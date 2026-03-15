@@ -14,7 +14,7 @@ A content planning platform designed for beginner YouTube and Instagram creators
 
 **Frontend:** React.js, Vite, Tailwind CSS  
 **Backend:** Node.js, Express.js  
-**Database & Auth:** Firebase (Firestore + Authentication)  
+**Database & Auth:** Supabase
 **AI (planned):** OpenAI / Gemini API
 
 ## Project Structure
