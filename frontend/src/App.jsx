@@ -22,15 +22,17 @@ function App() {
 }, [activePlat])
 
   useEffect(() => {
+    // app kholte waqt check karo - koi pehle se logged in hai?
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+      setUser(session?.user ?? null); // user mila toh save karo, nahi mila toh null
+      setLoading(false); // loading khatam
     });
 
+    // login/logout hone par automatically update karo
     supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
-  }, []);
+  }, []); // [] matlab sirf ek baar chalao - app load hone par
 
   if (loading)
     return <div style={{ background: "var(--bg)", height: "100vh" }} />;

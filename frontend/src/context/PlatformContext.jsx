@@ -5,7 +5,7 @@ const PlatformContext = createContext()
 
 export function PlatformProvider({ children }) {
   const [platform, setPlatform] = useState(null)
-  const [activePlat, setActivePlat] = useState('youtube') // for 'both' users
+  const [activePlat, setActivePlat] = useState('youtube')
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -30,4 +30,4 @@ export function PlatformProvider({ children }) {
 
 export function usePlatform() {
   return useContext(PlatformContext)
-}
+} 

@@ -36,7 +36,6 @@ function Sidebar() {
         overflow: 'hidden',
       }}
     >
-      {/* Logo */}
       <div style={{ padding: '14px 18px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div style={{ width: '28px', height: '28px', minWidth: '28px', background: 'var(--accent)', borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', color: '#fff' }}>
           CS
@@ -48,7 +47,6 @@ function Sidebar() {
         )}
       </div>
 
-      {/* Nav */}
       <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', padding: '0 8px' }}>
         {navItems.map((item) => (
           <div
@@ -67,7 +65,6 @@ function Sidebar() {
         ))}
       </nav>
 
-      {/* User */}
       <div style={{ padding: '0 8px 8px' }}>
         <div
           className="flex items-center gap-3 px-3 py-2 cursor-pointer rounded-lg hover:bg-[#18181b]"
