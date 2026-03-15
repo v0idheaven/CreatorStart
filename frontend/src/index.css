@@ -1,3 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --bg: #09090b;
+  --sb: #0f0f10;
+  --card: #111113;
+  --border: #1f1f22;
+  --border2: #27272a;
+  --text: #e4e4e7;
+  --muted: #b6b6b6;
+  --dim: #80808e;
+  --accent: #939eff;
+  --accent-dark: #4f46e5;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+}

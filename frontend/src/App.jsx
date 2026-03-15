@@ -1,20 +1,14 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import LandingPage from './pages/LandingPage';
-import Dashboard from './pages/dashboard';
-import ContentGenerator from './pages/ContentGenerator';
-import Planner from './pages/Planner';
+import Sidebar from './components/Sidebar'
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/generator" element={<Dashboard />} />
-        <Route path="/planner" element={<Planner />} />
-      </Routes>
-    </BrowserRouter>
-  );
+    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg)' }}>
+      <Sidebar />
+      <main style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
+        <p style={{ color: 'var(--text)' }}>Main content here</p>
+      </main>
+    </div>
+  )
 }
 
-export default App;
+export default App
