@@ -4,10 +4,22 @@ import supabase from "./supabase";
 import Auth from "./pages/Auth";
 import Sidebar from "./components/Sidebar";
 import PlatformSelect from "./pages/PlatformSelect";
+import { usePlatform } from "./context/PlatformContext";
 
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { activePlat } = usePlatform();
+
+  useEffect(() => {
+  if (activePlat === 'youtube') {
+    document.body.className = 'theme-yt'
+  } else if (activePlat === 'instagram') {
+    document.body.className = 'theme-ig'
+  } else {
+    document.body.className = ''
+  }
+}, [activePlat])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

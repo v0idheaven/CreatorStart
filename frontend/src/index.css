@@ -9,14 +9,26 @@
   --border: #1f1f22;
   --border2: #27272a;
   --text: #e4e4e7;
-  --muted: #b6b6b6;
-  --dim: #80808e;
-  --accent: #939eff;
+  --muted: #71717a;
+  --dim: #3f3f46;
+  --accent: #818cf8;
   --accent-dark: #4f46e5;
 }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Inter', sans-serif;
+.theme-ig {
+  --accent: #c13584;
+  --accent-dark: #833ab4;
+  --sb: #0a0a0f;
+  --card: #0f0f1a;
+  --border: #1e1a2e;
+  --border2: #2a2440;
+}
+
+.theme-ig {
+  --accent: #c13584;
+  --accent-dark: #833ab4;
+  --sb: #0a0a0f;
+  --card: #0f0f1a;
+  --border: #1e1a2e;
+  --border2: #2a2440;
 }
