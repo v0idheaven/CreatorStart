@@ -1,43 +1,57 @@
 # CreatorStart
 
-A content planning platform designed for beginner YouTube and Instagram creators who want to plan their content, stay consistent, and grow their channel from scratch.
+A content planning platform for beginner YouTube and Instagram creators.
 
-## Features
+## Current Progress
 
-- Platform selection (YouTube / Instagram)
-- Niche-based content guidance dashboard
-- Content generator with structured content flow
-- 30-day content planner
-- Firebase authentication and data storage
+- ✅ Project setup — React + Vite + Tailwind CSS
+- ✅ Supabase integration — Auth + Database
+- ✅ Email/Password authentication
+- ✅ Platform selection — YouTube / Instagram / Both
+- ✅ Dynamic theme switching based on platform
+- ✅ Sidebar with hover expand/collapse
+- ✅ Protected routes
 
 ## Tech Stack
 
 **Frontend:** React.js, Vite, Tailwind CSS  
 **Backend:** Node.js, Express.js  
-**Database & Auth:** Firebase (Firestore + Authentication)  
-**AI (planned):** OpenAI / Gemini API
+**Database & Auth:** Supabase (PostgreSQL + Auth)  
+**AI (planned):** Gemini API
 
 ## Project Structure
 ```
 CreatorStart/
-├── frontend/   # React + Vite + Tailwind
-├── backend/    # Node.js + Express
+├── frontend/
+│   ├── src/
+│   │   ├── components/   # Sidebar
+│   │   ├── context/      # PlatformContext
+│   │   ├── pages/        # Auth, Dashboard, Planner, etc.
+│   │   ├── supabase.js
+│   │   └── App.jsx
+│   └── .env
+├── backend/
 └── README.md
 ```
 
-## Getting Started
+## Database Schema
 
-### Backend
-```bash
-cd backend
-npm install
-npm run dev
-```
+**profiles** — id, name, platform, niche  
+**posts** — id, user_id, title, platform, day, status  
+**planner** — id, user_id, day, content, platform
+
+## Getting Started
 
 ### Frontend
 ```bash
 cd frontend
 npm install
+npm run dev
+```
+
+### Backend
+```bash
+cd backend
 npm run dev
 ```
 
