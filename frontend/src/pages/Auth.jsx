@@ -1,51 +1,91 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import supabase from '../supabase'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import supabase from "../supabase";
 
 function Auth() {
-  const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleGoogleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin + "/select-platform",
+      },
+    });
+  };
 
   const handleSubmit = async () => {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
 
     if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setError(error.message)
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) setError(error.message);
     } else {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { name } }
-      })
+        options: { data: { name } },
+      });
       if (error) {
-        setError(error.message)
+        setError(error.message);
       } else {
-        await supabase.from('profiles').insert({
+        await supabase.from("profiles").insert({
           id: data.user.id,
           name: name,
-        })
-        navigate('/select-platform')
+        });
+        navigate("/select-platform");
       }
     }
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '32px', width: '360px' }}>
-
-        <h1 style={{ color: 'var(--text)', fontSize: '20px', fontWeight: '600', marginBottom: '4px' }}>
-          {isLogin ? 'Welcome back' : 'Create account'}
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "var(--bg)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <div
+        style={{
+          background: "var(--card)",
+          border: "1px solid var(--border)",
+          borderRadius: "12px",
+          padding: "32px",
+          width: "360px",
+        }}
+      >
+        <h1
+          style={{
+            color: "var(--text)",
+            fontSize: "20px",
+            fontWeight: "600",
+            marginBottom: "4px",
+          }}
+        >
+          {isLogin ? "Welcome back" : "Create account"}
         </h1>
-        <p style={{ color: 'var(--dim)', fontSize: '13px', marginBottom: '24px' }}>
-          {isLogin ? 'Sign in to CreatorStart' : 'Start your creator journey'}
+        <p
+          style={{
+            color: "var(--dim)",
+            fontSize: "13px",
+            marginBottom: "24px",
+          }}
+        >
+          {isLogin ? "Sign in to CreatorStart" : "Start your creator journey"}
         </p>
 
         {!isLogin && (
@@ -53,7 +93,17 @@ function Auth() {
             placeholder="Your name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            style={{ width: '100%', background: '#18181b', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 12px', color: 'var(--text)', fontSize: '13px', marginBottom: '10px', outline: 'none' }}
+            style={{
+              width: "100%",
+              background: "#18181b",
+              border: "1px solid var(--border)",
+              borderRadius: "8px",
+              padding: "10px 12px",
+              color: "var(--text)",
+              fontSize: "13px",
+              marginBottom: "10px",
+              outline: "none",
+            }}
           />
         )}
 
@@ -61,7 +111,17 @@ function Auth() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          style={{ width: '100%', background: '#18181b', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 12px', color: 'var(--text)', fontSize: '13px', marginBottom: '10px', outline: 'none' }}
+          style={{
+            width: "100%",
+            background: "#18181b",
+            border: "1px solid var(--border)",
+            borderRadius: "8px",
+            padding: "10px 12px",
+            color: "var(--text)",
+            fontSize: "13px",
+            marginBottom: "10px",
+            outline: "none",
+          }}
         />
 
         <input
@@ -69,29 +129,90 @@ function Auth() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={{ width: '100%', background: '#18181b', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 12px', color: 'var(--text)', fontSize: '13px', marginBottom: '16px', outline: 'none' }}
+          style={{
+            width: "100%",
+            background: "#18181b",
+            border: "1px solid var(--border)",
+            borderRadius: "8px",
+            padding: "10px 12px",
+            color: "var(--text)",
+            fontSize: "13px",
+            marginBottom: "16px",
+            outline: "none",
+          }}
         />
 
-        {error && <p style={{ color: '#f87171', fontSize: '12px', marginBottom: '12px' }}>{error}</p>}
+        {error && (
+          <p
+            style={{ color: "#f87171", fontSize: "12px", marginBottom: "12px" }}
+          >
+            {error}
+          </p>
+        )}
 
         <button
           onClick={handleSubmit}
           disabled={loading}
-          style={{ width: '100%', background: 'var(--accent)', border: 'none', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', marginBottom: '16px' }}
+          style={{
+            width: "100%",
+            background: "var(--accent)",
+            border: "none",
+            borderRadius: "8px",
+            padding: "10px",
+            color: "#fff",
+            fontSize: "13px",
+            fontWeight: "600",
+            cursor: "pointer",
+            marginBottom: "16px",
+          }}
         >
-          {loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Sign Up'}
+          {loading ? "Please wait..." : isLogin ? "Sign In" : "Sign Up"}
         </button>
 
-        <p style={{ color: 'var(--dim)', fontSize: '12px', textAlign: 'center' }}>
-          {isLogin ? "Don't have an account? " : 'Already have an account? '}
-          <span onClick={() => setIsLogin(!isLogin)} style={{ color: 'var(--accent)', cursor: 'pointer' }}>
-            {isLogin ? 'Sign Up' : 'Sign In'}
+        <p
+          style={{ color: "var(--dim)", fontSize: "12px", textAlign: "center" }}
+        >
+          {isLogin ? "Don't have an account? " : "Already have an account? "}
+          <span
+            onClick={() => setIsLogin(!isLogin)}
+            style={{ color: "var(--accent)", cursor: "pointer" }}
+          >
+            {isLogin ? "Sign Up" : "Sign In"}
           </span>
         </p>
 
+        <div style={{ textAlign: "center", marginBottom: "16px" }}>
+          <span style={{ color: "var(--dim)", fontSize: "12px" }}>or</span>
+        </div>
+
+        <button
+          onClick={handleGoogleLogin}
+          style={{
+            width: "100%",
+            background: "transparent",
+            border: "1px solid var(--border)",
+            borderRadius: "8px",
+            padding: "10px",
+            color: "var(--text)",
+            fontSize: "13px",
+            fontWeight: "500",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+          }}
+        >
+          <img
+            src="https://www.google.com/favicon.ico"
+            width="16"
+            height="16"
+          />
+          Continue with Google
+        </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default Auth
+export default Auth;
