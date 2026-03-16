@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -7,6 +7,7 @@ import {
   FileText,
   Settings,
   BarChart2,
+  LogOut,
 } from "lucide-react";
 import supabase from "../supabase";
 
@@ -21,13 +22,40 @@ const navItems = [
 
 function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [userName, setUserName] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", user.id)
+        .single();
+      if (data?.name) {
+        setUserName(data.name);
+      } else {
+        setUserName(
+          user.user_metadata?.full_name ||
+          user.user_metadata?.name ||
+          user.email
+        );
+      }
+    };
+    fetchUser();
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/auth");
   };
+
+  const initials = userName
+    ? userName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)
+    : "..";
 
   return (
     <div
@@ -75,7 +103,6 @@ function Sidebar() {
         >
           CS
         </div>
-
         {isOpen && (
           <span
             style={{
@@ -105,7 +132,6 @@ function Sidebar() {
       >
         {navItems.map((item) => {
           const isActive = location.pathname === item.href;
-
           return (
             <div
               key={item.label}
@@ -117,9 +143,7 @@ function Sidebar() {
                 padding: "10px 12px",
                 borderRadius: "10px",
                 cursor: "pointer",
-                background: isActive
-                  ? "rgba(255,255,255,0.08)"
-                  : "transparent",
+                background: isActive ? "rgba(255,255,255,0.08)" : "transparent",
                 whiteSpace: "nowrap",
                 transition: "background 0.1s",
               }}
@@ -128,8 +152,7 @@ function Sidebar() {
                   e.currentTarget.style.background = "rgba(255,255,255,0.06)";
               }}
               onMouseLeave={(e) => {
-                if (!isActive)
-                  e.currentTarget.style.background = "transparent";
+                if (!isActive) e.currentTarget.style.background = "transparent";
               }}
             >
               <item.icon
@@ -137,7 +160,6 @@ function Sidebar() {
                 color={isActive ? "var(--text)" : "var(--dim)"}
                 style={{ minWidth: "22px" }}
               />
-
               {isOpen && (
                 <span
                   style={{
@@ -154,8 +176,8 @@ function Sidebar() {
         })}
       </nav>
 
-      {/* Logout */}
-      <div style={{ padding: "0 8px 8px" }}>
+      {/* User + Logout */}
+      <div style={{ padding: "0 8px 12px" }}>
         <div
           onClick={handleLogout}
           style={{
@@ -184,18 +206,29 @@ function Sidebar() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "10px",
+              fontSize: "11px",
               fontWeight: "700",
               color: "#fff",
+              flexShrink: 0,
             }}
           >
-            VY
+            {initials}
           </div>
-
           {isOpen && (
-            <span style={{ color: "var(--muted)", fontSize: "13px" }}>
-              Logout
-            </span>
+            <>
+              <span
+                style={{
+                  color: "var(--text)",
+                  fontSize: "13px",
+                  flex: 1,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {userName}
+              </span>
+              <LogOut size={16} color="var(--dim)" />
+            </>
           )}
         </div>
       </div>
