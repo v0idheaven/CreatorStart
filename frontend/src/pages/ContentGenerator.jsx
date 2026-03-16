@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Zap, ChevronDown } from 'lucide-react'
-import { usePlatform } from '../context/PlatformContext'
+import { usePlatform } from '../hooks/useplatform'
 
 const NICHES = [
   'Fitness & Gym','Cooking & Food','Tech & Gadgets','Finance & Money',

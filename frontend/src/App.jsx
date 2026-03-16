@@ -9,7 +9,7 @@ import DashboardYT from "./pages/DashboardYT";
 import DashboardIG from "./pages/DashboardIG";
 import ContentGenerator from "./pages/ContentGenerator";
 import Planner from "./pages/Planner";
-import { usePlatform } from "./context/PlatformContext";
+import { usePlatform } from "./hooks/useplatform";
 
 const Layout = ({ children }) => (
   <div style={{ display: "flex", height: "100vh", background: "var(--bg)", overflow: "hidden" }}>
@@ -31,9 +31,7 @@ const DashboardRouter = () => {
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { activePlat } = usePlatform();
-
-  const { platform } = usePlatform()
+  const { platform } = usePlatform();
 
 useEffect(() => {
   if (platform === "youtube") {

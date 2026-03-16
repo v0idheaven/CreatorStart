@@ -1,17 +1,14 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import supabase from "../supabase";
-
-const PlatformContext = createContext();
+import { PlatformContext } from "./PlatformContextValue";
 
 export function PlatformProvider({ children }) {
   const [platform, setPlatform] = useState(null);
-  const [activePlat, setActivePlat] = useState(null); // null rakho default
+  const [activePlat, setActivePlat] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data } = await supabase
           .from("profiles")
@@ -19,8 +16,10 @@ export function PlatformProvider({ children }) {
           .eq("id", user.id)
           .single();
 
-        setPlatform(data.platform);
-        setActivePlat(data.platform === "both" ? "overall" : data.platform);
+        if (data?.platform) {
+          setPlatform(data.platform);
+          setActivePlat(data.platform === "both" ? "youtube" : data.platform);
+        }
       }
     };
     fetchProfile();
@@ -31,8 +30,4 @@ export function PlatformProvider({ children }) {
       {children}
     </PlatformContext.Provider>
   );
-}
-
-export function usePlatform() {
-  return useContext(PlatformContext);
 }
