@@ -18,7 +18,7 @@ export function PlatformProvider({ children }) {
 
         if (data?.platform) {
           setPlatform(data.platform);
-          setActivePlat(data.platform === "both" ? "youtube" : data.platform);
+          setActivePlat(data.platform === "both" ? "overall" : data.platform);
         }
       }
     };
