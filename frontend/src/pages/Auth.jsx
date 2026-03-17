@@ -24,6 +24,12 @@ function Auth() {
     setLoading(true);
     setError("");
 
+    if (!isLogin && !name.trim()) {
+      setError("Please enter your name");
+      setLoading(false);
+      return;
+    }
+
     if (isLogin) {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -34,19 +40,43 @@ function Auth() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { name } },
+        options: { data: { name: name.trim() } },
       });
       if (error) {
         setError(error.message);
       } else {
-        await supabase.from("profiles").insert({
+        // profile insert karo — naam trim karke
+        const { error: insertError } = await supabase.from("profiles").insert({
           id: data.user.id,
-          name: name,
+          name: name.trim(),
+          platform: null,
         });
+
+        // agar insert fail hua (409 duplicate) toh update karo
+        if (insertError) {
+          await supabase
+            .from("profiles")
+            .update({ name: name.trim() })
+            .eq("id", data.user.id);
+        }
+
         navigate("/select-platform");
       }
     }
     setLoading(false);
+  };
+
+  const inputStyle = {
+    width: "100%",
+    background: "#18181b",
+    border: "1px solid var(--border)",
+    borderRadius: "8px",
+    padding: "10px 12px",
+    color: "var(--text)",
+    fontSize: "13px",
+    marginBottom: "10px",
+    outline: "none",
+    boxSizing: "border-box",
   };
 
   return (
@@ -93,17 +123,7 @@ function Auth() {
             placeholder="Your name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            style={{
-              width: "100%",
-              background: "#18181b",
-              border: "1px solid var(--border)",
-              borderRadius: "8px",
-              padding: "10px 12px",
-              color: "var(--text)",
-              fontSize: "13px",
-              marginBottom: "10px",
-              outline: "none",
-            }}
+            style={inputStyle}
           />
         )}
 
@@ -111,17 +131,7 @@ function Auth() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          style={{
-            width: "100%",
-            background: "#18181b",
-            border: "1px solid var(--border)",
-            borderRadius: "8px",
-            padding: "10px 12px",
-            color: "var(--text)",
-            fontSize: "13px",
-            marginBottom: "10px",
-            outline: "none",
-          }}
+          style={inputStyle}
         />
 
         <input
@@ -129,22 +139,16 @@ function Auth() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={{
-            width: "100%",
-            background: "#18181b",
-            border: "1px solid var(--border)",
-            borderRadius: "8px",
-            padding: "10px 12px",
-            color: "var(--text)",
-            fontSize: "13px",
-            marginBottom: "16px",
-            outline: "none",
-          }}
+          style={{ ...inputStyle, marginBottom: "16px" }}
         />
 
         {error && (
           <p
-            style={{ color: "#f87171", fontSize: "12px", marginBottom: "12px" }}
+            style={{
+              color: "#f87171",
+              fontSize: "12px",
+              marginBottom: "12px",
+            }}
           >
             {error}
           </p>
@@ -170,7 +174,12 @@ function Auth() {
         </button>
 
         <p
-          style={{ color: "var(--dim)", fontSize: "12px", textAlign: "center" }}
+          style={{
+            color: "var(--dim)",
+            fontSize: "12px",
+            textAlign: "center",
+            marginBottom: "16px",
+          }}
         >
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <span
@@ -207,6 +216,7 @@ function Auth() {
             src="https://www.google.com/favicon.ico"
             width="16"
             height="16"
+            alt="Google"
           />
           Continue with Google
         </button>
