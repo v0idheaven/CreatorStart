@@ -1,411 +1,441 @@
-import { useState } from 'react'
-import { Zap, ChevronDown } from 'lucide-react'
-import { usePlatform } from '../hooks/usePlatform'
+import { useState } from "react";
+import { Sparkles, Copy, Check, ChevronDown } from "lucide-react";
+import Sidebar from "../components/Sidebar";
+import { usePlatform } from "../context/PlatformContext";
 
-const NICHES = [
-  'Fitness & Gym','Cooking & Food','Tech & Gadgets','Finance & Money',
-  'Travel','Fashion & Style','Mental Health','Gaming','Education',
-  'Motivation','Beauty & Skincare','Business & Entrepreneurship','Other'
-]
+const formats = ["Short Video", "Long Video", "Reel", "Carousel", "Blog Post", "Other"];
+const niches  = ["Tech", "Finance", "Fitness", "Food", "Travel", "Gaming", "Education", "Lifestyle", "Business", "Entertainment", "Other"];
+const goals   = ["Grow Audience", "Increase Engagement", "Drive Sales", "Build Authority", "Entertain", "Other"];
+const tones   = ["Casual", "Professional", "Humorous", "Inspirational", "Educational", "Other"];
 
-const FORMATS = {
-  instagram: ['Reel','Story','Carousel','Static Post'],
-  youtube: ['Short (60s)','Long Video','Vlog','Tutorial']
-}
+const SIDEBAR_W  = 72;
+const PAGE_PAD   = 48;
+const LEFT_W     = 300;
+const GAP        = 32;
+const HEADER_H   = 116;
+const FIXED_LEFT = SIDEBAR_W + PAGE_PAD;
 
-const GOALS = ['Educate','Entertain','Inspire','Promote','Build Community']
-const TONES = ['Friendly','Casual','Bold & Punchy','Professional','Humorous','Storytelling']
+// ─── Select with "Other" support ─────────────────────────────────────────────
+const Select = ({ label, options, value, customValue, onCustomChange, onChange }) => {
+  const [open, setOpen] = useState(false);
+  const isOther = value === "Other";
 
-function Select({ id, label, options, value, onChange, openSelect, setOpenSelect }) {
-  const open = openSelect === id
-
-  const selectOption = (opt) => {
-    onChange(opt)
-    setOpenSelect(null)
-  }
+  const close = () => setOpen(false);
 
   return (
-    <div style={{ position: 'relative' }}>
-      <label style={{
-        fontSize: '11px',
-        color: 'var(--dim)',
-        letterSpacing: '0.08em',
-        textTransform: 'uppercase',
-        marginBottom: '8px',
-        display: 'block'
-      }}>
-        {label}
-      </label>
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div style={{ position: "relative" }}>
+        <label style={{
+          fontSize: "12px", fontWeight: "500", color: "var(--muted)",
+          display: "block", marginBottom: "6px",
+        }}>
+          {label}
+        </label>
 
-      <div
-        onClick={() => setOpenSelect(open ? null : id)}
-        style={{
-          padding: '10px 12px',
-          border: '1px solid var(--border)',
-          borderRadius: '6px',
-          background: 'var(--card)',
-          cursor: 'pointer',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          color: value ? 'var(--text)' : 'var(--dim)'
-        }}
-      >
-        {value || `Select ${label}`}
-        <ChevronDown size={14} />
+        <div
+          onClick={() => setOpen(p => !p)}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "10px 12px", borderRadius: "9px",
+            border: `1px solid ${open ? "var(--accent)" : "var(--border2)"}`,
+            background: "var(--bg)", color: value ? "var(--text)" : "var(--dim)",
+            fontSize: "13px", cursor: "pointer", userSelect: "none",
+          }}
+        >
+          <span>{value || `Select ${label}`}</span>
+          <ChevronDown size={14} color="var(--muted)"
+            style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .15s", flexShrink: 0 }} />
+        </div>
+
+        {open && (
+          <>
+            <div onClick={close} style={{ position: "fixed", inset: 0, zIndex: 40 }} />
+            <div style={{
+              position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0,
+              background: "var(--card)", border: "1px solid var(--border)",
+              borderRadius: "9px", zIndex: 999, overflow: "hidden",
+              boxShadow: "0 8px 24px rgba(0,0,0,.5)",
+            }}>
+              {options.map(opt => (
+                <div
+                  key={opt}
+                  className={`dropdown-item${value === opt ? " selected" : ""}`}
+                  onClick={() => { onChange(opt); close(); }}
+                >
+                  {opt}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
-      {open && (
-        <div style={{
-          position: 'absolute',
-          top: 'calc(100% + 4px)',
-          left: 0,
-          right: 0,
-          border: '1px solid var(--border)',
-          background: 'var(--card)',
-          borderRadius: '6px',
-          zIndex: 20,
-          maxHeight: '220px',
-          overflowY: 'auto'
-        }}>
-          {options.map(opt => {
-            const selected = value === opt
-            return (
-              <div
-                key={opt}
-                onClick={() => selectOption(opt)}
-                style={{
-                  padding: '10px 12px',
-                  cursor: 'pointer',
-                  color: selected ? 'var(--accent)' : 'var(--text)',
-                  background: selected ? 'rgba(129,140,248,0.06)' : 'transparent'
-                }}
-              >
-                {opt}
-              </div>
-            )
-          })}
-        </div>
+      {/* Custom input — only shown when "Other" is selected */}
+      {isOther && (
+        <input
+          autoFocus
+          placeholder={`Enter custom ${label.toLowerCase()}...`}
+          value={customValue}
+          onChange={e => onCustomChange(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px 12px",
+            borderRadius: "9px",
+            border: "1px solid var(--accent)",
+            background: "var(--bg)",
+            color: "var(--text)",
+            fontSize: "13px",
+            outline: "none",
+            boxSizing: "border-box",
+            transition: "border-color .15s",
+          }}
+        />
       )}
     </div>
-  )
-}
+  );
+};
 
-function ResultBlock({ label, children }) {
+// ─── CopyButton ──────────────────────────────────────────────────────────────
+const CopyButton = ({ text }) => {
+  const [copied, setCopied] = useState(false);
   return (
-    <div style={{ padding: '18px 22px', borderBottom: '1px solid var(--border)' }}>
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      style={{
+        display: "flex", alignItems: "center", gap: "5px",
+        padding: "4px 10px", borderRadius: "6px",
+        border: "1px solid var(--border2)", background: "transparent",
+        color: "var(--muted)", fontSize: "11px", cursor: "pointer",
+      }}
+    >
+      {copied ? <Check size={11} color="#4ade80" /> : <Copy size={11} />}
+      {copied ? "Copied!" : "Copy"}
+    </button>
+  );
+};
+
+// ─── ResultCard ──────────────────────────────────────────────────────────────
+const ResultCard = ({ label, content }) => (
+  <div style={{
+    background: "var(--bg)", border: "1px solid var(--border)",
+    borderRadius: "10px", padding: "16px",
+  }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
       <span style={{
-        fontSize: '10px',
-        color: 'var(--dim)',
-        letterSpacing: '0.08em',
-        textTransform: 'uppercase'
+        fontSize: "11px", fontWeight: "600", color: "var(--accent)",
+        textTransform: "uppercase", letterSpacing: "0.5px",
       }}>
         {label}
       </span>
-      <div style={{
-        marginTop: '8px',
-        color: 'var(--text)',
-        fontSize: '14px',
-        lineHeight: '1.6'
-      }}>
-        {children}
-      </div>
+      <CopyButton text={content} />
     </div>
-  )
-}
+    <p style={{ fontSize: "13px", color: "var(--text)", margin: 0, lineHeight: "1.7", whiteSpace: "pre-wrap" }}>
+      {content}
+    </p>
+  </div>
+);
 
-function ContentGenerator() {
-  const { platform } = usePlatform()
+// ─── Main ────────────────────────────────────────────────────────────────────
+export default function ContentGenerator() {
+  const [format,      setFormat]      = useState("");
+  const [customFormat, setCustomFormat] = useState("");
+  const [niche,       setNiche]       = useState("");
+  const [customNiche,  setCustomNiche]  = useState("");
+  const [goal,        setGoal]        = useState("");
+  const [customGoal,   setCustomGoal]   = useState("");
+  const [tone,        setTone]        = useState("");
+  const [customTone,   setCustomTone]   = useState("");
+  const [topic,       setTopic]       = useState("");
+  const [loading,     setLoading]     = useState(false);
+  const [result,      setResult]      = useState(null);
+  const [error,       setError]       = useState("");
+  const { activePlat } = usePlatform();
 
-  const [openSelect, setOpenSelect] = useState(null)
-  const [formatTab, setFormatTab] = useState('instagram')
-  const [formats, setFormats] = useState('')
-  const [niche, setNiche] = useState('')
-  const [goal, setGoal] = useState('')
-  const [tone, setTone] = useState('')
-  const [topic, setTopic] = useState('')
-  const [result, setResult] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const isYT     = activePlat === "youtube";
+  const isIG     = activePlat === "instagram";
+  const accent   = isYT ? "#ff4444" : isIG ? "#c13584" : "var(--accent)";
+  const platform = isYT ? "YouTube"  : isIG ? "Instagram" : "YouTube/Instagram";
 
-  const getFormats = () => {
-    if (platform === 'instagram') return FORMATS.instagram
-    if (platform === 'youtube') return FORMATS.youtube
-    if (platform === 'both') {
-      if (formatTab === 'instagram') return FORMATS.instagram
-      if (formatTab === 'youtube') return FORMATS.youtube
-      return [...FORMATS.instagram, ...FORMATS.youtube]
+  // resolve actual value — if "Other" use custom text
+  const resolvedFormat = format === "Other" ? customFormat : format;
+  const resolvedNiche  = niche  === "Other" ? customNiche  : niche;
+  const resolvedGoal   = goal   === "Other" ? customGoal   : goal;
+  const resolvedTone   = tone   === "Other" ? customTone   : tone;
+
+  const handleGenerate = async () => {
+    if (!format || !niche || !goal || !tone) {
+      setError("Please fill all fields before generating.");
+      return;
     }
-    return []
-  }
+    if (format === "Other" && !customFormat.trim()) { setError("Please enter a custom format."); return; }
+    if (niche  === "Other" && !customNiche.trim())  { setError("Please enter a custom niche.");  return; }
+    if (goal   === "Other" && !customGoal.trim())   { setError("Please enter a custom goal.");   return; }
+    if (tone   === "Other" && !customTone.trim())   { setError("Please enter a custom tone.");   return; }
 
-  const availableFormats = getFormats()
-  const canGenerate = formats && niche && goal && tone
-  const activePlatform = platform === 'both' ? formatTab : platform
+    setError(""); setLoading(true); setResult(null);
 
-  const generate = async () => {
-    setLoading(true)
-    setResult(null)
-    setError('')
+    const prompt = `You are an expert content strategist for ${platform} creators.
+Generate detailed content ideas for a ${resolvedNiche} creator:
+- Format: ${resolvedFormat}
+- Goal: ${resolvedGoal}
+- Tone: ${resolvedTone}
+${topic ? `- Topic/Keyword: ${topic}` : ""}
+
+Return ONLY this JSON, no markdown, no backticks, no explanation:
+{"hook":"A powerful attention-grabbing opening line","angle":"The unique content angle or perspective","outline":"1. First point\\n2. Second point\\n3. Third point\\n4. Fourth point\\n5. Fifth point","caption":"A ready-to-post engaging caption with relevant hashtags","tip":"One specific actionable pro tip for this content type"}`;
 
     try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
+      const res  = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
         },
         body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
+          model: "llama-3.3-70b-versatile",
           messages: [
-            {
-              role: 'system',
-              content: 'You are a social media content strategist. Always respond with valid JSON only, no markdown, no extra text, no backticks.'
-            },
-            {
-              role: 'user',
-              content: `Generate a complete content idea for a ${formats} on ${activePlatform}.
-Niche: ${niche}
-Goal: ${goal}
-Tone: ${tone}
-${topic ? `Topic: ${topic}` : ''}
-
-Respond in this exact JSON format only, no markdown:
-{
-  "hook": "attention-grabbing opening line",
-  "angle": "unique angle or perspective",
-  "outline": ["point 1", "point 2", "point 3", "point 4"],
-  "caption": "ready to use caption with emojis",
-  "tip": "one actionable tip"
-}`
-            }
+            { role: "system", content: "You are a content strategist. Always respond with valid JSON only. No markdown, no backticks, no extra text. Just raw JSON." },
+            { role: "user",   content: prompt },
           ],
-          temperature: 0.7
-        })
-      })
-
-      const data = await response.json()
-
-      // API error check
-      if (!response.ok) {
-        const msg = data?.error?.message || `API error ${response.status}`
-        setError(`API Error: ${msg}`)
-        setLoading(false)
-        return
-      }
-
-      // choices check
-      if (!data.choices || data.choices.length === 0) {
-        setError('No content returned. Please try again.')
-        setLoading(false)
-        return
-      }
-
-      const text = data.choices[0]?.message?.content
-      if (!text) {
-        setError('Empty response. Please try again.')
-        setLoading(false)
-        return
-      }
-
-      // JSON parse
-      const clean = text.replace(/```json|```/g, '').trim()
-      const parsed = JSON.parse(clean)
-      setResult(parsed)
-
+          temperature: 0.8,
+          max_tokens: 1024,
+        }),
+      });
+      const data   = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      const raw    = data.choices?.[0]?.message?.content || "";
+      const parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
+      setResult(parsed);
     } catch (err) {
-      console.error('Groq error:', err)
-      if (err instanceof SyntaxError) {
-        setError('Response was not valid JSON. Please try again.')
-      } else {
-        setError('Something went wrong. Check your API key and try again.')
-      }
+      setError(err.message || "Failed to generate. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false)
-  }
+  };
 
   return (
-    <div style={{ maxWidth: '1150px', margin: '0 auto', padding: '56px 32px' }}>
+    <div style={{ display: "flex", background: "var(--bg)", minHeight: "100vh" }}>
+      <Sidebar />
 
-      {/* Header */}
-      <div style={{ marginBottom: '48px' }}>
-        <h1 style={{
-          fontSize: '32px',
-          fontWeight: '600',
-          color: 'var(--text)',
-          letterSpacing: '-0.02em',
-          marginBottom: '6px'
-        }}>
-          Generate your next post
+      {/* ── FIXED HEADER ── */}
+      <div
+        className="fixed-header-fade"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: `${SIDEBAR_W}px`,
+          right: 0,
+          height: `${HEADER_H}px`,
+          background: "var(--bg)",
+          zIndex: 20,
+          padding: `24px ${PAGE_PAD}px 0`,
+          boxSizing: "border-box",
+        }}
+      >
+        <p style={{ fontSize: "11px", color: "var(--dim)", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 8px" }}>
+          AI Tools
+        </p>
+        <h1 style={{ fontSize: "24px", fontWeight: "700", color: "var(--text)", margin: "0 0 6px", letterSpacing: "-0.5px" }}>
+          Content Generator
         </h1>
-        <p style={{ color: 'var(--dim)', fontSize: '14px' }}>
-          Create scroll-stopping content ideas in seconds.
+        <p style={{ fontSize: "13px", color: "var(--dim)", margin: 0 }}>
+          Generate hooks, outlines &amp; captions for your {platform} content.
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: '28px' }}>
+      {/* ── SCROLLABLE BODY ── */}
+      <main style={{
+        marginLeft:    `${SIDEBAR_W}px`,
+        flex:          1,
+        paddingTop:    `${HEADER_H + 32}px`,
+        paddingBottom: "48px",
+        paddingLeft:   `${PAGE_PAD}px`,
+        paddingRight:  `${PAGE_PAD}px`,
+        boxSizing:     "border-box",
+      }}>
+        <div style={{ display: "flex", gap: `${GAP}px`, alignItems: "flex-start" }}>
 
-        {/* Form Card */}
-        <div style={{
-          border: '1px solid var(--border)',
-          borderRadius: '12px',
-          background: 'var(--card)',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.35)'
-        }}>
-          <div style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Ghost spacer */}
+          <div style={{ width: `${LEFT_W}px`, flexShrink: 0 }} />
 
-            {platform === 'both' && (
-              <div>
-                <label style={{
-                  fontSize: '11px',
-                  color: 'var(--dim)',
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  marginBottom: '8px',
-                  display: 'block'
-                }}>
-                  Platform
-                </label>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <button
-                    onClick={() => { setFormatTab('instagram'); setFormats('') }}
-                    style={{
-                      flex: 1, padding: '9px 0', borderRadius: '6px',
-                      border: '1px solid var(--border)',
-                      background: formatTab === 'instagram' ? 'rgba(193,53,132,0.1)' : 'var(--card)',
-                      color: formatTab === 'instagram' ? '#c13584' : 'var(--dim)',
-                      cursor: 'pointer', fontSize: '12px'
-                    }}
-                  >
-                    Instagram
-                  </button>
-                  <button
-                    onClick={() => { setFormatTab('youtube'); setFormats('') }}
-                    style={{
-                      flex: 1, padding: '9px 0', borderRadius: '6px',
-                      border: '1px solid var(--border)',
-                      background: formatTab === 'youtube' ? 'rgba(255,0,0,0.1)' : 'var(--card)',
-                      color: formatTab === 'youtube' ? '#ff4444' : 'var(--dim)',
-                      cursor: 'pointer', fontSize: '12px'
-                    }}
-                  >
-                    YouTube
-                  </button>
-                </div>
+          {/* ── FIXED LEFT PANEL ── */}
+          <div style={{
+            position:      "fixed",
+            top:           `${HEADER_H + 32}px`,
+            left:          `${FIXED_LEFT}px`,
+            width:         `${LEFT_W}px`,
+            background:    "var(--card)",
+            border:        "1px solid var(--border)",
+            borderRadius:  "14px",
+            padding:       "24px",
+            display:       "flex",
+            flexDirection: "column",
+            gap:           "16px",
+            zIndex:        10,
+            boxSizing:     "border-box",
+            /* allow panel to scroll if "Other" inputs push it too tall */
+            maxHeight:     `calc(100vh - ${HEADER_H + 32 + 24}px)`,
+            overflowY:     "auto",
+          }}>
+            <Select
+              label="Format"
+              options={formats}
+              value={format}
+              customValue={customFormat}
+              onCustomChange={setCustomFormat}
+              onChange={(v) => { setFormat(v); setCustomFormat(""); }}
+            />
+            <Select
+              label="Niche"
+              options={niches}
+              value={niche}
+              customValue={customNiche}
+              onCustomChange={setCustomNiche}
+              onChange={(v) => { setNiche(v); setCustomNiche(""); }}
+            />
+            <Select
+              label="Goal"
+              options={goals}
+              value={goal}
+              customValue={customGoal}
+              onCustomChange={setCustomGoal}
+              onChange={(v) => { setGoal(v); setCustomGoal(""); }}
+            />
+            <Select
+              label="Tone"
+              options={tones}
+              value={tone}
+              customValue={customTone}
+              onCustomChange={setCustomTone}
+              onChange={(v) => { setTone(v); setCustomTone(""); }}
+            />
+
+            {/* Topic input */}
+            <div>
+              <label style={{
+                fontSize: "12px", fontWeight: "500", color: "var(--muted)",
+                display: "block", marginBottom: "6px",
+              }}>
+                Topic / Keyword <span style={{ color: "var(--dim)" }}>(optional)</span>
+              </label>
+              <input
+                placeholder="e.g. Morning routine, AI tools..."
+                value={topic}
+                onChange={e => setTopic(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 12px", borderRadius: "9px",
+                  border: "1px solid var(--border2)", background: "var(--bg)",
+                  color: "var(--text)", fontSize: "13px", outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            {error && (
+              <p style={{
+                fontSize: "12px", color: "#f87171", margin: 0,
+                padding: "10px 12px", background: "#ff000012",
+                borderRadius: "8px", border: "1px solid #ff000025", lineHeight: "1.5",
+              }}>
+                {error}
+              </p>
+            )}
+
+            <button
+              onClick={handleGenerate}
+              disabled={loading}
+              style={{
+                width: "100%", padding: "11px", borderRadius: "9px",
+                border: "none", background: accent, color: "#fff",
+                fontSize: "14px", fontWeight: "600",
+                cursor: loading ? "not-allowed" : "pointer",
+                opacity: loading ? 0.7 : 1,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                transition: "opacity .2s",
+              }}
+            >
+              {loading ? (
+                <>
+                  <div style={{
+                    width: "14px", height: "14px",
+                    border: "2px solid #ffffff40", borderTopColor: "#fff",
+                    borderRadius: "50%", animation: "spin .8s linear infinite",
+                  }} />
+                  Generating...
+                </>
+              ) : (
+                <><Sparkles size={15} /> Generate Content</>
+              )}
+            </button>
+
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          </div>
+
+          {/* ── RIGHT RESULTS ── */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {!result && !loading && (
+              <div style={{
+                background: "var(--card)", border: "1px solid var(--border)",
+                borderRadius: "14px", padding: "60px 40px", textAlign: "center",
+              }}>
+                <Sparkles size={32} color="var(--dim)" style={{ marginBottom: "16px" }} />
+                <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", margin: "0 0 6px" }}>
+                  Ready to generate
+                </p>
+                <p style={{ fontSize: "13px", color: "var(--dim)", margin: 0 }}>
+                  Fill in the details and click Generate to get your content ideas.
+                </p>
               </div>
             )}
 
-            <Select id="format" label="Format" options={availableFormats} value={formats} onChange={setFormats} openSelect={openSelect} setOpenSelect={setOpenSelect} />
-            <Select id="niche" label="Niche" options={NICHES} value={niche} onChange={setNiche} openSelect={openSelect} setOpenSelect={setOpenSelect} />
-            <Select id="goal" label="Goal" options={GOALS} value={goal} onChange={setGoal} openSelect={openSelect} setOpenSelect={setOpenSelect} />
-            <Select id="tone" label="Tone" options={TONES} value={tone} onChange={setTone} openSelect={openSelect} setOpenSelect={setOpenSelect} />
-
-            <input
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="Topic (optional)"
-              style={{
-                padding: '10px 12px',
-                border: '1px solid var(--border)',
-                borderRadius: '6px',
-                background: 'transparent',
-                color: 'var(--text)',
-                outline: 'none'
-              }}
-            />
-          </div>
-
-          <div style={{ padding: '22px' }}>
-            {error && (
-              <p style={{ color: '#f87171', fontSize: '12px', marginBottom: '12px' }}>{error}</p>
+            {loading && (
+              <div style={{
+                background: "var(--card)", border: "1px solid var(--border)",
+                borderRadius: "14px", padding: "60px 40px", textAlign: "center",
+              }}>
+                <div style={{
+                  width: "28px", height: "28px",
+                  border: "2px solid var(--border2)", borderTopColor: accent,
+                  borderRadius: "50%", animation: "spin .8s linear infinite",
+                  margin: "0 auto 16px",
+                }} />
+                <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
+                  Generating your content ideas...
+                </p>
+              </div>
             )}
-            <button
-              onClick={generate}
-              disabled={!canGenerate || loading}
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '8px',
-                border: 'none',
-                background: canGenerate && !loading
-                  ? 'linear-gradient(135deg,var(--accent),var(--accent-dark))'
-                  : 'var(--border)',
-                color: '#fff',
-                fontWeight: '600',
-                cursor: canGenerate && !loading ? 'pointer' : 'not-allowed'
-              }}
-            >
-              {loading ? 'Generating...' : 'Generate Content'}
-            </button>
+
+            {result && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <ResultCard label="Hook"    content={result.hook}    />
+                <ResultCard label="Angle"   content={result.angle}   />
+                <ResultCard label="Outline" content={result.outline} />
+                <ResultCard label="Caption" content={result.caption} />
+                <ResultCard label="Pro Tip" content={result.tip}     />
+
+                <button
+                  onClick={handleGenerate}
+                  style={{
+                    padding: "10px", borderRadius: "9px",
+                    border: "1px solid var(--border2)", background: "transparent",
+                    color: "var(--muted)", fontSize: "13px", cursor: "pointer",
+                    fontWeight: "500", transition: "border-color .15s",
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = accent}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border2)"}
+                >
+                  Regenerate ↻
+                </button>
+              </div>
+            )}
           </div>
+
         </div>
-
-        {/* Result Card */}
-        <div>
-          {!result && !loading && (
-            <div style={{
-              border: '1px solid var(--border)',
-              borderRadius: '12px',
-              padding: '40px',
-              background: 'var(--card)',
-              minHeight: '420px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center'
-            }}>
-              <Zap size={28} color="var(--accent)" style={{ marginBottom: '12px' }} />
-              <h3 style={{ color: 'var(--text)', fontSize: '16px', marginBottom: '6px' }}>
-                Your content idea will appear here
-              </h3>
-              <p style={{ color: 'var(--dim)', fontSize: '13px', maxWidth: '240px' }}>
-                Select format, niche, tone and generate a complete post idea.
-              </p>
-            </div>
-          )}
-
-          {loading && (
-            <div style={{
-              border: '1px solid var(--border)',
-              borderRadius: '12px',
-              padding: '40px',
-              background: 'var(--card)',
-              minHeight: '420px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--dim)',
-              fontSize: '14px'
-            }}>
-              Generating your content idea...
-            </div>
-          )}
-
-          {result && !loading && (
-            <div style={{ border: '1px solid var(--border)', borderRadius: '12px', background: 'var(--card)' }}>
-              <ResultBlock label="Hook">{result.hook}</ResultBlock>
-              <ResultBlock label="Angle">{result.angle}</ResultBlock>
-              <ResultBlock label="Outline">
-                <ul style={{ paddingLeft: '16px', margin: 0 }}>
-                  {result.outline?.map((o, i) => (
-                    <li key={i} style={{ marginBottom: '4px' }}>{o}</li>
-                  ))}
-                </ul>
-              </ResultBlock>
-              <ResultBlock label="Caption">
-                {result.caption?.split('\n').map((line, i) => (
-                  <span key={i}>{line}<br /></span>
-                ))}
-              </ResultBlock>
-              <ResultBlock label="Tip">{result.tip}</ResultBlock>
-            </div>
-          )}
-        </div>
-      </div>
+      </main>
     </div>
-  )
+  );
 }
-
-export default ContentGenerator

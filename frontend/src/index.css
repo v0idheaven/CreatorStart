@@ -3,16 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --bg: #09090b;
-  --sb: #0f0f10;
-  --card: #111113;
-  --border: #1f1f22;
-  --border2: #27272a;
-  --text: #e4e4e7;
-  --muted: #71717a;
-  --dim: #3f3f46;
+  --bg: #0f0f0f;
+  --sb: #212121;
+  --card: #1f1f1f;
+  --border: #3d3d3d;
+  --border2: #484848;
+  --text: #e8eaed;
+  --muted: #aaaaaa;
+  --dim: #717171;
   --accent: #818cf8;
-  --accent-dark: #4f46e5;
+  --accent-dark: #554ee6;
 }
 
 .theme-yt {
@@ -28,15 +28,51 @@
   --accent-dark: #cc0000;
 }
 
+/* Instagram — same comfortable dark as YouTube, not pure black */
 .theme-ig {
-  --bg: #000000;
-  --sb: #000000;
-  --card: #1c1c1c;
-  --border: #262626;
-  --border2: #363636;
-  --text: #f5f5f5;
-  --muted: #a8a8a8;
-  --dim: #737373;
+  --bg: #0f0f0f;
+  --sb: #212121;
+  --card: #1f1f1f;
+  --border: #3d3d3d;
+  --border2: #484848;
+  --text: #e8eaed;
+  --muted: #aaaaaa;
+  --dim: #717171;
   --accent: #c13584;
   --accent-dark: #833ab4;
+}
+
+/* Fixed header fade — works across all themes */
+.fixed-header-fade::after {
+  content: "";
+  position: absolute;
+  bottom: -24px;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background: linear-gradient(to bottom, var(--bg), transparent);
+  pointer-events: none;
+}
+
+/* Dropdown item hover — pure CSS so it always resets correctly */
+.dropdown-item {
+  padding: 9px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text);
+  background: transparent;
+  transition: background 0.1s;
+}
+
+.dropdown-item:hover {
+  background: var(--border2) !important;
+}
+
+.dropdown-item.selected {
+  color: var(--accent);
+  background: var(--border);
+}
+
+.dropdown-item.selected:hover {
+  background: var(--border2) !important;
 }
