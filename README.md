@@ -1,61 +1,106 @@
 # CreatorStart
 
-A content planning platform for beginner YouTube and Instagram creators.
+CreatorStart is a content planning platform built for beginner YouTube and Instagram creators. It helps users organize their content, stay consistent, and plan growth with structured workflows.
+
+---
 
 ## Current Progress
 
-- ✅ Project setup — React + Vite + Tailwind CSS
-- ✅ Supabase integration — Auth + Database
-- ✅ Email/Password authentication
-- ✅ Platform selection — YouTube / Instagram / Both
-- ✅ Dynamic theme switching based on platform
-- ✅ Sidebar with hover expand/collapse
-- ✅ Protected routes
+* Frontend and backend scaffolded
+* Environment setup completed
+* Basic backend API structure (user and planner routes)
+* Health and status endpoints implemented
+
+---
 
 ## Tech Stack
 
-**Frontend:** React.js, Vite, Tailwind CSS  
-**Backend:** Node.js, Express.js  
-**Database & Auth:** Supabase (PostgreSQL + Auth)  
-**AI (planned):** Gemini API
+**Frontend**
+React (Vite), Tailwind CSS
+
+**Backend**
+Node.js, Express.js
+
+---
 
 ## Project Structure
-```
+
+```id="xq8m2l"
 CreatorStart/
-├── frontend/
-│   ├── src/
-│   │   ├── components/   # Sidebar
-│   │   ├── context/      # PlatformContext
-│   │   ├── pages/        # Auth, Dashboard, Planner, etc.
-│   │   ├── supabase.js
-│   │   └── App.jsx
-│   └── .env
 ├── backend/
-└── README.md
+│   └── src/
+│       ├── index.js
+│       └── routes/
+│           ├── user.routes.js
+│           └── planner.routes.js
+│
+├── frontend/
+│   └── src/
+│       ├── pages/
+│       ├── components/
+│       ├── context/
+│       └── App.jsx
 ```
 
-## Database Schema
+---
 
-**profiles** — id, name, platform, niche  
-**posts** — id, user_id, title, platform, day, status  
-**planner** — id, user_id, day, content, platform
+## API Endpoints
+
+| Method | Endpoint     | Description       |
+| ------ | ------------ | ----------------- |
+| GET    | /api/health  | Health check      |
+| GET    | /api/status  | Server status     |
+| GET    | /api/user/me | Fetch user data   |
+| GET    | /api/planner | Get planner data  |
+| POST   | /api/planner | Save planner data |
+
+---
 
 ## Getting Started
 
+### Backend
+
+```id="boc1hd"
+cd backend
+npm install
+npm run dev
+```
+
+Create a `.env` file:
+
+```id="dr5y9m"
+PORT=5000
+```
+
+---
+
 ### Frontend
-```bash
+
+```id="d1b4kw"
 cd frontend
 npm install
 npm run dev
 ```
 
-### Backend
-```bash
-cd backend
-npm run dev
+---
+
+## Environment Variables
+
+```id="ny6g8s"
+PORT=5000
 ```
 
-## Team
+---
 
-- Varun Yadav
-- Om Manoj Hire
+## Next Steps
+
+* Implement planner UI and connect with backend
+* Add database integration
+* Build dashboard and content generation features
+* Improve error handling and API validation
+
+---
+
+## Author
+
+Varun Yadav
