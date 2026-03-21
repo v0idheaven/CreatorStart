@@ -1,14 +1,17 @@
 # CreatorStart
 
-A content planning platform designed for beginner YouTube and Instagram creators who want to plan their content, stay consistent, and grow their channel from scratch.
+CreatorStart is a content planning platform built for beginner YouTube and Instagram creators. It helps users organize their content, stay consistent, and plan growth with structured workflows.
 
-## Features
+---
 
-- Platform selection (YouTube / Instagram)
-- Niche-based content guidance dashboard
-- Content generator with structured content flow
-- 30-day content planner
-- Firebase authentication and data storage
+## Current Progress
+
+* Frontend and backend scaffolded
+* Environment setup completed
+* Basic backend API structure (user and planner routes)
+* Health and status endpoints implemented
+
+---
 
 ## Tech Stack
 
@@ -18,30 +21,65 @@ A content planning platform designed for beginner YouTube and Instagram creators
 **AI (planned):** OpenAI / Gemini API
 
 ## Project Structure
-```
+
+```id="xq8m2l"
 CreatorStart/
-├── frontend/   # React + Vite + Tailwind
-├── backend/    # Node.js + Express
-└── README.md
+├── backend/
+│   └── src/
+│       ├── index.js
+│       └── routes/
+│           ├── user.routes.js
+│           └── planner.routes.js
+│
+├── frontend/
+│   └── src/
+│       ├── pages/
+│       ├── components/
+│       ├── context/
+│       └── App.jsx
 ```
+
+---
+
+## API Endpoints
+
+| Method | Endpoint     | Description       |
+| ------ | ------------ | ----------------- |
+| GET    | /api/health  | Health check      |
+| GET    | /api/status  | Server status     |
+| GET    | /api/user/me | Fetch user data   |
+| GET    | /api/planner | Get planner data  |
+| POST   | /api/planner | Save planner data |
+
+---
 
 ## Getting Started
 
 ### Backend
-```bash
+
+```id="boc1hd"
 cd backend
 npm install
 npm run dev
 ```
 
+Create a `.env` file:
+
+```id="dr5y9m"
+PORT=5000
+```
+
+---
+
 ### Frontend
-```bash
+
+```id="d1b4kw"
 cd frontend
 npm install
 npm run dev
 ```
 
-## Team
+---
 
 - Varun Yadav
 - Om Manoj Hire
