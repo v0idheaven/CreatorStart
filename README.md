@@ -81,5 +81,7 @@ npm run dev
 
 ---
 
+## Authors
+
 - Varun Yadav
 - Om Manoj Hire
