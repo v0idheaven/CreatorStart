@@ -101,6 +101,7 @@ PORT=5000
 
 ---
 
-## Author
+## Authors
 
-Varun Yadav
+Varun Yadav  
+Om Manoj Hire
