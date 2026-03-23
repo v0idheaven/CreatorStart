@@ -62,13 +62,6 @@ cd backend
 npm install
 npm run dev
 ```
-
-Create a `.env` file:
-
-```id="dr5y9m"
-PORT=5000
-```
-
 ---
 
 ### Frontend
@@ -80,6 +73,8 @@ npm run dev
 ```
 
 ---
+
+## Authors
 
 - Varun Yadav
 - Om Manoj Hire
