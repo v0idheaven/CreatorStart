@@ -19,7 +19,7 @@ export default function PlatformSelect() {
         <p style={{ fontSize: "13px", color: "var(--muted)", margin: "0 0 24px" }}>Choose your platform. You can change this later.</p>
 
         <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-          {/* YouTube */}
+
           <div onClick={() => setSelected("youtube")} style={{
             flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
             gap: "8px", padding: "20px 12px", borderRadius: "12px",
@@ -32,7 +32,6 @@ export default function PlatformSelect() {
             <span style={{ fontSize: "11px", color: "var(--dim)", textAlign: "center", lineHeight: "1.4" }}>Plan & grow your channel</span>
           </div>
 
-          {/* Instagram */}
           <div onClick={() => setSelected("instagram")} style={{
             flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
             gap: "8px", padding: "20px 12px", borderRadius: "12px",
@@ -46,7 +45,6 @@ export default function PlatformSelect() {
           </div>
         </div>
 
-        {/* Both */}
         <div onClick={() => setSelected("both")} style={{
           display: "flex", alignItems: "center", gap: "14px",
           padding: "16px 18px", borderRadius: "12px",

@@ -77,9 +77,9 @@ const ResultCard = ({ label, content }) => (
 
 export default function ContentGenerator() {
   const [format, setFormat] = useState(""); const [customFormat, setCustomFormat] = useState("");
-  const [niche, setNiche] = useState("");   const [customNiche, setCustomNiche] = useState("");
-  const [goal, setGoal] = useState("");     const [customGoal, setCustomGoal] = useState("");
-  const [tone, setTone] = useState("");     const [customTone, setCustomTone] = useState("");
+  const [niche, setNiche] = useState(""); const [customNiche, setCustomNiche] = useState("");
+  const [goal, setGoal] = useState("");  const [customGoal, setCustomGoal] = useState("");
+  const [tone, setTone] = useState(""); const [customTone, setCustomTone] = useState("");
   const [topic, setTopic] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -88,9 +88,9 @@ export default function ContentGenerator() {
   const handleGenerate = () => {
     if (!format || !niche || !goal || !tone) { setError("Please fill all fields before generating."); return; }
     if (format === "Other" && !customFormat.trim()) { setError("Please enter a custom format."); return; }
-    if (niche  === "Other" && !customNiche.trim())  { setError("Please enter a custom niche.");  return; }
-    if (goal   === "Other" && !customGoal.trim())   { setError("Please enter a custom goal.");   return; }
-    if (tone   === "Other" && !customTone.trim())   { setError("Please enter a custom tone.");   return; }
+    if (niche === "Other" && !customNiche.trim()) { setError("Please enter a custom niche.");  return; }
+    if (goal === "Other" && !customGoal.trim()) { setError("Please enter a custom goal.");   return; }
+    if (tone === "Other" && !customTone.trim()) { setError("Please enter a custom tone.");   return; }
 
     setError(""); setLoading(true); setResult(null);
     setTimeout(() => { setResult(DUMMY_RESULT); setLoading(false); }, 1500);

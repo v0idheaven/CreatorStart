@@ -52,7 +52,6 @@ export default function Dashboard() {
       <Sidebar />
       <main style={{ marginLeft: "72px", flex: 1, padding: "40px", maxWidth: "1100px" }}>
 
-        {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "36px" }}>
           <div>
             <p style={{ fontSize: "11px", color: "var(--dim)", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 8px" }}>Dashboard</p>
@@ -84,14 +83,13 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Stat Cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", marginBottom: "20px" }}>
           {statCards.map(({ label, value, icon: Icon, color }) => (
             <div key={label} style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "20px 20px 16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                 <span style={{ fontSize: "12px", color: "var(--muted)", fontWeight: "500" }}>{label}</span>
                 <div style={{ width: "30px", height: "30px", borderRadius: "8px", background: color + "20", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Icon size={14} color={color} strokeWidth={2} />
+                  {Icon && <Icon size={14} color={color} strokeWidth={2} />}
                 </div>
               </div>
               <p style={{ fontSize: "30px", fontWeight: "700", color: "var(--text)", margin: "0 0 6px", lineHeight: 1 }}>{value}</p>
@@ -103,7 +101,6 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Graph + Planner */}
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "12px", marginBottom: "20px" }}>
           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "20px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
@@ -147,28 +144,29 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Quick Actions */}
         <div style={{ marginBottom: "20px" }}>
           <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", margin: "0 0 12px" }}>Quick Actions</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
-            {quickActions.map(({ icon: Icon, title, desc, href }) => (
-              <div key={title} onClick={() => navigate(href)}
-                onMouseEnter={() => setHoveredAction(title)} onMouseLeave={() => setHoveredAction(null)}
-                style={{
-                  background: "var(--card)", border: `1px solid ${hoveredAction === title ? "#818cf8" : "var(--border)"}`,
-                  borderRadius: "12px", padding: "20px", cursor: "pointer", transition: "border-color 0.15s",
-                }}>
-                <div style={{ width: "34px", height: "34px", borderRadius: "9px", background: "#818cf815", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "12px" }}>
-                  <Icon size={16} color="#818cf8" strokeWidth={2} />
+            {quickActions.map(({ icon, title, desc, href }) => {
+              const IconComponent = icon;
+              return (
+                <div key={title} onClick={() => navigate(href)}
+                  onMouseEnter={() => setHoveredAction(title)} onMouseLeave={() => setHoveredAction(null)}
+                  style={{
+                    background: "var(--card)", border: `1px solid ${hoveredAction === title ? "#818cf8" : "var(--border)"}`,
+                    borderRadius: "12px", padding: "20px", cursor: "pointer", transition: "border-color 0.15s",
+                  }}>
+                  <div style={{ width: "34px", height: "34px", borderRadius: "9px", background: "#818cf815", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "12px" }}>
+                    {IconComponent && <IconComponent size={16} color="#818cf8" strokeWidth={2} />}
+                  </div>
+                  <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", margin: "0 0 5px" }}>{title}</p>
+                  <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0, lineHeight: "1.6" }}>{desc}</p>
                 </div>
-                <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", margin: "0 0 5px" }}>{title}</p>
-                <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0, lineHeight: "1.6" }}>{desc}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
-        {/* Recent Posts */}
         <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", overflow: "hidden" }}>
           <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>Recent Posts</span>

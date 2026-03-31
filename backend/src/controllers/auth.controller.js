@@ -1,5 +1,5 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { ApiError } from "../utils/ApiError.js";
+import ApiError from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -179,16 +179,6 @@ const logoutUser = asyncHandler( async(req, res) => {
 
 })
 
-const getCurrentUser = asyncHandler(async (req, res) => {
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            req.user,
-            "Current user fetched successfully"
-        )
-    )
-})
-
 const refreshAccessToken = asyncHandler( async(req, res) => {
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
@@ -237,6 +227,23 @@ const refreshAccessToken = asyncHandler( async(req, res) => {
         throw new ApiError(401, "Invalid refresh token")
     }
 
+})
+
+const getCurrentUser = asyncHandler( async(req, res) => {
+    const user = await User.findById(req.user._id).select("-password -refreshToken")
+    if (!user) {
+        throw new ApiError(404, "User not found")
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            { user },
+            "Current user fetched successfully"
+        )
+    )
 })
 
 export { registerUser, loginUser, logoutUser, refreshAccessToken, getCurrentUser }
