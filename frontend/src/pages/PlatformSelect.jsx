@@ -79,7 +79,12 @@ export default function PlatformSelect() {
         </div>
 
         <button
-          onClick={() => selected && navigate("/dashboard")}
+          onClick={() => {
+            if (selected) {
+              localStorage.setItem("platform", selected)
+              navigate("/dashboard")
+            }
+          }}
           disabled={!selected}
           style={{
             width: "100%",
