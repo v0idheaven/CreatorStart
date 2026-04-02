@@ -5,6 +5,7 @@ import PlatformSelect from './pages/PlatformSelect'
 import Dashboard from './pages/Dashboard'
 import ContentGenerator from './pages/ContentGenerator'
 import Planner from './pages/Planner'
+import Settings from './pages/Settings'
 
 const App = () => {
   return (
@@ -16,6 +17,7 @@ const App = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/generator" element={<ContentGenerator />} />
         <Route path="/planner" element={<Planner />} />
+        <Route path="/settings" element={<Settings />} />
       </Routes>
     </BrowserRouter>
   )
