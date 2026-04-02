@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import "./Auth.css"
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true)
@@ -9,23 +10,23 @@ export default function Auth() {
   const navigate = useNavigate()
 
   function handleSubmit() {
-    navigate(isLogin ? "/dashboard" : "/select-platform")
+    navigate("/select-platform")
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+    <div className="auth-page">
 
-      <div style={{ marginBottom: "24px" }}>
-        <span style={{ fontSize: "20px", fontWeight: "700", color: "var(--text)" }}>
-          Creator<span style={{ color: "var(--accent)" }}>Start</span>
+      <div className="auth-logo">
+        <span className="auth-logo-text">
+          Creator<span className="auth-logo-accent">Start</span>
         </span>
       </div>
 
-      <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "16px", padding: "32px 28px", width: "100%", maxWidth: "400px" }}>
-        <h1 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "600", margin: "0 0 4px" }}>
+      <div className="auth-card">
+        <h1 className="auth-title">
           {isLogin ? "Welcome back" : "Create account"}
         </h1>
-        <p style={{ color: "var(--muted)", fontSize: "13px", margin: "0 0 24px" }}>
+        <p className="auth-subtitle">
           {isLogin ? "Sign in to CreatorStart" : "Start your creator journey"}
         </p>
 
@@ -58,11 +59,11 @@ export default function Auth() {
           {isLogin ? "Sign In" : "Sign Up"}
         </button>
 
-        <p style={{ color: "var(--muted)", fontSize: "13px", textAlign: "center", marginTop: "16px" }}>
+        <p className="auth-switch">
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <span
             onClick={() => setIsLogin(!isLogin)}
-            style={{ color: "var(--accent)", cursor: "pointer", fontWeight: "500" }}
+            className="auth-switch-link"
           >
             {isLogin ? "Sign Up" : "Sign In"}
           </span>
@@ -70,7 +71,7 @@ export default function Auth() {
 
         <div className="auth-divider">
           <div className="auth-divider-line" />
-          <span style={{ fontSize: "12px", color: "var(--dim)" }}>or</span>
+          <span className="auth-divider-text">or</span>
           <div className="auth-divider-line" />
         </div>
 
@@ -85,7 +86,7 @@ export default function Auth() {
         </button>
       </div>
 
-      <p style={{ marginTop: "20px", fontSize: "12px", color: "var(--dim)" }}>
+      <p className="auth-legal">
         By continuing you agree to our Terms & Privacy Policy
       </p>
     </div>
