@@ -1,22 +1,17 @@
-import express from 'express';
+import { Router } from "express"
+import {
+    getPlannerEntries,
+    addPlannerEntry,
+    updatePlannerEntry,
+    deletePlannerEntry
+} from "../controllers/planner.controller.js"
+import { verifyJWT } from "../middleware/auth.middleware.js"
 
-const router = express.Router();
+const router = Router()
 
-// GET /api/planner
-router.get('/', (req, res) => {
-  res.json({
-    message: 'Planner fetched',
-  });
-});
+router.use(verifyJWT)
 
-// POST /api/planner
-router.post('/', (req, res) => {
-  const data = req.body;
+router.route("/").get(getPlannerEntries).post(addPlannerEntry)
+router.route("/:id").patch(updatePlannerEntry).delete(deletePlannerEntry)
 
-  res.json({
-    message: 'Planner saved',
-    data,
-  });
-});
-
-export default router;
+export default router
