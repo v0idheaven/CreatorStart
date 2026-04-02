@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
 import { Zap, CalendarDays, FileText, TrendingUp, Users, Eye, PlaySquare, Timer } from "lucide-react"
 import Sidebar from "../components/Sidebar"
+import StreakCard from "../components/StreakCard"
 
 const viewData = [
   { day: "Mon", views: 1200 }, { day: "Tue", views: 980 },
@@ -10,7 +11,6 @@ const viewData = [
   { day: "Fri", views: 2400 }, { day: "Sat", views: 3100 }, { day: "Sun", views: 2700 },
 ]
 
-const plannerFilled = [1, 3, 5, 7, 9, 12, 15, 18, 20, 22, 25, 28]
 
 const videos = [
   { id: 1, title: "How to grow on YouTube in 2025", type: "Video", views: 12400, likes: 843, comments: 91, duration: "14:32", status: "done" },
@@ -95,23 +95,7 @@ export default function DashboardYT() {
             </ResponsiveContainer>
           </div>
 
-          <div className="card" style={{ padding: "20px" }}>
-            <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", margin: "0 0 3px" }}>30-Day Planner</p>
-            <p style={{ fontSize: "11px", color: "var(--dim)", margin: "0 0 16px" }}>{plannerFilled.length} / 30 days planned</p>
-            <div className="planner-mini-grid">
-              {Array.from({ length: 30 }, (_, i) => {
-                const day = i + 1
-                const has = plannerFilled.includes(day)
-                return (
-                  <div key={day} className="planner-day" onClick={() => navigate("/planner")}
-                    style={{ background: has ? YT : "var(--border)", opacity: has ? 1 : 0.3, color: has ? "#fff" : "var(--dim)" }}>
-                    {day}
-                  </div>
-                )
-              })}
-            </div>
-            <button className="planner-open-btn" onClick={() => navigate("/planner")}>Open Planner →</button>
-          </div>
+          <StreakCard accent={YT} platform="youtube" />
         </div>
 
         <div style={{ marginBottom: "20px" }}>

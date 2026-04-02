@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
 import { Zap, CalendarDays, FileText, TrendingUp, Clock, CheckCheck, AlignLeft, Users, Eye, PlaySquare, Timer, Heart, MessageCircle, Image } from "lucide-react"
 import Sidebar from "../components/Sidebar"
+import StreakCard from "../components/StreakCard"
 
-const plannerFilled = [1, 3, 5, 7, 9, 12, 15, 18, 20, 22, 25, 28]
 
 const DATA = {
   overall: {
@@ -190,23 +190,7 @@ export default function DashboardBoth() {
             </ResponsiveContainer>
           </div>
 
-          <div className="card" style={{ padding: "20px" }}>
-            <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", margin: "0 0 3px" }}>30-Day Planner</p>
-            <p style={{ fontSize: "11px", color: "var(--dim)", margin: "0 0 16px" }}>{plannerFilled.length} / 30 days planned</p>
-            <div className="planner-mini-grid">
-              {Array.from({ length: 30 }, (_, i) => {
-                const day = i + 1
-                const has = plannerFilled.includes(day)
-                return (
-                  <div key={day} className="planner-day" onClick={() => navigate("/planner")}
-                    style={{ background: has ? accent : "var(--border)", opacity: has ? 1 : 0.3, color: has ? "#fff" : "var(--dim)" }}>
-                    {day}
-                  </div>
-                )
-              })}
-            </div>
-            <button className="planner-open-btn" onClick={() => navigate("/planner")}>Open Planner →</button>
-          </div>
+          <StreakCard accent={accent} platform="both" />
         </div>
 
         <div style={{ marginBottom: "20px" }}>

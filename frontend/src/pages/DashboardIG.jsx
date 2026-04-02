@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
 import { Zap, CalendarDays, FileText, TrendingUp, Users, Eye, Heart, MessageCircle, Image } from "lucide-react"
 import Sidebar from "../components/Sidebar"
+import StreakCard from "../components/StreakCard"
 
 const reachData = [
   { day: "Mon", reach: 3200 }, { day: "Tue", reach: 2800 },
@@ -10,7 +11,6 @@ const reachData = [
   { day: "Fri", reach: 6200 }, { day: "Sat", reach: 8900 }, { day: "Sun", reach: 7100 },
 ]
 
-const plannerFilled = [1, 3, 5, 7, 9, 12, 15, 18, 20, 22, 25, 28]
 
 const posts = [
   { id: 1, title: "Behind the scenes reel", type: "Reel", likes: 2400, comments: 187, reach: 31000, status: "done" },
@@ -95,23 +95,7 @@ export default function DashboardIG() {
             </ResponsiveContainer>
           </div>
 
-          <div className="card" style={{ padding: "20px" }}>
-            <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", margin: "0 0 3px" }}>30-Day Planner</p>
-            <p style={{ fontSize: "11px", color: "var(--dim)", margin: "0 0 16px" }}>{plannerFilled.length} / 30 days planned</p>
-            <div className="planner-mini-grid">
-              {Array.from({ length: 30 }, (_, i) => {
-                const day = i + 1
-                const has = plannerFilled.includes(day)
-                return (
-                  <div key={day} className="planner-day" onClick={() => navigate("/planner")}
-                    style={{ background: has ? IG : "var(--border)", opacity: has ? 1 : 0.3, color: has ? "#fff" : "var(--dim)" }}>
-                    {day}
-                  </div>
-                )
-              })}
-            </div>
-            <button className="planner-open-btn" onClick={() => navigate("/planner")}>Open Planner →</button>
-          </div>
+          <StreakCard accent={IG} platform="instagram" />
         </div>
 
         <div style={{ marginBottom: "20px" }}>
