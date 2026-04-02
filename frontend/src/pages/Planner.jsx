@@ -411,6 +411,16 @@ export default function Planner() {
   }
 
   function toggleDone(id) {
+    const entry = entries.find(e => e.id === id)
+    if (!entry) return
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const entryDate = entry.date ? new Date(entry.date) : null
+    if (entryDate) entryDate.setHours(0, 0, 0, 0)
+
+    if (entryDate && entryDate > today) return
+
     const updated = entries.map(e => e.id === id ? { ...e, isCompleted: !e.isCompleted } : e)
     setEntries(updated)
     savePlan(updated, planInfo)
@@ -577,6 +587,11 @@ export default function Planner() {
                       {entry.note && !entry.isCompleted && (
                         <div style={{ position: "absolute", bottom: "5px", right: "5px", width: "5px", height: "5px", borderRadius: "50%", background: "#f59e0b" }} />
                       )}
+                      {entry.extraPosts?.length > 0 && (
+                        <div style={{ position: "absolute", top: "5px", left: "5px", fontSize: "8px", fontWeight: "700", color: accent, background: accent + "20", padding: "1px 4px", borderRadius: "3px" }}>
+                          +{entry.extraPosts.length}
+                        </div>
+                      )}
                       {isEmpty && planInfo?.freq !== "daily" && (
                         <button
                           onClick={e => { e.stopPropagation(); setAddDayModal(entry); setAddDayContent("") }}
@@ -607,10 +622,22 @@ export default function Planner() {
               {activeEntry.isCompleted && <span style={{ fontSize: "11px", color: "#4ade80", background: "#4ade8015", padding: "2px 8px", borderRadius: "4px", fontWeight: "600" }}>✓ Done</span>}
             </div>
             <div className="planner-detail-head-right">
-              <button onClick={() => toggleDone(activeEntry.id)}
-                style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "7px", border: `1px solid ${activeEntry.isCompleted ? "#4ade8040" : "#4ade8030"}`, background: "transparent", color: "#4ade80", fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>
-                <Check size={11} />{activeEntry.isCompleted ? "Undo" : "Mark done"}
-              </button>
+              {(() => {
+                const today = new Date(); today.setHours(0,0,0,0)
+                const entryDate = activeEntry.date ? new Date(activeEntry.date) : null
+                if (entryDate) entryDate.setHours(0,0,0,0)
+                const isFuture = entryDate && entryDate > today
+                return isFuture ? (
+                  <span style={{ fontSize: "11px", color: "var(--dim)", padding: "6px 12px", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent" }}>
+                    Available on {activeEntry.dateLabel}
+                  </span>
+                ) : (
+                  <button onClick={() => toggleDone(activeEntry.id)}
+                    style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "7px", border: `1px solid ${activeEntry.isCompleted ? "#4ade8040" : "#4ade8030"}`, background: "transparent", color: "#4ade80", fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>
+                    <Check size={11} />{activeEntry.isCompleted ? "Undo" : "Mark done"}
+                  </button>
+                )
+              })()}
               <button onClick={() => openEdit(activeEntry)}
                 style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "7px", border: `1px solid ${accent}30`, background: "transparent", color: accent, fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>
                 <Pencil size={11} />Edit
@@ -621,7 +648,31 @@ export default function Planner() {
             </div>
           </div>
           <div className="planner-detail-body">
-            <p className="planner-detail-content">{activeEntry.content}</p>
+            <div style={{ marginBottom: "12px" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
+                <p className="planner-detail-content" style={{ margin: 0, flex: 1 }}>{activeEntry.content}</p>
+              </div>
+              {activeEntry.extraPosts?.length > 0 && (
+                <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {activeEntry.extraPosts.map((post, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "8px", padding: "8px 12px", background: "var(--bg)", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                      <span style={{ fontSize: "10px", fontWeight: "700", color: accent, background: accent + "15", padding: "1px 6px", borderRadius: "4px", flexShrink: 0, marginTop: "1px" }}>#{i + 2}</span>
+                      <p style={{ fontSize: "13px", color: "var(--text)", margin: 0, flex: 1, lineHeight: "1.5" }}>{post}</p>
+                      <button onClick={() => {
+                        const updated = entries.map(e => e.id === activeEntry.id ? { ...e, extraPosts: e.extraPosts.filter((_, j) => j !== i) } : e)
+                        setEntries(updated); savePlan(updated, planInfo)
+                      }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--dim)", display: "flex", flexShrink: 0, padding: "2px" }}>
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button onClick={() => { setAddDayModal(activeEntry); setAddDayContent("") }}
+                style={{ marginTop: "10px", display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "7px", border: `1px solid ${accent}30`, background: "transparent", color: accent, fontSize: "12px", cursor: "pointer" }}>
+                <Plus size={12} /> Add another post for this day
+              </button>
+            </div>
             {aiLoading && (
               <div className="planner-loading-row">
                 <div className="spinner spinner-sm" style={{ borderTopColor: accent }} />
@@ -752,7 +803,11 @@ export default function Planner() {
               </button>
               <button onClick={() => {
                 if (!addDayContent.trim()) return
-                const updated = entries.map(e => e.day === addDayModal.day ? { ...e, content: addDayContent.trim(), active: true } : e)
+                const updated = entries.map(e => {
+                  if (e.day !== addDayModal.day) return e
+                  if (!e.content) return { ...e, content: addDayContent.trim(), active: true }
+                  return { ...e, extraPosts: [...(e.extraPosts || []), addDayContent.trim()] }
+                })
                 setEntries(updated)
                 savePlan(updated, planInfo)
                 setAddDayModal(null)

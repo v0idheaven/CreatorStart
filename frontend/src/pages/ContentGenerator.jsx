@@ -238,7 +238,8 @@ export default function ContentGenerator() {
             <p style={{ fontSize: "12px", color: "var(--dim)", margin: "0 0 16px" }}>Pick any day — empty days will be filled, filled days will be replaced.</p>
 
             {(() => {
-              const saved = JSON.parse(localStorage.getItem("planner_data") || "null")
+              const _plat = localStorage.getItem("platform") || "both"
+              const saved = JSON.parse(localStorage.getItem(`planner_data_${_plat}`) || "null")
               if (!saved) return (
                 <div style={{ textAlign: "center", padding: "16px 0" }}>
                   <p style={{ fontSize: "13px", color: "var(--dim)", margin: "0 0 12px" }}>No planner found. Create a plan first.</p>
@@ -262,7 +263,7 @@ export default function ContentGenerator() {
                           onClick={() => {
                             const title = result.title || result.hook || result.caption || "Content idea"
                             const updated = saved.entries.map(en => en.day === e.day ? { ...en, content: title, active: true } : en)
-                            localStorage.setItem("planner_data", JSON.stringify({ ...saved, entries: updated }))
+                            localStorage.setItem(`planner_data_${_plat}`, JSON.stringify({ ...saved, entries: updated }))
                             setPlannerSaved(true)
                             setTimeout(() => { setShowPlannerModal(false); setPlannerSaved(false) }, 1200)
                           }}
