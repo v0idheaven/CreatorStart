@@ -10,13 +10,40 @@ const COLORS = { youtube: "#ff4444", instagram: "#c13584", both: "#818cf8" }
 const STATUS_COLORS = { Idea: "#818cf8", Scripting: "#f59e0b", Filming: "#f97316", Editing: "#06b6d4", Published: "#4ade80" }
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
 
-function IGConnectView({ apiBase }) {
+function IGConnectView({ apiBase, igStats }) {
   const [isProfessional, setIsProfessional] = useState(false)
   const [isLinked, setIsLinked] = useState(false)
   const canConnect = isProfessional && isLinked
-
-  // check for error from OAuth callback
   const urlError = new URLSearchParams(window.location.search).get("ig_error")
+
+  // if already connected, show stats
+  if (igStats) {
+    return (
+      <div>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "20px" }}>
+          <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "linear-gradient(135deg, #c13584, #f56040)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Instagram size={22} color="#fff" />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: "16px", fontWeight: "700", color: "var(--text)", margin: "0 0 2px" }}>@{igStats.username}</p>
+            {igStats.bio && <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>{igStats.bio}</p>}
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", borderRadius: "10px", overflow: "hidden", border: "1px solid var(--border)" }}>
+          {[
+            { label: "Followers", value: Number(igStats.followers || 0).toLocaleString() },
+            { label: "Following", value: Number(igStats.following || 0).toLocaleString() },
+            { label: "Posts", value: Number(igStats.posts || 0).toLocaleString() },
+          ].map((s, i) => (
+            <div key={s.label} style={{ padding: "18px 20px", background: "var(--card)", borderRight: i < 2 ? "1px solid var(--border)" : "none" }}>
+              <p style={{ fontSize: "24px", fontWeight: "800", color: "#c13584", margin: "0 0 4px", letterSpacing: "-1px" }}>{s.value}</p>
+              <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ maxWidth: "420px", margin: "40px auto", display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -739,7 +766,7 @@ export default function Analytics() {
           )}
 
           {tab === "instagram" && (
-            <IGConnectView apiBase={API_BASE} />
+            <IGConnectView apiBase={API_BASE} igStats={storedUser.instagramStats || null} />
           )}
 
         </div>
