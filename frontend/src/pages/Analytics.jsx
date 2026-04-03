@@ -694,11 +694,17 @@ export default function Analytics() {
           )}
 
           {tab === "instagram" && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "60px 0", gap: "14px" }}>
-              <Instagram size={28} color="#c13584" />
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "60px 0", gap: "16px" }}>
+              <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: "linear-gradient(135deg, #c13584, #f56040)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Instagram size={24} color="#fff" />
+              </div>
               <div style={{ textAlign: "center" }}>
-                <p style={{ fontSize: "15px", fontWeight: "600", color: "var(--text)", margin: "0 0 6px" }}>Instagram analytics</p>
-                <p style={{ fontSize: "13px", color: "var(--dim)", margin: 0 }}>Available after deployment.</p>
+                <p style={{ fontSize: "15px", fontWeight: "600", color: "var(--text)", margin: "0 0 6px" }}>Connect Instagram</p>
+                <p style={{ fontSize: "13px", color: "var(--dim)", margin: "0 0 20px" }}>See followers, posts and engagement from your Instagram account.</p>
+                <a href={`${import.meta.env.VITE_API_URL || ""}/api/v1/auth/instagram`}
+                  style={{ padding: "9px 20px", borderRadius: "9px", background: "linear-gradient(135deg, #c13584, #f56040)", color: "#fff", fontSize: "13px", fontWeight: "600", textDecoration: "none" }}>
+                  Connect with Instagram
+                </a>
               </div>
             </div>
           )}
