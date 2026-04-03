@@ -11,38 +11,9 @@ const STATUS_COLORS = { Idea: "#818cf8", Scripting: "#f59e0b", Filming: "#f97316
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
 
 function IGConnectView({ apiBase }) {
-  const [username, setUsername] = useState("")
   const [isProfessional, setIsProfessional] = useState(false)
   const [isLinked, setIsLinked] = useState(false)
-  const [verifying, setVerifying] = useState(false)
-  const [verified, setVerified] = useState(false)
-  const [verifyError, setVerifyError] = useState("")
-  const canVerify = username.trim().length > 0 && isProfessional && isLinked
-
-  async function handleVerify() {
-    setVerifying(true)
-    setVerifyError("")
-    setVerified(false)
-    const clean = username.trim()
-    if (!clean || clean.length > 30 || /\s/.test(clean)) {
-      setVerifyError("Enter a valid Instagram username.")
-      setVerifying(false)
-      return
-    }
-    try {
-      const res = await fetch(`${apiBase}/api/v1/auth/instagram/check/${clean}`)
-      const data = await res.json()
-      if (data?.data?.exists === false) {
-        setVerifyError(`@${clean} not found on Instagram. Check the username.`)
-      } else {
-        setVerified(true)
-      }
-    } catch {
-      // network error — allow anyway
-      setVerified(true)
-    }
-    setVerifying(false)
-  }
+  const canConnect = isProfessional && isLinked
 
   return (
     <div style={{ maxWidth: "420px", margin: "40px auto", display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -56,23 +27,10 @@ function IGConnectView({ apiBase }) {
         </div>
       </div>
 
-      <div>
-        <label style={{ fontSize: "12px", color: "var(--muted)", display: "block", marginBottom: "6px" }}>Your Instagram username</label>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <input
-            className="input-sm"
-            value={username}
-            onChange={e => { setUsername(e.target.value.replace("@", "")); setVerified(false); setVerifyError("") }}
-            placeholder="yourhandle"
-            style={{ flex: 1, boxSizing: "border-box" }}
-          />
-        </div>
-      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>Before connecting, confirm both:</p>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>Before connecting, confirm:</p>
-
-        <div onClick={() => { setIsProfessional(p => !p); setVerified(false) }}
+        <div onClick={() => setIsProfessional(p => !p)}
           style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px", borderRadius: "8px", border: `1px solid ${isProfessional ? "#c13584" : "var(--border)"}`, background: isProfessional ? "#c1358408" : "transparent", transition: "all 0.15s" }}>
           <div style={{ width: "18px", height: "18px", borderRadius: "4px", border: `2px solid ${isProfessional ? "#c13584" : "var(--border2)"}`, background: isProfessional ? "#c13584" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
             {isProfessional && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
@@ -83,7 +41,7 @@ function IGConnectView({ apiBase }) {
           </div>
         </div>
 
-        <div onClick={() => { setIsLinked(p => !p); setVerified(false) }}
+        <div onClick={() => setIsLinked(p => !p)}
           style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px", borderRadius: "8px", border: `1px solid ${isLinked ? "#c13584" : "var(--border)"}`, background: isLinked ? "#c1358408" : "transparent", transition: "all 0.15s" }}>
           <div style={{ width: "18px", height: "18px", borderRadius: "4px", border: `2px solid ${isLinked ? "#c13584" : "var(--border2)"}`, background: isLinked ? "#c13584" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
             {isLinked && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
@@ -95,25 +53,17 @@ function IGConnectView({ apiBase }) {
         </div>
       </div>
 
-      {verifyError && <p style={{ fontSize: "12px", color: "#f87171", margin: 0 }}>{verifyError}</p>}
+      <a href={canConnect ? `${apiBase}/api/v1/auth/instagram` : undefined}
+        onClick={e => { if (!canConnect) e.preventDefault() }}
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px", borderRadius: "10px", background: canConnect ? "linear-gradient(135deg, #c13584, #f56040)" : "var(--border)", color: canConnect ? "#fff" : "var(--dim)", fontSize: "13px", fontWeight: "600", textDecoration: "none", cursor: canConnect ? "pointer" : "not-allowed", transition: "all 0.15s" }}>
+        <Instagram size={15} />
+        Connect Instagram
+      </a>
 
-      {!verified ? (
-        <button onClick={handleVerify} disabled={!canVerify || verifying}
-          style={{ padding: "11px", borderRadius: "10px", border: "none", background: canVerify ? "#c13584" : "var(--border)", color: canVerify ? "#fff" : "var(--dim)", fontSize: "13px", fontWeight: "600", cursor: canVerify ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-          {verifying ? <><div style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Verifying...</> : "Verify & Continue"}
-        </button>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderRadius: "8px", background: "#4ade8015", border: "1px solid #4ade8030" }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="7" fill="#4ade80"/><path d="M4 7L6 9L10 5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            <span style={{ fontSize: "12px", color: "#4ade80", fontWeight: "600" }}>@{username} — ready to connect</span>
-          </div>
-          <a href={`${apiBase}/api/v1/auth/instagram`}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px", borderRadius: "10px", background: "linear-gradient(135deg, #c13584, #f56040)", color: "#fff", fontSize: "13px", fontWeight: "600", textDecoration: "none" }}>
-            <Instagram size={15} />
-            Connect Instagram
-          </a>
-        </div>
+      {!canConnect && (
+        <p style={{ fontSize: "11px", color: "var(--dim)", textAlign: "center", margin: 0 }}>
+          Check both boxes above to continue
+        </p>
       )}
     </div>
   )
