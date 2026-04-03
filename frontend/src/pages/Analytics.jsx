@@ -23,16 +23,16 @@ function IGConnectView({ apiBase }) {
     setVerifying(true)
     setVerifyError("")
     setVerified(false)
-    try {
-      // check if username exists via Instagram oEmbed (public, no auth needed)
-      const res = await fetch(`https://graph.facebook.com/v19.0/instagram_oembed?url=https://www.instagram.com/${username.trim()}/&access_token=${apiBase ? "check" : "check"}`)
-      // oEmbed needs token — use a simple fetch to instagram.com instead
-      const checkRes = await fetch(`https://www.instagram.com/${username.trim()}/?__a=1&__d=dis`, { mode: "no-cors" })
-      // no-cors means we can't read response but if it doesn't throw, username likely exists
-      setVerified(true)
-    } catch {
-      setVerifyError("Could not verify username. Please check and try again.")
+    // We can't verify Instagram account type without OAuth
+    // Just validate that username looks valid (no spaces, reasonable length)
+    await new Promise(r => setTimeout(r, 800)) // small delay for UX
+    const clean = username.trim()
+    if (clean.length < 1 || clean.length > 30 || /\s/.test(clean)) {
+      setVerifyError("Please enter a valid Instagram username.")
+      setVerifying(false)
+      return
     }
+    setVerified(true)
     setVerifying(false)
   }
 
@@ -98,7 +98,7 @@ function IGConnectView({ apiBase }) {
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderRadius: "8px", background: "#4ade8015", border: "1px solid #4ade8030" }}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="7" fill="#4ade80"/><path d="M4 7L6 9L10 5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            <span style={{ fontSize: "12px", color: "#4ade80", fontWeight: "600" }}>@{username} verified — ready to connect</span>
+            <span style={{ fontSize: "12px", color: "#4ade80", fontWeight: "600" }}>@{username} — ready to connect</span>
           </div>
           <a href={`${apiBase}/api/v1/auth/instagram`}
             style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px", borderRadius: "10px", background: "linear-gradient(135deg, #c13584, #f56040)", color: "#fff", fontSize: "13px", fontWeight: "600", textDecoration: "none" }}>
