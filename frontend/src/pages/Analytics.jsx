@@ -30,52 +30,27 @@ function IGConnectView({ apiBase }) {
         </div>
       </div>
 
-      {urlError && (
-        <div style={{ padding: "12px 14px", borderRadius: "8px", background: "#f8717110", border: "1px solid #f8717130" }}>
-          <p style={{ fontSize: "13px", fontWeight: "600", color: "#f87171", margin: "0 0 4px" }}>Connection failed</p>
-          <p style={{ fontSize: "12px", color: "var(--muted)", margin: "0 0 8px" }}>{decodeURIComponent(urlError)}</p>
-          <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Make sure your Instagram is a Professional account linked to a Facebook Page, then try again.</p>
-        </div>
-      )}
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>Before connecting, confirm both:</p>
-
-        <div onClick={() => setIsProfessional(p => !p)}
-          style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px", borderRadius: "8px", border: `1px solid ${isProfessional ? "#c13584" : "var(--border)"}`, background: isProfessional ? "#c1358408" : "transparent", transition: "all 0.15s" }}>
-          <div style={{ width: "18px", height: "18px", borderRadius: "4px", border: `2px solid ${isProfessional ? "#c13584" : "var(--border2)"}`, background: isProfessional ? "#c13584" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
-            {isProfessional && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-          </div>
-          <div>
-            <p style={{ fontSize: "13px", fontWeight: "500", color: "var(--text)", margin: "0 0 2px" }}>My account is Professional (Creator or Business)</p>
-            <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Instagram → Settings → Account → Switch to Professional Account</p>
-          </div>
-        </div>
-
-        <div onClick={() => setIsLinked(p => !p)}
-          style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px", borderRadius: "8px", border: `1px solid ${isLinked ? "#c13584" : "var(--border)"}`, background: isLinked ? "#c1358408" : "transparent", transition: "all 0.15s" }}>
-          <div style={{ width: "18px", height: "18px", borderRadius: "4px", border: `2px solid ${isLinked ? "#c13584" : "var(--border2)"}`, background: isLinked ? "#c13584" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
-            {isLinked && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-          </div>
-          <div>
-            <p style={{ fontSize: "13px", fontWeight: "500", color: "var(--text)", margin: "0 0 2px" }}>My Instagram is linked to a Facebook Page</p>
-            <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Instagram → Settings → Account → Linked Accounts → Facebook</p>
-          </div>
-        </div>
+      <div style={{ padding: "12px 14px", borderRadius: "8px", background: "#f8717110", border: "1px solid #f8717130", marginBottom: "4px" }}>
+        <p style={{ fontSize: "13px", fontWeight: "600", color: "#f87171", margin: "0 0 4px" }}>Setup required</p>
+        <p style={{ fontSize: "12px", color: "var(--muted)", margin: 0 }}>Instagram connection requires a Professional account linked to a Facebook Page. Once set up, come back and connect.</p>
       </div>
 
-      <a href={canConnect ? `${apiBase}/api/v1/auth/instagram` : undefined}
-        onClick={e => { if (!canConnect) e.preventDefault() }}
-        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px", borderRadius: "10px", background: canConnect ? "linear-gradient(135deg, #c13584, #f56040)" : "var(--border)", color: canConnect ? "#fff" : "var(--dim)", fontSize: "13px", fontWeight: "600", textDecoration: "none", cursor: canConnect ? "pointer" : "not-allowed", transition: "all 0.15s" }}>
-        <Instagram size={15} />
-        {urlError ? "Try again" : "Connect Instagram"}
-      </a>
-
-      {!canConnect && (
-        <p style={{ fontSize: "11px", color: "var(--dim)", textAlign: "center", margin: 0 }}>
-          Check both boxes above to continue
-        </p>
-      )}
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>Steps to set up:</p>
+        {[
+          "Switch to Professional account: Instagram → Settings → Account → Switch to Professional Account",
+          "Create a Facebook Page (free): facebook.com/pages/create",
+          "Link Instagram to Facebook Page: Instagram → Settings → Account → Linked Accounts → Facebook",
+          "Come back here and connect"
+        ].map((step, i) => (
+          <div key={i} style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+            <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#c1358420", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
+              <span style={{ fontSize: "10px", fontWeight: "700", color: "#c13584" }}>{i + 1}</span>
+            </div>
+            <p style={{ fontSize: "12px", color: "var(--muted)", margin: 0, lineHeight: "1.5" }}>{step}</p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
