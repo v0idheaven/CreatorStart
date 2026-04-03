@@ -10,6 +10,77 @@ const COLORS = { youtube: "#ff4444", instagram: "#c13584", both: "#818cf8" }
 const STATUS_COLORS = { Idea: "#818cf8", Scripting: "#f59e0b", Filming: "#f97316", Editing: "#06b6d4", Published: "#4ade80" }
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
 
+function IGConnectView({ apiBase }) {
+  const [username, setUsername] = useState("")
+  const [isProfessional, setIsProfessional] = useState(false)
+  const [isLinked, setIsLinked] = useState(false)
+  const canConnect = username.trim().length > 0 && isProfessional && isLinked
+
+  return (
+    <div style={{ maxWidth: "420px", margin: "40px auto", display: "flex", flexDirection: "column", gap: "20px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "linear-gradient(135deg, #c13584, #f56040)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Instagram size={20} color="#fff" />
+        </div>
+        <div>
+          <p style={{ fontSize: "15px", fontWeight: "700", color: "var(--text)", margin: 0 }}>Connect Instagram</p>
+          <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>Professional account required</p>
+        </div>
+      </div>
+
+      <div>
+        <label style={{ fontSize: "12px", color: "var(--muted)", display: "block", marginBottom: "6px" }}>Your Instagram username</label>
+        <input
+          className="input-sm"
+          value={username}
+          onChange={e => setUsername(e.target.value.replace("@", ""))}
+          placeholder="@yourhandle"
+          style={{ width: "100%", boxSizing: "border-box" }}
+        />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>Before connecting, confirm:</p>
+
+        <div onClick={() => setIsProfessional(p => !p)}
+          style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px", borderRadius: "8px", border: `1px solid ${isProfessional ? "#c13584" : "var(--border)"}`, background: isProfessional ? "#c1358408" : "transparent", transition: "all 0.15s" }}>
+          <div style={{ width: "18px", height: "18px", borderRadius: "4px", border: `2px solid ${isProfessional ? "#c13584" : "var(--border2)"}`, background: isProfessional ? "#c13584" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
+            {isProfessional && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+          </div>
+          <div>
+            <p style={{ fontSize: "13px", fontWeight: "500", color: "var(--text)", margin: "0 0 2px" }}>My account is Professional (Creator or Business)</p>
+            <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Instagram → Settings → Account → Switch to Professional Account</p>
+          </div>
+        </div>
+
+        <div onClick={() => setIsLinked(p => !p)}
+          style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px", borderRadius: "8px", border: `1px solid ${isLinked ? "#c13584" : "var(--border)"}`, background: isLinked ? "#c1358408" : "transparent", transition: "all 0.15s" }}>
+          <div style={{ width: "18px", height: "18px", borderRadius: "4px", border: `2px solid ${isLinked ? "#c13584" : "var(--border2)"}`, background: isLinked ? "#c13584" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
+            {isLinked && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+          </div>
+          <div>
+            <p style={{ fontSize: "13px", fontWeight: "500", color: "var(--text)", margin: "0 0 2px" }}>My Instagram is linked to a Facebook Page</p>
+            <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Instagram → Settings → Account → Linked Accounts → Facebook</p>
+          </div>
+        </div>
+      </div>
+
+      <a href={canConnect ? `${apiBase}/api/v1/auth/instagram` : undefined}
+        onClick={e => { if (!canConnect) e.preventDefault() }}
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px", borderRadius: "10px", background: canConnect ? "linear-gradient(135deg, #c13584, #f56040)" : "var(--border)", color: canConnect ? "#fff" : "var(--dim)", fontSize: "13px", fontWeight: "600", textDecoration: "none", cursor: canConnect ? "pointer" : "not-allowed", transition: "all 0.15s" }}>
+        <Instagram size={15} />
+        Connect Instagram
+      </a>
+
+      {!canConnect && username.trim().length > 0 && (
+        <p style={{ fontSize: "11px", color: "var(--dim)", textAlign: "center", margin: 0 }}>
+          Check both boxes above to enable the connect button
+        </p>
+      )}
+    </div>
+  )
+}
+
 function YTStudioView({ ytStats, ytVideos, ytAnalytics, loadingVideos, refreshingYT, ytError, onRefresh, fmt }) {
   const [ytTab, setYtTab] = useState("overview")
   const [hoveredIdx, setHoveredIdx] = useState(null)
@@ -694,19 +765,7 @@ export default function Analytics() {
           )}
 
           {tab === "instagram" && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "60px 0", gap: "16px" }}>
-              <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: "linear-gradient(135deg, #c13584, #f56040)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Instagram size={24} color="#fff" />
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <p style={{ fontSize: "15px", fontWeight: "600", color: "var(--text)", margin: "0 0 6px" }}>Connect Instagram</p>
-                <p style={{ fontSize: "13px", color: "var(--dim)", margin: "0 0 20px" }}>See followers, posts and engagement from your Instagram account.</p>
-                <a href={`${API_BASE}/api/v1/auth/instagram`}
-                  style={{ padding: "9px 20px", borderRadius: "9px", background: "linear-gradient(135deg, #c13584, #f56040)", color: "#fff", fontSize: "13px", fontWeight: "600", textDecoration: "none" }}>
-                  Connect with Instagram
-                </a>
-              </div>
-            </div>
+            <IGConnectView apiBase={API_BASE} />
           )}
 
         </div>
