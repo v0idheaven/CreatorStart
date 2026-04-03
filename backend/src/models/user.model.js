@@ -40,6 +40,10 @@ const userSchema = new Schema(
         avatar: {
             type: String,
         },
+        coverImage: {
+            type: String,
+            default: ""
+        },
         refreshToken: {
             type: String
         }

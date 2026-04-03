@@ -1,6 +1,4 @@
-const _platform = localStorage.getItem("platform") || "both"
-
 export const STORAGE_KEYS = {
   PLATFORM: "platform",
-  PLANNER_DATA: `planner_data_${_platform}`,
+  getPlannerData: () => `planner_data_${localStorage.getItem("platform") || "both"}`,
 }
