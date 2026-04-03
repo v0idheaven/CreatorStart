@@ -14,7 +14,11 @@ const generateTokens = async (userId) => {
     return { accessToken, refreshToken }
 }
 
-const cookieOptions = { httpOnly: true, secure: process.env.NODE_ENV === "production" }
+const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+}
 
 const registerUser = asyncHandler(async (req, res) => {
     const { fullName, username, email, password } = req.body

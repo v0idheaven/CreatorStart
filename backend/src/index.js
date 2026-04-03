@@ -4,10 +4,12 @@ import { app } from "./app.js"
 
 dotenv.config()
 
+const PORT = process.env.PORT || 10000
+
 connectDB()
 .then(() => {
-    app.listen(process.env.PORT, () => {
-        console.log(`Server running on port: ${process.env.PORT}`)
+    app.listen(PORT, () => {
+        console.log(`Server running on port: ${PORT}`)
     })
 })
 .catch((err) => {

@@ -7,11 +7,18 @@ const app = express()
 const allowedOrigins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    process.env.CORS_ORIGIN
+    "https://creator-start.vercel.app",
+    process.env.FRONTEND_URL,
+    process.env.CORS_ORIGIN,
+    ...(process.env.CORS_ORIGINS || "").split(",").map((o) => o.trim())
 ].filter(Boolean)
 
 app.use(cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true)
+        if (allowedOrigins.includes(origin)) return callback(null, true)
+        return callback(new Error(`CORS blocked for origin: ${origin}`), false)
+    },
     credentials: true
 }))
 
