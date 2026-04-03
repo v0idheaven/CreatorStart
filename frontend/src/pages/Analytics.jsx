@@ -23,16 +23,24 @@ function IGConnectView({ apiBase }) {
     setVerifying(true)
     setVerifyError("")
     setVerified(false)
-    // We can't verify Instagram account type without OAuth
-    // Just validate that username looks valid (no spaces, reasonable length)
-    await new Promise(r => setTimeout(r, 800)) // small delay for UX
     const clean = username.trim()
-    if (clean.length < 1 || clean.length > 30 || /\s/.test(clean)) {
-      setVerifyError("Please enter a valid Instagram username.")
+    if (!clean || clean.length > 30 || /\s/.test(clean)) {
+      setVerifyError("Enter a valid Instagram username.")
       setVerifying(false)
       return
     }
-    setVerified(true)
+    try {
+      const res = await fetch(`${apiBase}/api/v1/auth/instagram/check/${clean}`)
+      const data = await res.json()
+      if (data?.data?.exists === false) {
+        setVerifyError(`@${clean} not found on Instagram. Check the username.`)
+      } else {
+        setVerified(true)
+      }
+    } catch {
+      // network error — allow anyway
+      setVerified(true)
+    }
     setVerifying(false)
   }
 

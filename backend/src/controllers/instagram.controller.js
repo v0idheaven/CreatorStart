@@ -217,4 +217,29 @@ const linkInstagram = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, { user: safeUser }, "Instagram connected"))
 })
 
-export { instagramAuthRedirect, instagramAuthCallback, refreshInstagramStats, linkInstagram }
+// check if Instagram username exists via oEmbed
+const checkInstagramUsername = asyncHandler(async (req, res) => {
+    const { username } = req.params
+    if (!username) throw new ApiError(400, "Username required")
+
+    try {
+        const response = await axios.get(`https://graph.facebook.com/v19.0/instagram_oembed`, {
+            params: {
+                url: `https://www.instagram.com/${username}/`,
+                access_token: `${process.env.META_APP_ID}|${process.env.META_APP_SECRET}`
+            },
+            timeout: 5000
+        })
+        // if we get a response, username exists
+        return res.status(200).json(new ApiResponse(200, { exists: true, username }, "Username found"))
+    } catch (e) {
+        const status = e.response?.status
+        if (status === 404 || e.response?.data?.error?.code === 100) {
+            return res.status(200).json(new ApiResponse(200, { exists: false, username }, "Username not found"))
+        }
+        // other errors — assume exists (don't block user)
+        return res.status(200).json(new ApiResponse(200, { exists: true, username }, "Could not verify"))
+    }
+})
+
+export { instagramAuthRedirect, instagramAuthCallback, refreshInstagramStats, linkInstagram, checkInstagramUsername }
