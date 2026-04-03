@@ -1,9 +1,11 @@
-import { createElement, useState } from "react"
+import { createElement, useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
 import { Zap, CalendarDays, FileText, TrendingUp, Users, Eye, PlaySquare, Timer } from "lucide-react"
 import Sidebar from "../components/Sidebar"
 import StreakCard from "../components/StreakCard"
+import { apiFetch } from "../utils/api"
+import { API_ENDPOINTS } from "../constants/api"
 
 const viewData = [
   { day: "Mon", views: 1200 }, { day: "Tue", views: 980 },
@@ -31,6 +33,16 @@ const YTbg = "#ff444415"
 export default function DashboardYT() {
   const navigate = useNavigate()
   const [hovered, setHovered] = useState(null)
+  const [ytVideos, setYtVideos] = useState([])
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}")
+    if (user.youtubeStats) {
+      apiFetch(API_ENDPOINTS.youtubeVideos).then(r => r.json()).then(d => {
+        if (Array.isArray(d?.data)) setYtVideos(d.data)
+      }).catch(() => {})
+    }
+  }, [])
 
   const stats = [
     { label: "Subscribers", value: "2.4K", icon: Users, color: YT },
@@ -96,7 +108,7 @@ export default function DashboardYT() {
             </ResponsiveContainer>
           </div>
 
-          <StreakCard accent={YT} platform="youtube" />
+          <StreakCard accent={YT} platform="youtube" ytVideos={ytVideos} />
         </div>
 
         <div style={{ marginBottom: "20px" }}>
