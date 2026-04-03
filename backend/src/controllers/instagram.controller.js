@@ -29,11 +29,12 @@ const instagramAuthRedirect = asyncHandler(async (req, res) => {
 
 // Step 2: handle callback
 const instagramAuthCallback = asyncHandler(async (req, res) => {
-    const { code, error } = req.query
+    const { code, error, error_description } = req.query
     const frontendUrl = process.env.FRONTEND_URL || DEFAULT_FRONTEND_URL
 
     if (error || !code) {
-        return res.redirect(`${frontendUrl}/auth/instagram/error?msg=${error || "no_code"}`)
+        const msg = error_description || error || "Instagram connection failed"
+        return res.redirect(`${frontendUrl}/analytics?ig_error=${encodeURIComponent(msg)}`)
     }
 
     // exchange code for access token

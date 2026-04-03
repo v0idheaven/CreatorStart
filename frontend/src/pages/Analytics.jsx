@@ -15,6 +15,9 @@ function IGConnectView({ apiBase }) {
   const [isLinked, setIsLinked] = useState(false)
   const canConnect = isProfessional && isLinked
 
+  // check for error from OAuth callback
+  const urlError = new URLSearchParams(window.location.search).get("ig_error")
+
   return (
     <div style={{ maxWidth: "420px", margin: "40px auto", display: "flex", flexDirection: "column", gap: "20px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -26,6 +29,14 @@ function IGConnectView({ apiBase }) {
           <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>Professional account required</p>
         </div>
       </div>
+
+      {urlError && (
+        <div style={{ padding: "12px 14px", borderRadius: "8px", background: "#f8717110", border: "1px solid #f8717130" }}>
+          <p style={{ fontSize: "13px", fontWeight: "600", color: "#f87171", margin: "0 0 4px" }}>Connection failed</p>
+          <p style={{ fontSize: "12px", color: "var(--muted)", margin: "0 0 8px" }}>{decodeURIComponent(urlError)}</p>
+          <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Make sure your Instagram is a Professional account linked to a Facebook Page, then try again.</p>
+        </div>
+      )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>Before connecting, confirm both:</p>
@@ -57,7 +68,7 @@ function IGConnectView({ apiBase }) {
         onClick={e => { if (!canConnect) e.preventDefault() }}
         style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px", borderRadius: "10px", background: canConnect ? "linear-gradient(135deg, #c13584, #f56040)" : "var(--border)", color: canConnect ? "#fff" : "var(--dim)", fontSize: "13px", fontWeight: "600", textDecoration: "none", cursor: canConnect ? "pointer" : "not-allowed", transition: "all 0.15s" }}>
         <Instagram size={15} />
-        Connect Instagram
+        {urlError ? "Try again" : "Connect Instagram"}
       </a>
 
       {!canConnect && (
