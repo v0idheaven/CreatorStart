@@ -1,6 +1,8 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Youtube, Instagram, LayoutGrid, ArrowRight } from "lucide-react"
+import { apiFetch } from "../utils/api"
+import { API_ENDPOINTS } from "../constants/api"
 
 export default function PlatformSelect() {
   const [selected, setSelected] = useState(null)
@@ -79,9 +81,17 @@ export default function PlatformSelect() {
         </div>
 
         <button
-          onClick={() => {
+          onClick={async () => {
             if (selected) {
               localStorage.setItem("platform", selected)
+              const user = JSON.parse(localStorage.getItem("user") || "{}")
+              localStorage.setItem("user", JSON.stringify({ ...user, platform: selected }))
+              try {
+                await apiFetch(API_ENDPOINTS.updateProfile, {
+                  method: "PATCH",
+                  body: JSON.stringify({ platform: selected })
+                })
+              } catch {}
               navigate("/dashboard")
             }
           }}
