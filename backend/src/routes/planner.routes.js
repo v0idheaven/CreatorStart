@@ -1,24 +1,22 @@
 import { Router } from "express"
 import {
-    getPlannerEntries,
-    addPlannerEntry,
-    updatePlannerEntry,
-    deletePlannerEntry,
-    generatePlannerAiPlan,
-    generatePlannerAiDetail,
-    generateContentIdea
+    savePlanData, getPlanData, saveStreakData, getStreakData,
+    generatePlannerAiDetail, generateContentIdea
 } from "../controllers/planner.controller.js"
 import { verifyJWT } from "../middleware/auth.middleware.js"
 
 const router = Router()
 
-router.route("/ai/plan").post(generatePlannerAiPlan)
-router.route("/ai/detail").post(generatePlannerAiDetail)
-router.route("/ai/content").post(generateContentIdea)
+// public AI routes (no auth needed)
+router.post("/ai/detail", generatePlannerAiDetail)
+router.post("/ai/content", generateContentIdea)
 
+// protected routes
 router.use(verifyJWT)
 
-router.route("/").get(getPlannerEntries).post(addPlannerEntry)
-router.route("/:id").patch(updatePlannerEntry).delete(deletePlannerEntry)
+router.post("/plan", savePlanData)
+router.get("/plan/:platform", getPlanData)
+router.post("/streak", saveStreakData)
+router.get("/streak/:platform", getStreakData)
 
 export default router
