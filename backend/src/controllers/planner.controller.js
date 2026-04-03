@@ -1,5 +1,5 @@
 import { asyncHandler } from "../utils/asyncHandler.js"
-import { ApiError } from "../utils/ApiError.js"
+import ApiError from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { Planner } from "../models/planner.model.js"
 import fetch from "node-fetch"

@@ -1,6 +1,8 @@
 import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
+import authRouter from './routes/auth.routes.js'
+import plannerRouter from './routes/planner.routes.js'
 
 const app = express()
 
@@ -10,7 +12,6 @@ const allowedOrigins = [
     "https://creator-start.vercel.app",
     process.env.FRONTEND_URL,
     process.env.CORS_ORIGIN,
-    ...(process.env.CORS_ORIGINS || "").split(",").map((o) => o.trim())
 ].filter(Boolean)
 
 app.use(cors({
@@ -30,16 +31,12 @@ app.get('/api/v1/health', (_req, res) => {
     res.status(200).json({ ok: true })
 })
 
-import authRouter from './routes/auth.routes.js'
-import plannerRouter from './routes/planner.routes.js'
-
 app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/planner', plannerRouter)
 
 app.use((err, _req, res, _next) => {
     const statusCode = err?.statusCode || 500
     const message = err?.message || 'Internal Server Error'
-
     return res.status(statusCode).json({
         success: false,
         message,
