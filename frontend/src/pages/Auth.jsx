@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { Eye, EyeOff, Youtube, Instagram, Layers } from "lucide-react"
+const API_BASE = import.meta.env.VITE_API_URL || "https://creator-start-backend.onrender.com"
 import { API_ENDPOINTS } from "../constants/api"
 
 const inputStyle = {
@@ -161,7 +162,7 @@ export default function Auth() {
 
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
             {/* Google OAuth */}
-            <a href={`${import.meta.env.VITE_API_URL || ""}/api/v1/auth/google`}
+            <a href={`${API_BASE}/api/v1/auth/google`}
               style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", padding: "12px", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.12)", background: "#111", color: "#fff", fontSize: "14px", fontWeight: "500", textDecoration: "none", transition: "border-color 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)"}
               onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"}>

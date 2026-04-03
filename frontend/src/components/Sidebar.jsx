@@ -2,6 +2,8 @@ import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { LayoutDashboard, Zap, Calendar, Settings, LogOut, FileText, BarChart2 } from "lucide-react"
 
+const API_BASE = import.meta.env.VITE_API_URL || "https://creator-start-backend.onrender.com"
+
 const navItems = [
   { icon: LayoutDashboard, label: "Overview", href: "/dashboard" },
   { icon: Zap, label: "Content Generator", href: "/generator" },
@@ -94,7 +96,7 @@ export default function Sidebar() {
         <div className="sidebar-user" onClick={() => {
           const token = localStorage.getItem("accessToken")
           if (token) {
-            fetch(`${import.meta.env.VITE_API_URL || ""}/api/v1/auth/logout`, {
+            fetch(`${API_BASE}/api/v1/auth/logout`, {
               method: "POST", credentials: "include",
               headers: { "Authorization": `Bearer ${token}` }
             }).catch(() => {})

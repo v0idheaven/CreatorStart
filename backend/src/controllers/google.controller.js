@@ -4,13 +4,20 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import ApiError from "../utils/ApiError.js"
 
-const cookieOptions = { httpOnly: true, secure: process.env.NODE_ENV === "production" }
+const DEFAULT_BACKEND_URL = "https://creator-start-backend.onrender.com"
+const DEFAULT_FRONTEND_URL = "https://creator-start.vercel.app"
+
+const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+}
 
 function getOAuthClient() {
     return new google.auth.OAuth2(
         process.env.GOOGLE_CLIENT_ID,
         process.env.GOOGLE_CLIENT_SECRET,
-        `${process.env.BACKEND_URL || "http://localhost:10000"}/api/v1/auth/google/callback`
+        `${process.env.BACKEND_URL || DEFAULT_BACKEND_URL}/api/v1/auth/google/callback`
     )
 }
 
@@ -105,7 +112,7 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
 
     const safeUser = await User.findById(user._id).select("-password -refreshToken -googleAccessToken -googleRefreshToken")
 
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173"
+    const frontendUrl = process.env.FRONTEND_URL || DEFAULT_FRONTEND_URL
     // redirect to frontend with token in query (frontend will store it)
     res
         .cookie("accessToken", accessToken, cookieOptions)
