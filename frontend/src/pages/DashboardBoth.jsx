@@ -100,6 +100,8 @@ export default function DashboardBoth() {
   const [view, setView] = useState("overall")
   const [hovered, setHovered] = useState(null)
 
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}")
+  const firstName = storedUser.fullName?.split(" ")[0] || "Creator"
   const d = DATA[view]
   const accent = SWITCHER.find(s => s.id === view).color
 
@@ -118,13 +120,14 @@ export default function DashboardBoth() {
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)" }}>
       <Sidebar />
-      <main style={{ marginLeft: "72px", flex: 1, padding: "40px", maxWidth: "1100px" }}>
+      <div style={{ marginLeft: "72px", flex: 1, display: "flex", justifyContent: "center" }}>
+      <main style={{ width: "100%", maxWidth: "1100px", padding: "40px" }}>
 
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "32px" }}>
           <div>
             <p style={{ fontSize: "11px", color: "var(--dim)", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 8px" }}>Dashboard</p>
             <h1 style={{ fontSize: "26px", fontWeight: "700", color: "var(--text)", letterSpacing: "-0.5px", margin: "0 0 6px" }}>
-              {getGreeting()}, <span style={{ color: "#818cf8" }}>Varun</span> 👋
+              {getGreeting()}, <span style={{ color: "#818cf8" }}>{firstName}</span> 👋
             </h1>
             <p style={{ fontSize: "13px", color: "var(--dim)", margin: 0 }}>Here's how your content is performing today.</p>
           </div>
@@ -225,6 +228,7 @@ export default function DashboardBoth() {
         </div>
 
       </main>
+      </div>
     </div>
   )
 }

@@ -199,35 +199,6 @@ body {
   border-color: var(--accent);
 }
 
-.btn-primary {
-  width: 100%;
-  background: var(--accent);
-  border: none;
-  border-radius: 10px;
-  padding: 11px;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 16px;
-}
-
-.btn-outline {
-  width: 100%;
-  background: transparent;
-  border: 1px solid var(--border2);
-  border-radius: 10px;
-  padding: 11px;
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
 .btn-ghost {
   background: transparent;
   border: 1px solid var(--border2);
@@ -294,25 +265,6 @@ body {
   color: var(--accent);
 }
 
-.auth-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.auth-divider {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 20px 0;
-}
-
-.auth-divider-line {
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -350,35 +302,6 @@ body {
   border-radius: 6px;
   background: var(--bg);
   border: 1px solid var(--border);
-}
-
-.planner-mini-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 5px;
-}
-
-.planner-day {
-  aspect-ratio: 1;
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 8px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.planner-open-btn {
-  width: 100%;
-  margin-top: 14px;
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--muted);
-  font-size: 12px;
-  cursor: pointer;
 }
 
 .quick-actions-grid {

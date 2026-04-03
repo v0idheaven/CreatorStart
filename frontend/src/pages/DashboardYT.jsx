@@ -47,7 +47,8 @@ export default function DashboardYT() {
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)" }}>
       <Sidebar />
-      <main style={{ marginLeft: "72px", flex: 1, padding: "40px", maxWidth: "1100px" }}>
+      <div style={{ marginLeft: "72px", flex: 1, display: "flex", justifyContent: "center" }}>
+      <main style={{ width: "100%", maxWidth: "1100px", padding: "40px" }}>
 
         <div style={{ marginBottom: "32px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
@@ -143,6 +144,7 @@ export default function DashboardYT() {
         </div>
 
       </main>
+      </div>
     </div>
   )
 }
