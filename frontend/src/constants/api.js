@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL || ""
+const BASE = import.meta.env.VITE_API_URL || "https://creator-start-backend.onrender.com"
 
 export const API_ENDPOINTS = {
     // Google OAuth

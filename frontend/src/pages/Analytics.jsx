@@ -4,6 +4,8 @@ import Sidebar from "../components/Sidebar"
 import { apiFetch } from "../utils/api"
 import { API_ENDPOINTS } from "../constants/api"
 
+const API_BASE = import.meta.env.VITE_API_URL || "https://creator-start-backend.onrender.com"
+
 const COLORS = { youtube: "#ff4444", instagram: "#c13584", both: "#818cf8" }
 const STATUS_COLORS = { Idea: "#818cf8", Scripting: "#f59e0b", Filming: "#f97316", Editing: "#06b6d4", Published: "#4ade80" }
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
@@ -681,7 +683,7 @@ export default function Analytics() {
                   <div style={{ textAlign: "center" }}>
                     <p style={{ fontSize: "15px", fontWeight: "600", color: "var(--text)", margin: "0 0 6px" }}>Connect YouTube</p>
                     <p style={{ fontSize: "13px", color: "var(--dim)", margin: "0 0 20px" }}>See subscribers, views and video count.</p>
-                    <a href={`${import.meta.env.VITE_API_URL || ""}/api/v1/auth/google`}
+                    <a href={`${API_BASE}/api/v1/auth/google`}
                       style={{ padding: "8px 18px", borderRadius: "8px", background: "#ff4444", color: "#fff", fontSize: "13px", fontWeight: "600", textDecoration: "none" }}>
                       Connect with Google
                     </a>
