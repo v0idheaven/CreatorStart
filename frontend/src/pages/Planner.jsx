@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Sparkles, Check, Pencil, X, RefreshCw, Download, StickyNote, Users, Flame, Zap, Target, DollarSign, Heart, Youtube, Instagram, Scale, Calendar, Clock, FileText, CalendarDays, Plus } from "lucide-react"
+import { Sparkles, Check, Pencil, X, Download, StickyNote, Users, Flame, Zap, Target, DollarSign, Heart, Youtube, Instagram, Scale, Calendar, Plus } from "lucide-react"
 import Sidebar from "../components/Sidebar"
 import "./Planner.css"
 import {
@@ -53,38 +53,36 @@ function buildFallbackContent(goalLabel, topicLabel, platformLabel, dayNum) {
 }
 
 function generatePlan(goal, topic, freq, focus, platform) {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  // IST today
+  const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+  const today = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate())
 
-  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0)
-  const daysLeft = lastDay.getDate() - today.getDate() + 1
+  // Full current month
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
+  const totalDays = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
 
-  const allDays = Array.from({ length: daysLeft }, (_, i) => i + 1)
-  let activeDays
-  if (freq === "daily") activeDays = allDays
-  else if (freq === "alt") activeDays = allDays.filter((_, i) => i % 2 === 0)
-  else if (freq === "weekdays") {
-    activeDays = []
-    for (let i = 0; i < daysLeft; i++) {
-      const d = new Date(today)
-      d.setDate(today.getDate() + i)
-      const dow = d.getDay()
-      if (dow !== 0 && dow !== 6) activeDays.push(i + 1)
-    }
-  } else activeDays = allDays
-
+  const focusPlatform = focus || platform
   const goalLabel = GOALS.find(g => g.id === goal)?.label || goal
   const topicLabel = TOPICS.find(t => t.id === topic)?.label || topic
 
-  const focusPlatform = focus || platform
-
-  return Array.from({ length: daysLeft }, (_, i) => {
+  return Array.from({ length: totalDays }, (_, i) => {
+    const date = new Date(firstDay)
+    date.setDate(firstDay.getDate() + i)
     const dayNum = i + 1
-    const isActive = activeDays.includes(dayNum)
+    const isPast = date < today
+    const isToday = date.getTime() === today.getTime()
+    const offsetFromToday = Math.round((date - today) / 86400000)
 
-    const date = new Date(today)
-    date.setDate(today.getDate() + i)
-    const isToday = i === 0
+    // Determine if this day should have content based on frequency
+    let isActive = false
+    if (!isPast) {
+      if (freq === "daily") isActive = true
+      else if (freq === "alt") isActive = offsetFromToday % 2 === 0
+      else if (freq === "weekdays") {
+        const dow = date.getDay()
+        isActive = dow !== 0 && dow !== 6
+      } else isActive = true
+    }
 
     let p
     if (platform !== "both") {
@@ -100,9 +98,9 @@ function generatePlan(goal, topic, freq, focus, platform) {
     return {
       id: dayNum,
       day: dayNum,
-      date,
-      dateLabel: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      dayName: date.toLocaleDateString("en-US", { weekday: "short" }),
+      date: date.toISOString(),
+      dateLabel: date.toLocaleDateString("en-IN", { month: "short", day: "numeric" }),
+      dayName: date.toLocaleDateString("en-IN", { weekday: "short" }),
       isToday,
       content: isActive ? buildFallbackContent(goalLabel, topicLabel, p === "both" ? "YouTube + Instagram" : p === "youtube" ? "YouTube" : "Instagram", dayNum) : "",
       platform: p,
@@ -256,7 +254,29 @@ function SetupScreen({ onGenerate }) {
 export default function Planner() {
   const platform = localStorage.getItem(STORAGE_KEYS.PLATFORM) || "both"
   const accent = COLORS[platform] || COLORS.both
-  const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANNER_DATA) || "null")
+
+  const rawSaved = JSON.parse(localStorage.getItem(STORAGE_KEYS.getPlannerData()) || "null")
+
+  // If saved plan is from a previous month, clear it
+  const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+  const todayIST = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate())
+
+  let saved = rawSaved
+  if (rawSaved?.entries?.length > 0) {
+    const firstEntry = rawSaved.entries[0]
+    if (firstEntry?.date) {
+      const firstDate = new Date(firstEntry.date)
+      const sameMonth = firstDate.getFullYear() === todayIST.getFullYear() &&
+                        firstDate.getMonth() === todayIST.getMonth()
+      const startsOnFirst = firstDate.getDate() === 1
+      // also clear if date is stored as a Date object (old format) — typeof check
+      const isStringDate = typeof firstEntry.date === "string"
+      if (!sameMonth || !startsOnFirst || !isStringDate) {
+        saved = null
+        localStorage.removeItem(STORAGE_KEYS.getPlannerData())
+      }
+    }
+  }
 
   const [screen, setScreen] = useState(saved ? "plan" : "setup")
   const [generating, setGenerating] = useState(false)
@@ -276,6 +296,9 @@ export default function Planner() {
   const [aiDetail, setAiDetail] = useState(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState("")
+  const [activeExtraIdx, setActiveExtraIdx] = useState(null)
+  const [extraAiDetail, setExtraAiDetail] = useState(null)
+  const [extraAiLoading, setExtraAiLoading] = useState(false)
 
   async function generateDayDetail(entry) {
     if (!entry.content) return
@@ -311,15 +334,19 @@ export default function Planner() {
     if (activeDay === day) {
       setActiveDay(null)
       setAiDetail(null)
+      setActiveExtraIdx(null)
+      setExtraAiDetail(null)
     } else {
       setActiveDay(day)
+      setActiveExtraIdx(null)
+      setExtraAiDetail(null)
       const entry = entries.find(e => e.day === day)
       if (entry?.content) generateDayDetail(entry)
     }
   }
 
   function savePlan(newEntries, newPlanInfo) {
-    localStorage.setItem(STORAGE_KEYS.PLANNER_DATA, JSON.stringify({ entries: newEntries, planInfo: newPlanInfo }))
+    localStorage.setItem(STORAGE_KEYS.getPlannerData(), JSON.stringify({ entries: newEntries, planInfo: newPlanInfo }))
   }
 
   async function callGroqForPlan(goal, topic, freq, focus) {
@@ -328,71 +355,65 @@ export default function Planner() {
     const freqLabel = FREQUENCIES.find(f => f.id === freq)?.label || freq
     const plat = platform === "both" ? (focus === "youtube" ? "YouTube (70%) + Instagram (30%)" : focus === "instagram" ? "Instagram (70%) + YouTube (30%)" : "YouTube + Instagram equally") : platform === "youtube" ? "YouTube" : "Instagram"
 
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0)
-    const daysLeft = lastDay.getDate() - today.getDate() + 1
+    const nowISTg = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+    const todayIST = new Date(nowISTg.getFullYear(), nowISTg.getMonth(), nowISTg.getDate())
+    const totalDays = new Date(todayIST.getFullYear(), todayIST.getMonth() + 1, 0).getDate()
 
-    const res = await fetch(API_ENDPOINTS.plannerAiPlan, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        goalLabel,
-        topicLabel,
-        freqLabel,
-        platformLabel: plat,
-        daysLeft,
+    const prompt = `You are a content strategist. Create a ${totalDays}-day content plan for a ${plat} creator.
+Goal: ${goalLabel}
+Topic/Niche: ${topicLabel}
+Posting frequency: ${freqLabel}
+
+Return ONLY a JSON array with exactly ${totalDays} objects. Each object: {"day": number, "content": string}
+For "${freqLabel}": Every 2 days = odd days have content, even days have "". Weekdays only = Mon-Fri have content, Sat-Sun have "". Every day = all days have content.
+Make content specific and actionable. Return only the JSON array.`
+
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 8000)
+
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${import.meta.env.VITE_GROQ_API_KEY}` },
+        body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: [{ role: "user", content: prompt }], temperature: 0.8 }),
+        signal: controller.signal
       })
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.message || "AI API error")
-    if (!Array.isArray(data?.data)) throw new Error("Could not parse plan from AI")
-    return data.data
+      clearTimeout(timeout)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error?.message || "Groq error")
+      const text = data.choices?.[0]?.message?.content || ""
+      const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
+      const match = cleaned.match(/\[[\s\S]*\]/)
+      if (!match) throw new Error("Parse error")
+      return JSON.parse(match[0])
+    } catch {
+      clearTimeout(timeout)
+      throw new Error("Groq failed")
+    }
   }
 
   async function handleGenerate(goal, topic, freq, focus) {
     setGenerating(true)
     const newInfo = { goal, topic, freq, focus }
     setPlanInfo(newInfo)
-    try {
-      const aiPlan = await callGroqForPlan(goal, topic, freq, focus)
-      const base = generatePlan(goal, topic, freq, focus, platform)
-      const newEntries = base.map((entry) => {
-        const aiDay = aiPlan.find(d => d.day === entry.day)
-        return { ...entry, content: aiDay?.content || entry.content }
-      })
-      setEntries(newEntries)
-      savePlan(newEntries, newInfo)
-      setScreen("plan")
-    } catch {
+    setTimeout(() => {
       const newEntries = generatePlan(goal, topic, freq, focus, platform)
       setEntries(newEntries)
       savePlan(newEntries, newInfo)
       setScreen("plan")
-    }
-    setGenerating(false)
+      setGenerating(false)
+    }, 1200)
   }
 
   async function handleRegenerate() {
     if (!planInfo) return
     setGenerating(true)
-    try {
-      const aiPlan = await callGroqForPlan(planInfo.goal, planInfo.topic, planInfo.freq, planInfo.focus)
-      const base = generatePlan(planInfo.goal, planInfo.topic, planInfo.freq, planInfo.focus, platform)
-      const newEntries = base.map(entry => {
-        const aiDay = aiPlan.find(d => d.day === entry.day)
-        return { ...entry, content: aiDay?.content || entry.content }
-      })
-      setEntries(newEntries)
-      savePlan(newEntries, planInfo)
-    } catch {
+    setTimeout(() => {
       const newEntries = generatePlan(planInfo.goal, planInfo.topic, planInfo.freq, planInfo.focus, platform)
       setEntries(newEntries)
       savePlan(newEntries, planInfo)
-    }
-    setGenerating(false)
+      setGenerating(false)
+    }, 1200)
   }
 
   function openEdit(entry) {
@@ -414,12 +435,12 @@ export default function Planner() {
     const entry = entries.find(e => e.id === id)
     if (!entry) return
 
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+    const today = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate())
     const entryDate = entry.date ? new Date(entry.date) : null
     if (entryDate) entryDate.setHours(0, 0, 0, 0)
 
-    if (entryDate && entryDate > today) return
+    if (!entryDate || entryDate.getTime() !== today.getTime()) return
 
     const updated = entries.map(e => e.id === id ? { ...e, isCompleted: !e.isCompleted } : e)
     setEntries(updated)
@@ -440,7 +461,7 @@ export default function Planner() {
     return (
       <div className="planner-generating-root">
         <Sidebar />
-        <main className="planner-generating-main">
+      <div className="planner-generating-main">
           <div className="planner-generating-icon" style={{ background: accent + "18" }}>
             <Sparkles size={24} color={accent} />
           </div>
@@ -451,7 +472,7 @@ export default function Planner() {
           <div className="planner-progress-track">
             <div className="planner-progress-fill" style={{ background: accent }} />
           </div>
-        </main>
+        </div>
       </div>
     )
   }
@@ -459,12 +480,18 @@ export default function Planner() {
   return (
     <div className="planner-root">
       <Sidebar />
+      <div className="planner-content-wrapper">
       <main className="planner-main">
 
         <div className="planner-header">
           <div>
             <p className="planner-header-kicker">Content</p>
-            <h1 className="planner-header-title">30-Day Planner</h1>
+            <h1 className="planner-header-title">
+              30-Day Planner &nbsp;
+              <span style={{ fontSize: "16px", fontWeight: "500", color: "var(--dim)" }}>
+                {new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric", timeZone: "Asia/Kolkata" })}
+              </span>
+            </h1>
             {planInfo && (
               <p className="planner-header-subtitle">
                 {GOALS.find(g => g.id === planInfo.goal)?.label} · {TOPICS.find(t => t.id === planInfo.topic)?.label} · {FREQUENCIES.find(f => f.id === planInfo.freq)?.label}
@@ -481,7 +508,7 @@ export default function Planner() {
               <button onClick={handleRegenerate}
                 className="planner-btn-inline"
                 style={{ border: `1px solid ${accent}40`, background: accent + "12", color: accent, fontWeight: "600" }}>
-                <RefreshCw size={13} /> Regenerate
+                <span style={{ fontSize: "13px" }}>↻</span> Regenerate
               </button>
               <button onClick={() => setConfirmNew(true)}
                 className="planner-btn-inline planner-btn-ghost">
@@ -525,9 +552,10 @@ export default function Planner() {
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "5px", marginBottom: "20px" }}>
               {(() => {
-                const today = new Date()
-                today.setHours(0, 0, 0, 0)
-                const startDow = today.getDay()
+                const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+                const today = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate())
+                const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+                const startDow = firstOfMonth.getDay()
                 const mondayOffset = startDow === 0 ? 6 : startDow - 1
                 const blanks = Array.from({ length: mondayOffset }, (_, i) => (
                   <div key={`b${i}`} style={{ minHeight: "76px" }} />
@@ -540,10 +568,18 @@ export default function Planner() {
                   : entries.map(e => e.active && e.isCompleted ? { ...e, content: "" } : e)
 
                 const cards = allEntries.map(entry => {
-                  const pc = PC[entry.platform]
+                  const pc = PC[entry.platform] || PC.both
                   const isSelected = activeDay === entry.day
                   const dateNum = entry.date ? new Date(entry.date).getDate() : entry.day
+                  const dateLabel = entry.dateLabel || String(dateNum)
                   const isEmpty = !entry.active || !entry.content
+
+                  const _istNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+                  const todayNow = new Date(_istNow.getFullYear(), _istNow.getMonth(), _istNow.getDate())
+                  const entryDateObj = entry.date ? new Date(entry.date) : null
+                  if (entryDateObj) entryDateObj.setHours(0, 0, 0, 0)
+                  const isTodayNow = entryDateObj ? entryDateObj.getTime() === todayNow.getTime() : false
+                  const isPastNow = entryDateObj ? entryDateObj < todayNow : false
 
                   return (
                     <div key={entry.id}
@@ -552,8 +588,8 @@ export default function Planner() {
                       }}
                       style={{
                         borderRadius: "8px",
-                        border: `1.5px solid ${isSelected ? accent : entry.isCompleted ? "#4ade8040" : entry.isToday ? accent + "70" : isEmpty ? "var(--border)" : "var(--border)"}`,
-                        background: isSelected ? accent + "12" : entry.isCompleted ? "#4ade8008" : entry.isToday && !isEmpty ? accent + "08" : "var(--card)",
+                        border: `1.5px solid ${isSelected ? accent : entry.isCompleted ? "#4ade8040" : isTodayNow ? accent + "70" : isEmpty ? "var(--border)" : "var(--border)"}`,
+                        background: isSelected ? accent + "12" : entry.isCompleted ? "#4ade8008" : isTodayNow && !isEmpty ? accent + "08" : "var(--card)",
                         padding: "8px 7px",
                         cursor: isEmpty ? "default" : "pointer",
                         transition: "border-color 0.12s, background 0.12s",
@@ -567,10 +603,10 @@ export default function Planner() {
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-                          <span style={{ fontSize: "15px", fontWeight: "700", lineHeight: 1, color: entry.isToday ? accent : entry.isCompleted ? "#4ade80" : "var(--text)" }}>
-                            {dateNum}
+                          <span style={{ fontSize: "12px", fontWeight: "700", lineHeight: 1, color: isTodayNow ? accent : entry.isCompleted ? "#4ade80" : "var(--text)" }}>
+                            {dateLabel}
                           </span>
-                          {entry.isToday && <div style={{ width: "4px", height: "4px", borderRadius: "50%", background: accent, marginTop: "2px" }} />}
+                          {isTodayNow && <div style={{ width: "4px", height: "4px", borderRadius: "50%", background: accent, marginTop: "2px" }} />}
                         </div>
                         {!isEmpty && <span style={{ fontSize: "8px", fontWeight: "700", color: pc.color, background: pc.bg, padding: "1px 4px", borderRadius: "3px" }}>{pc.label}</span>}
                       </div>
@@ -600,6 +636,16 @@ export default function Planner() {
                           <Plus size={12} strokeWidth={2.5} />
                         </button>
                       )}
+                      {!isEmpty && (
+                        <button
+                          onClick={e => { e.stopPropagation(); setAddDayModal(entry); setAddDayContent("") }}
+                          style={{ position: "absolute", bottom: "6px", right: "6px", width: "18px", height: "18px", borderRadius: "50%", border: `1px solid ${accent}50`, background: accent + "20", color: accent, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 0, opacity: 0 }}
+                          onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                          onMouseLeave={e => e.currentTarget.style.opacity = "0"}
+                        >
+                          <Plus size={10} strokeWidth={2.5} />
+                        </button>
+                      )}
                     </div>
                   )
                 })
@@ -613,7 +659,7 @@ export default function Planner() {
       </main>
 
       {activeEntry && (
-        <div className="planner-detail-wrap" style={{ borderTop: `2px solid ${accent}` }}>
+        <div className="planner-detail-wrap" style={{ borderTop: `2px solid ${accent}`, marginTop: "0" }}>
           <div className="planner-detail-head">
             <div className="planner-detail-head-left">
               <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--text)" }}>{activeEntry.dayName}, {activeEntry.dateLabel}</span>
@@ -623,15 +669,25 @@ export default function Planner() {
             </div>
             <div className="planner-detail-head-right">
               {(() => {
-                const today = new Date(); today.setHours(0,0,0,0)
+                const _nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+                const today = new Date(_nowIST.getFullYear(), _nowIST.getMonth(), _nowIST.getDate()); today.setHours(0,0,0,0)
                 const entryDate = activeEntry.date ? new Date(activeEntry.date) : null
                 if (entryDate) entryDate.setHours(0,0,0,0)
+                const isToday = entryDate && entryDate.getTime() === today.getTime()
                 const isFuture = entryDate && entryDate > today
-                return isFuture ? (
-                  <span style={{ fontSize: "11px", color: "var(--dim)", padding: "6px 12px", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent" }}>
+                const isPast = entryDate && entryDate < today
+
+                if (isFuture) return (
+                  <span style={{ fontSize: "11px", color: "var(--dim)", padding: "6px 12px", borderRadius: "7px", border: "1px solid var(--border)" }}>
                     Available on {activeEntry.dateLabel}
                   </span>
-                ) : (
+                )
+                if (isPast) return (
+                  <span style={{ fontSize: "11px", color: "var(--dim)", padding: "6px 12px", borderRadius: "7px", border: "1px solid var(--border)" }}>
+                    {activeEntry.isCompleted ? "✓ Completed" : "Missed"}
+                  </span>
+                )
+                return (
                   <button onClick={() => toggleDone(activeEntry.id)}
                     style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "7px", border: `1px solid ${activeEntry.isCompleted ? "#4ade8040" : "#4ade8030"}`, background: "transparent", color: "#4ade80", fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>
                     <Check size={11} />{activeEntry.isCompleted ? "Undo" : "Mark done"}
@@ -653,17 +709,32 @@ export default function Planner() {
                 <p className="planner-detail-content" style={{ margin: 0, flex: 1 }}>{activeEntry.content}</p>
               </div>
               {activeEntry.extraPosts?.length > 0 && (
-                <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "8px" }}>
                   {activeEntry.extraPosts.map((post, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "8px", padding: "8px 12px", background: "var(--bg)", borderRadius: "8px", border: "1px solid var(--border)" }}>
-                      <span style={{ fontSize: "10px", fontWeight: "700", color: accent, background: accent + "15", padding: "1px 6px", borderRadius: "4px", flexShrink: 0, marginTop: "1px" }}>#{i + 2}</span>
-                      <p style={{ fontSize: "13px", color: "var(--text)", margin: 0, flex: 1, lineHeight: "1.5" }}>{post}</p>
-                      <button onClick={() => {
-                        const updated = entries.map(e => e.id === activeEntry.id ? { ...e, extraPosts: e.extraPosts.filter((_, j) => j !== i) } : e)
-                        setEntries(updated); savePlan(updated, planInfo)
-                      }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--dim)", display: "flex", flexShrink: 0, padding: "2px" }}>
-                        <X size={12} />
-                      </button>
+                    <div key={i}>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", padding: "8px 12px", background: "var(--bg)", borderRadius: "8px", border: `1px solid ${activeExtraIdx === i ? accent + "60" : "var(--border)"}` }}>
+                        <span style={{ fontSize: "10px", fontWeight: "700", color: accent, background: accent + "15", padding: "1px 6px", borderRadius: "4px", flexShrink: 0, marginTop: "2px" }}>#{i + 2}</span>
+                        <p style={{ fontSize: "13px", color: "var(--text)", margin: 0, flex: 1, lineHeight: "1.5" }}>{post}</p>
+                        <button onClick={async () => {
+                          setActiveExtraIdx(i)
+                          setExtraAiDetail(null)
+                          setExtraAiLoading(true)
+                          const fakeEntry = { ...activeEntry, content: post }
+                          try {
+                            await generateDayDetail(fakeEntry)
+                          } catch {}
+                          setExtraAiLoading(false)
+                        }} style={{ display: "flex", alignItems: "center", gap: "4px", padding: "3px 8px", borderRadius: "5px", border: `1px solid ${accent}30`, background: "transparent", color: accent, fontSize: "10px", cursor: "pointer", flexShrink: 0 }}>
+                          <Sparkles size={10} /> Brief
+                        </button>
+                        <button onClick={() => {
+                          const updated = entries.map(e => e.id === activeEntry.id ? { ...e, extraPosts: e.extraPosts.filter((_, j) => j !== i) } : e)
+                          setEntries(updated); savePlan(updated, planInfo)
+                          if (activeExtraIdx === i) { setActiveExtraIdx(null); setExtraAiDetail(null) }
+                        }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--dim)", display: "flex", flexShrink: 0, padding: "2px" }}>
+                          <X size={12} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -769,7 +840,7 @@ export default function Planner() {
                 Keep my plan
               </button>
               <button onClick={() => {
-                localStorage.removeItem(STORAGE_KEYS.PLANNER_DATA)
+                localStorage.removeItem(STORAGE_KEYS.getPlannerData())
                 setScreen("setup"); setEntries([]); setPlanInfo(null); setActiveDay(null); setConfirmNew(false)
               }} className="planner-btn-fill-danger">
                 Yes, delete it
@@ -820,6 +891,7 @@ export default function Planner() {
           </div>
         </>
       )}
+    </div>
     </div>
   )
 }
