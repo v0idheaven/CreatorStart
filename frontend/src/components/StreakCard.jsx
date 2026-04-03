@@ -92,9 +92,7 @@ export default function StreakCard({ accent, platform }) {
 
             let bg, opacity
             if (entry?.isCompleted) { bg = accent; opacity = 1 }
-            else if (entry?.active) { bg = accent; opacity = 0.35 }
-            else if (isFuture) { bg = "var(--border)"; opacity = 0.2 }
-            else { bg = "var(--border)"; opacity = 0.4 }
+            else { bg = "var(--border2)"; opacity = 0.6 }
 
             return (
               <div key={dayNum}
@@ -117,10 +115,8 @@ export default function StreakCard({ accent, platform }) {
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: "var(--border)", opacity: 0.4 }} />
-          <span style={{ fontSize: "10px", color: "var(--dim)" }}>Empty</span>
-          <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: accent, opacity: 0.4, marginLeft: "6px" }} />
-          <span style={{ fontSize: "10px", color: "var(--dim)" }}>Planned</span>
+          <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: "var(--border2)", opacity: 0.6 }} />
+          <span style={{ fontSize: "10px", color: "var(--dim)" }}>Not done</span>
           <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: accent, marginLeft: "6px" }} />
           <span style={{ fontSize: "10px", color: "var(--dim)" }}>Done</span>
         </div>

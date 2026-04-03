@@ -1,22 +1,8 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { LayoutDashboard, Zap, Calendar, Settings, LogOut } from "lucide-react"
 
-const ytNav = [
-  { icon: LayoutDashboard, label: "Overview", href: "/dashboard" },
-  { icon: Zap, label: "Content Generator", href: "/generator" },
-  { icon: Calendar, label: "30-Day Planner", href: "/planner" },
-  { icon: Settings, label: "Settings", href: "/settings" },
-]
-
-const igNav = [
-  { icon: LayoutDashboard, label: "Overview", href: "/dashboard" },
-  { icon: Zap, label: "Content Generator", href: "/generator" },
-  { icon: Calendar, label: "30-Day Planner", href: "/planner" },
-  { icon: Settings, label: "Settings", href: "/settings" },
-]
-
-const bothNav = [
+const navItems = [
   { icon: LayoutDashboard, label: "Overview", href: "/dashboard" },
   { icon: Zap, label: "Content Generator", href: "/generator" },
   { icon: Calendar, label: "30-Day Planner", href: "/planner" },
@@ -24,27 +10,9 @@ const bothNav = [
 ]
 
 const PLATFORM_CONFIG = {
-  youtube: {
-    color: "#ff4444",
-    bg: "#ff444418",
-    logoColor: "#ff4444",
-    navItems: ytNav,
-    label: "YouTube",
-  },
-  instagram: {
-    color: "#c13584",
-    bg: "#c1358418",
-    logoColor: "#c13584",
-    navItems: igNav,
-    label: "Instagram",
-  },
-  both: {
-    color: "#818cf8",
-    bg: "#818cf818",
-    logoColor: "#818cf8",
-    navItems: bothNav,
-    label: "CreatorStart",
-  },
+  youtube: { color: "#ff4444", bg: "#ff444418", logoColor: "#ff4444", navItems, label: "YouTube" },
+  instagram: { color: "#c13584", bg: "#c1358418", logoColor: "#c13584", navItems, label: "Instagram" },
+  both: { color: "#818cf8", bg: "#818cf818", logoColor: "#818cf8", navItems, label: "CreatorStart" },
 }
 
 export default function Sidebar() {
@@ -54,7 +22,20 @@ export default function Sidebar() {
 
   const platform = localStorage.getItem("platform") || "both"
   const cfg = PLATFORM_CONFIG[platform] || PLATFORM_CONFIG.both
-  const { color, bg, logoColor, navItems, label } = cfg
+  const { color, bg, logoColor, label } = cfg
+
+  const [userState, setUserState] = useState(() => JSON.parse(localStorage.getItem("user") || "{}"))
+
+  useEffect(() => {
+    const refresh = () => setUserState(JSON.parse(localStorage.getItem("user") || "{}"))
+    window.addEventListener("userUpdated", refresh)
+    return () => window.removeEventListener("userUpdated", refresh)
+  }, [])
+
+  const displayName = userState.fullName || "User"
+  const displayEmail = userState.email || ""
+  const initials = displayName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+  const avatarUrl = userState.avatar || ""
 
   return (
     <div
@@ -108,13 +89,28 @@ export default function Sidebar() {
 
       <div className="sidebar-footer">
         <div className="sidebar-divider" />
-        <div className="sidebar-user" onClick={() => navigate("/auth")}>
-          <div className="sidebar-avatar" style={{ background: color }}>VY</div>
+        <div className="sidebar-user" onClick={() => {
+          const token = localStorage.getItem("accessToken")
+          if (token) {
+            fetch(`${import.meta.env.VITE_API_URL || ""}/api/v1/auth/logout`, {
+              method: "POST", credentials: "include",
+              headers: { "Authorization": `Bearer ${token}` }
+            }).catch(() => {})
+          }
+          localStorage.removeItem("accessToken")
+          localStorage.removeItem("user")
+          localStorage.removeItem("platform")
+          navigate("/auth")
+        }}>
+          {avatarUrl
+            ? <img src={avatarUrl} alt="avatar" style={{ width: "28px", height: "28px", minWidth: "28px", borderRadius: "50%", objectFit: "cover" }} />
+            : <div className="sidebar-avatar" style={{ background: color }}>{initials}</div>
+          }
           {isOpen && (
             <>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p className="sidebar-user-name">Varun Yadav</p>
-                <p className="sidebar-user-email">varun@email.com</p>
+                <p className="sidebar-user-name">{displayName}</p>
+                <p className="sidebar-user-email">{displayEmail}</p>
               </div>
               <LogOut size={16} color="var(--dim)" />
             </>

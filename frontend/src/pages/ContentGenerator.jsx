@@ -258,22 +258,39 @@ export default function ContentGenerator() {
                     {allDays.map(e => {
                       const isEmpty = !e.content
                       const dateNum = e.date ? new Date(e.date).getDate() : e.day
+
+                      const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+                      const todayIST = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate())
+                      const entryDate = e.date ? new Date(e.date) : null
+                      if (entryDate) entryDate.setHours(0, 0, 0, 0)
+                      const isPast = entryDate ? entryDate < todayIST : false
+
                       return (
                         <div key={e.day}
                           onClick={() => {
+                            if (isPast) return
                             const title = result.title || result.hook || result.caption || "Content idea"
                             const updated = saved.entries.map(en => en.day === e.day ? { ...en, content: title, active: true } : en)
                             localStorage.setItem(`planner_data_${_plat}`, JSON.stringify({ ...saved, entries: updated }))
                             setPlannerSaved(true)
                             setTimeout(() => { setShowPlannerModal(false); setPlannerSaved(false) }, 1200)
                           }}
-                          onMouseEnter={el => el.currentTarget.style.borderColor = color}
-                          onMouseLeave={el => el.currentTarget.style.borderColor = isEmpty ? "var(--border2)" : "var(--border)"}
-                          style={{ padding: "8px 6px", borderRadius: "8px", border: `1.5px solid ${isEmpty ? "var(--border2)" : "var(--border)"}`, background: isEmpty ? "var(--bg)" : "var(--card)", cursor: "pointer", textAlign: "center", transition: "border-color 0.12s" }}
+                          onMouseEnter={el => { if (!isPast) el.currentTarget.style.borderColor = color }}
+                          onMouseLeave={el => el.currentTarget.style.borderColor = isPast ? "var(--border)" : isEmpty ? "var(--border2)" : "var(--border)"}
+                          style={{
+                            padding: "8px 6px", borderRadius: "8px",
+                            border: `1.5px solid ${isPast ? "var(--border)" : isEmpty ? "var(--border2)" : "var(--border)"}`,
+                            background: isPast ? "transparent" : isEmpty ? "var(--bg)" : "var(--card)",
+                            cursor: isPast ? "not-allowed" : "pointer",
+                            textAlign: "center", transition: "border-color 0.12s",
+                            opacity: isPast ? 0.35 : 1,
+                          }}
                         >
-                          <p style={{ fontSize: "15px", fontWeight: "700", color: isEmpty ? "var(--text)" : color, margin: "0 0 2px", lineHeight: 1 }}>{dateNum}</p>
+                          <p style={{ fontSize: "15px", fontWeight: "700", color: isPast ? "var(--dim)" : isEmpty ? "var(--text)" : color, margin: "0 0 2px", lineHeight: 1 }}>{dateNum}</p>
                           <p style={{ fontSize: "9px", color: "var(--dim)", margin: "0 0 3px" }}>{e.dayName || ""}</p>
-                          {isEmpty
+                          {isPast
+                            ? <p style={{ fontSize: "9px", color: "var(--dim)", margin: 0 }}>past</p>
+                            : isEmpty
                             ? <p style={{ fontSize: "9px", color: "var(--dim)", margin: 0 }}>empty</p>
                             : <p style={{ fontSize: "9px", color: "var(--muted)", margin: 0, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>replace</p>
                           }
