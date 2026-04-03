@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose"
 
+// stores the full plan blob per user per platform
 const plannerSchema = new Schema(
     {
         owner: {
@@ -7,28 +8,23 @@ const plannerSchema = new Schema(
             ref: "User",
             required: true
         },
-        day: {
-            type: Number,
-            required: true,
-            min: 1,
-            max: 30
-        },
-        content: {
-            type: String,
-            required: true,
-            trim: true
-        },
         platform: {
             type: String,
             enum: ["youtube", "instagram", "both"],
             required: true
         },
-        isCompleted: {
-            type: Boolean,
-            default: false
+        planData: {
+            type: Schema.Types.Mixed,
+            default: null
+        },
+        streakData: {
+            type: Schema.Types.Mixed,
+            default: []
         }
     },
     { timestamps: true }
 )
+
+plannerSchema.index({ owner: 1, platform: 1 }, { unique: true })
 
 export const Planner = mongoose.model("Planner", plannerSchema)

@@ -1,9 +1,11 @@
-import { createElement, useState } from "react"
+import { createElement, useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
 import { Zap, CalendarDays, FileText, TrendingUp, Clock, CheckCheck, AlignLeft, Users, Eye, PlaySquare, Timer, Heart, MessageCircle, Image } from "lucide-react"
 import Sidebar from "../components/Sidebar"
 import StreakCard from "../components/StreakCard"
+import { apiFetch } from "../utils/api"
+import { API_ENDPOINTS } from "../constants/api"
 
 
 const DATA = {
@@ -98,6 +100,16 @@ function fmt(n) {
 export default function DashboardBoth() {
   const navigate = useNavigate()
   const [view, setView] = useState("overall")
+  const [ytVideos, setYtVideos] = useState([])
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}")
+    if (user.youtubeStats) {
+      apiFetch(API_ENDPOINTS.youtubeVideos).then(r => r.json()).then(d => {
+        if (Array.isArray(d?.data)) setYtVideos(d.data)
+      }).catch(() => {})
+    }
+  }, [])
   const [hovered, setHovered] = useState(null)
 
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}")
@@ -193,7 +205,7 @@ export default function DashboardBoth() {
             </ResponsiveContainer>
           </div>
 
-          <StreakCard accent={accent} platform="both" />
+          <StreakCard accent={accent} platform="both" ytVideos={ytVideos} />
         </div>
 
         <div style={{ marginBottom: "20px" }}>

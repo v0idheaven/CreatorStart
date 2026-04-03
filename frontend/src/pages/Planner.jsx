@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Sparkles, Check, Pencil, X, Download, StickyNote, Users, Flame, Zap, Target, DollarSign, Heart, Youtube, Instagram, Scale, Calendar, Plus } from "lucide-react"
+import { Sparkles, Check, Pencil, X, StickyNote, Users, Flame, Zap, Target, DollarSign, Heart, Youtube, Instagram, Scale, Calendar, Plus, Trash2 } from "lucide-react"
 import Sidebar from "../components/Sidebar"
 import "./Planner.css"
 import {
@@ -13,6 +13,7 @@ import {
 } from "../constants/plannerConstants"
 import { STORAGE_KEYS } from "../constants/storageKeys"
 import { API_ENDPOINTS } from "../constants/api"
+import { apiFetch } from "../utils/api"
 
 const GOAL_ICONS = {
   followers: Users,
@@ -35,24 +36,21 @@ const FOCUS_ICONS = {
   both: Scale,
 }
 
-function buildFallbackContent(goalLabel, topicLabel, platformLabel, dayNum) {
+function buildFallbackContent(goalLabel, topicLabel, platformLabel, dayNum, seed) {
   const angles = [
-    "quick tip",
-    "common mistake",
-    "step-by-step guide",
-    "myth vs reality",
-    "behind-the-scenes",
-    "beginner checklist",
+    "quick tip", "common mistake", "step-by-step guide", "myth vs reality",
+    "behind-the-scenes", "beginner checklist", "pro strategy", "case study",
+    "trending topic", "audience Q&A", "personal story", "tool review",
   ]
-
-  const formats = ["Short video", "Carousel", "Story", "Post", "Live topic"]
-  const angle = angles[(dayNum - 1) % angles.length]
-  const format = formats[(dayNum - 1) % formats.length]
-
+  const formats = ["Short video", "Carousel", "Story", "Post", "Live topic", "Reel", "Tutorial", "Vlog"]
+  const idx = (dayNum + seed) % angles.length
+  const fidx = (dayNum * 3 + seed) % formats.length
+  const angle = angles[idx]
+  const format = formats[fidx]
   return `${format}: ${goalLabel} for ${topicLabel} on ${platformLabel} - ${angle}.`
 }
 
-function generatePlan(goal, topic, freq, focus, platform) {
+function generatePlan(goal, topic, freq, focus, platform, seed = 0) {
   // IST today
   const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
   const today = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate())
@@ -102,7 +100,7 @@ function generatePlan(goal, topic, freq, focus, platform) {
       dateLabel: date.toLocaleDateString("en-IN", { month: "short", day: "numeric" }),
       dayName: date.toLocaleDateString("en-IN", { weekday: "short" }),
       isToday,
-      content: isActive ? buildFallbackContent(goalLabel, topicLabel, p === "both" ? "YouTube + Instagram" : p === "youtube" ? "YouTube" : "Instagram", dayNum) : "",
+      content: isActive ? buildFallbackContent(goalLabel, topicLabel, p === "both" ? "YouTube + Instagram" : p === "youtube" ? "YouTube" : "Instagram", dayNum, seed) : "",
       platform: p,
       isCompleted: false,
       note: "",
@@ -269,7 +267,6 @@ export default function Planner() {
       const sameMonth = firstDate.getFullYear() === todayIST.getFullYear() &&
                         firstDate.getMonth() === todayIST.getMonth()
       const startsOnFirst = firstDate.getDate() === 1
-      // also clear if date is stored as a Date object (old format) — typeof check
       const isStringDate = typeof firstEntry.date === "string"
       if (!sameMonth || !startsOnFirst || !isStringDate) {
         saved = null
@@ -299,6 +296,36 @@ export default function Planner() {
   const [activeExtraIdx, setActiveExtraIdx] = useState(null)
   const [extraAiDetail, setExtraAiDetail] = useState(null)
   const [extraAiLoading, setExtraAiLoading] = useState(false)
+
+  // load from backend on mount, merge with localStorage
+  useState(() => {
+    async function loadFromBackend() {
+      try {
+        const [planRes, streakRes] = await Promise.all([
+          apiFetch(API_ENDPOINTS.getPlan(platform)),
+          apiFetch(API_ENDPOINTS.getStreak(platform))
+        ])
+        if (planRes.ok) {
+          const planData = await planRes.json()
+          if (planData?.data) {
+            localStorage.setItem(STORAGE_KEYS.getPlannerData(), JSON.stringify(planData.data))
+            if (!saved) {
+              setEntries(planData.data.entries || [])
+              setPlanInfo(planData.data.planInfo || null)
+              if (planData.data.entries?.length > 0) setScreen("plan")
+            }
+          }
+        }
+        if (streakRes.ok) {
+          const streakData = await streakRes.json()
+          if (Array.isArray(streakData?.data)) {
+            localStorage.setItem(STORAGE_KEYS.getStreakData(), JSON.stringify(streakData.data))
+          }
+        }
+      } catch {}
+    }
+    loadFromBackend()
+  })
 
   async function generateDayDetail(entry) {
     if (!entry.content) return
@@ -346,7 +373,27 @@ export default function Planner() {
   }
 
   function savePlan(newEntries, newPlanInfo) {
-    localStorage.setItem(STORAGE_KEYS.getPlannerData(), JSON.stringify({ entries: newEntries, planInfo: newPlanInfo }))
+    const planId = newPlanInfo?.planId || planInfo?.planId
+    const planPayload = { entries: newEntries, planInfo: newPlanInfo }
+    localStorage.setItem(STORAGE_KEYS.getPlannerData(), JSON.stringify(planPayload))
+
+    // sync to backend
+    apiFetch(API_ENDPOINTS.savePlan, {
+      method: "POST",
+      body: JSON.stringify({ platform, planData: planPayload })
+    }).catch(() => {})
+
+    const completedDays = newEntries.filter(e => e.isCompleted).map(e => ({ day: e.day, date: e.date, planId }))
+    const existing = JSON.parse(localStorage.getItem(STORAGE_KEYS.getStreakData()) || "[]")
+    const otherPlans = existing.filter(m => m.planId !== planId)
+    const merged = [...otherPlans, ...completedDays]
+    localStorage.setItem(STORAGE_KEYS.getStreakData(), JSON.stringify(merged))
+
+    // sync streak to backend
+    apiFetch(API_ENDPOINTS.saveStreak, {
+      method: "POST",
+      body: JSON.stringify({ platform, streakData: merged })
+    }).catch(() => {})
   }
 
   async function callGroqForPlan(goal, topic, freq, focus) {
@@ -394,10 +441,10 @@ Make content specific and actionable. Return only the JSON array.`
 
   async function handleGenerate(goal, topic, freq, focus) {
     setGenerating(true)
-    const newInfo = { goal, topic, freq, focus }
+    const newInfo = { goal, topic, freq, focus, planId: `plan_${Date.now()}` }
     setPlanInfo(newInfo)
     setTimeout(() => {
-      const newEntries = generatePlan(goal, topic, freq, focus, platform)
+      const newEntries = generatePlan(goal, topic, freq, focus, platform, Date.now() % 1000)
       setEntries(newEntries)
       savePlan(newEntries, newInfo)
       setScreen("plan")
@@ -405,16 +452,6 @@ Make content specific and actionable. Return only the JSON array.`
     }, 1200)
   }
 
-  async function handleRegenerate() {
-    if (!planInfo) return
-    setGenerating(true)
-    setTimeout(() => {
-      const newEntries = generatePlan(planInfo.goal, planInfo.topic, planInfo.freq, planInfo.focus, platform)
-      setEntries(newEntries)
-      savePlan(newEntries, planInfo)
-      setGenerating(false)
-    }, 1200)
-  }
 
   function openEdit(entry) {
     setEditingEntry(entry)
@@ -445,16 +482,6 @@ Make content specific and actionable. Return only the JSON array.`
     const updated = entries.map(e => e.id === id ? { ...e, isCompleted: !e.isCompleted } : e)
     setEntries(updated)
     savePlan(updated, planInfo)
-  }
-
-  function exportPlan() {
-    const lines = entries.filter(e => e.active && e.content).map(e => `Day ${e.day}: ${e.content}${e.note ? ` [Note: ${e.note}]` : ""}`)
-    const text = `30-Day Content Plan\nGoal: ${GOALS.find(g => g.id === planInfo?.goal)?.label} | Topic: ${TOPICS.find(t => t.id === planInfo?.topic)?.label}\n\n${lines.join("\n")}`
-    const blob = new Blob([text], { type: "text/plain" })
-    const a = document.createElement("a")
-    a.href = URL.createObjectURL(blob)
-    a.download = "30-day-plan.txt"
-    a.click()
   }
 
   if (generating) {
@@ -501,15 +528,6 @@ Make content specific and actionable. Return only the JSON array.`
 
           {screen === "plan" && (
             <div className="planner-top-actions">
-              <button onClick={exportPlan}
-                className="planner-btn-inline planner-btn-ghost">
-                <Download size={13} /> Export
-              </button>
-              <button onClick={handleRegenerate}
-                className="planner-btn-inline"
-                style={{ border: `1px solid ${accent}40`, background: accent + "12", color: accent, fontWeight: "600" }}>
-                <span style={{ fontSize: "13px" }}>↻</span> Regenerate
-              </button>
               <button onClick={() => setConfirmNew(true)}
                 className="planner-btn-inline planner-btn-ghost">
                 New Plan
@@ -628,7 +646,7 @@ Make content specific and actionable. Return only the JSON array.`
                           +{entry.extraPosts.length}
                         </div>
                       )}
-                      {isEmpty && planInfo?.freq !== "daily" && (
+                      {isEmpty && planInfo?.freq !== "daily" && !isPastNow && (
                         <button
                           onClick={e => { e.stopPropagation(); setAddDayModal(entry); setAddDayContent("") }}
                           style={{ position: "absolute", bottom: "6px", right: "6px", width: "22px", height: "22px", borderRadius: "50%", border: `1.5px solid ${accent}`, background: accent + "30", color: accent, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 0 }}
@@ -636,7 +654,7 @@ Make content specific and actionable. Return only the JSON array.`
                           <Plus size={12} strokeWidth={2.5} />
                         </button>
                       )}
-                      {!isEmpty && (
+                      {!isEmpty && !isPastNow && (
                         <button
                           onClick={e => { e.stopPropagation(); setAddDayModal(entry); setAddDayContent("") }}
                           style={{ position: "absolute", bottom: "6px", right: "6px", width: "18px", height: "18px", borderRadius: "50%", border: `1px solid ${accent}50`, background: accent + "20", color: accent, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 0, opacity: 0 }}
@@ -698,6 +716,28 @@ Make content specific and actionable. Return only the JSON array.`
                 style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "7px", border: `1px solid ${accent}30`, background: "transparent", color: accent, fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>
                 <Pencil size={11} />Edit
               </button>
+              {(() => {
+                const _n = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+                const _today = new Date(_n.getFullYear(), _n.getMonth(), _n.getDate()); _today.setHours(0,0,0,0)
+                const _ed = activeEntry.date ? new Date(activeEntry.date) : null
+                if (_ed) _ed.setHours(0,0,0,0)
+                const _isPast = _ed && _ed < _today
+                if (_isPast) return null
+                return (
+                  <button onClick={() => {
+                    const updated = entries.map(e => e.id === activeEntry.id
+                      ? { ...e, content: "", active: false, isCompleted: false, note: "", extraPosts: [] }
+                      : e)
+                    setEntries(updated)
+                    savePlan(updated, planInfo)
+                    setActiveDay(null)
+                    setAiDetail(null)
+                  }}
+                    style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "7px", border: "1px solid #f8717130", background: "transparent", color: "#f87171", fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>
+                    <Trash2 size={11} />Delete
+                  </button>
+                )
+              })()}
               <button onClick={() => { setActiveDay(null); setAiDetail(null) }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--dim)", display: "flex", padding: "6px" }}>
                 <X size={14} />
               </button>
@@ -739,10 +779,20 @@ Make content specific and actionable. Return only the JSON array.`
                   ))}
                 </div>
               )}
-              <button onClick={() => { setAddDayModal(activeEntry); setAddDayContent("") }}
-                style={{ marginTop: "10px", display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "7px", border: `1px solid ${accent}30`, background: "transparent", color: accent, fontSize: "12px", cursor: "pointer" }}>
-                <Plus size={12} /> Add another post for this day
-              </button>
+              {(() => {
+                const _n = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+                const todayCheck = new Date(_n.getFullYear(), _n.getMonth(), _n.getDate())
+                const entryDateCheck = activeEntry.date ? new Date(activeEntry.date) : null
+                if (entryDateCheck) entryDateCheck.setHours(0,0,0,0)
+                const isPastEntry = entryDateCheck && entryDateCheck < todayCheck
+                if (isPastEntry) return null
+                return (
+                  <button onClick={() => { setAddDayModal(activeEntry); setAddDayContent("") }}
+                    style={{ marginTop: "10px", display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "7px", border: `1px solid ${accent}30`, background: "transparent", color: accent, fontSize: "12px", cursor: "pointer" }}>
+                    <Plus size={12} /> Add another post for this day
+                  </button>
+                )
+              })()}
             </div>
             {aiLoading && (
               <div className="planner-loading-row">
@@ -839,9 +889,20 @@ Make content specific and actionable. Return only the JSON array.`
               <button onClick={() => setConfirmNew(false)} className="planner-btn-secondary">
                 Keep my plan
               </button>
-              <button onClick={() => {
+              <button onClick={async () => {
                 localStorage.removeItem(STORAGE_KEYS.getPlannerData())
-                setScreen("setup"); setEntries([]); setPlanInfo(null); setActiveDay(null); setConfirmNew(false)
+                // also clear from backend so reload doesn't restore it
+                try {
+                  await apiFetch(API_ENDPOINTS.savePlan, {
+                    method: "POST",
+                    body: JSON.stringify({ platform, planData: null })
+                  })
+                } catch {}
+                setConfirmNew(false)
+                setEntries([])
+                setPlanInfo(null)
+                setActiveDay(null)
+                setScreen("setup")
               }} className="planner-btn-fill-danger">
                 Yes, delete it
               </button>

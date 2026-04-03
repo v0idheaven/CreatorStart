@@ -33,20 +33,26 @@ const userSchema = new Schema(
             enum: ["youtube", "instagram", "both"],
             default: "both"
         },
-        niche: {
-            type: String,
-            trim: true
-        },
-        avatar: {
-            type: String,
-        },
-        coverImage: {
-            type: String,
-            default: ""
-        },
-        refreshToken: {
-            type: String
-        }
+        niche: { type: String, trim: true, default: "" },
+        bio: { type: String, trim: true, default: "" },
+        goal: { type: String, trim: true, default: "" },
+        tone: { type: String, trim: true, default: "" },
+        avatar: { type: String, default: "" },
+        coverImage: { type: String, default: "" },
+        // Google OAuth
+        googleId: { type: String, default: "" },
+        googleAccessToken: { type: String, default: "" },
+        googleRefreshToken: { type: String, default: "" },
+        // YouTube channel data
+        youtubeChannelId: { type: String, default: "" },
+        youtubeStats: { type: Object, default: null },
+        youtubeStatsUpdatedAt: { type: Date, default: null },
+        // Meta/Instagram OAuth
+        metaId: { type: String, default: "" },
+        metaAccessToken: { type: String, default: "" },
+        instagramStats: { type: Object, default: null },
+        instagramStatsUpdatedAt: { type: Date, default: null },
+        refreshToken: { type: String }
     },
     {
         timestamps: true

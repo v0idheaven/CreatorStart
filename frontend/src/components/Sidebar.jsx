@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { LayoutDashboard, Zap, Calendar, Settings, LogOut } from "lucide-react"
+import { LayoutDashboard, Zap, Calendar, Settings, LogOut, FileText, BarChart2 } from "lucide-react"
 
 const navItems = [
   { icon: LayoutDashboard, label: "Overview", href: "/dashboard" },
   { icon: Zap, label: "Content Generator", href: "/generator" },
   { icon: Calendar, label: "30-Day Planner", href: "/planner" },
+  { icon: FileText, label: "Content", href: "/content" },
+  { icon: BarChart2, label: "Analytics", href: "/analytics" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ]
 
