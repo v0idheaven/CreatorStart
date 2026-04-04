@@ -4,8 +4,8 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import ApiError from "../utils/ApiError.js"
 
-const DEFAULT_BACKEND_URL = "https://creator-start-backend.onrender.com"
-const DEFAULT_FRONTEND_URL = "https://creator-start.vercel.app"
+const BACKEND_URL = process.env.BACKEND_URL || "https://creator-start-backend.onrender.com"
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://creator-start.vercel.app"
 
 const cookieOptions = {
     httpOnly: true,
@@ -17,12 +17,11 @@ function getOAuthClient() {
     return new google.auth.OAuth2(
         process.env.GOOGLE_CLIENT_ID,
         process.env.GOOGLE_CLIENT_SECRET,
-        `${process.env.BACKEND_URL || DEFAULT_BACKEND_URL}/api/v1/auth/google/callback`
+        `${BACKEND_URL}/api/v1/auth/google/callback`
     )
 }
 
-// Step 1: redirect user to Google consent screen
-const googleAuthRedirect = asyncHandler(async (req, res) => {
+const googleAuthRedirect = asyncHandler(async (_req, res) => {
     const oauth2Client = getOAuthClient()
     const url = oauth2Client.generateAuthUrl({
         access_type: "offline",
@@ -38,7 +37,6 @@ const googleAuthRedirect = asyncHandler(async (req, res) => {
     res.redirect(url)
 })
 
-// Step 2: Google redirects back with code
 const googleAuthCallback = asyncHandler(async (req, res) => {
     const { code } = req.query
     if (!code) throw new ApiError(400, "No code from Google")
@@ -47,13 +45,10 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
     const { tokens } = await oauth2Client.getToken(code)
     oauth2Client.setCredentials(tokens)
 
-    // get user info from Google
     const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client })
     const { data: googleUser } = await oauth2.userinfo.get()
-
     const { id: googleId, email, name, picture } = googleUser
 
-    // find or create user
     let user = await User.findOne({ $or: [{ googleId }, { email }] })
 
     if (!user) {
@@ -62,7 +57,7 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
             fullName: name,
             email,
             username,
-            password: Math.random().toString(36).slice(-12) + "Aa1!", // random password, won't be used
+            password: Math.random().toString(36).slice(-12) + "Aa1!",
             avatar: picture,
             googleId,
             googleAccessToken: tokens.access_token,
@@ -76,7 +71,6 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
         await user.save({ validateBeforeSave: false })
     }
 
-    // fetch YouTube channel stats
     try {
         const youtube = google.youtube({ version: "v3", auth: oauth2Client })
         const channelRes = await youtube.channels.list({
@@ -104,7 +98,6 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
         console.error("YouTube stats fetch failed:", e.message)
     }
 
-    // generate app tokens
     const accessToken = user.generateAccessToken()
     const refreshToken = user.generateRefreshToken()
     user.refreshToken = refreshToken
@@ -112,15 +105,12 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
 
     const safeUser = await User.findById(user._id).select("-password -refreshToken -googleAccessToken -googleRefreshToken")
 
-    const frontendUrl = process.env.FRONTEND_URL || DEFAULT_FRONTEND_URL
-    // redirect to frontend with token in query (frontend will store it)
     res
         .cookie("accessToken", accessToken, cookieOptions)
         .cookie("refreshToken", refreshToken, cookieOptions)
-        .redirect(`${frontendUrl}/auth/callback?token=${accessToken}&user=${encodeURIComponent(JSON.stringify(safeUser))}`)
+        .redirect(`${FRONTEND_URL}/auth/callback?token=${accessToken}&user=${encodeURIComponent(JSON.stringify(safeUser))}`)
 })
 
-// refresh YouTube stats (called from frontend)
 const refreshYoutubeStats = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id)
     if (!user.googleAccessToken) throw new ApiError(400, "YouTube not connected")
@@ -158,7 +148,6 @@ const refreshYoutubeStats = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, { youtubeStats: stats }, "YouTube stats refreshed"))
 })
 
-// fetch latest YouTube videos
 const getYoutubeVideos = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id)
     if (!user.googleAccessToken) throw new ApiError(400, "YouTube not connected")
@@ -171,10 +160,7 @@ const getYoutubeVideos = asyncHandler(async (req, res) => {
 
     const youtube = google.youtube({ version: "v3", auth: oauth2Client })
 
-    const channelRes = await youtube.channels.list({
-        part: ["contentDetails"],
-        mine: true
-    })
+    const channelRes = await youtube.channels.list({ part: ["contentDetails"], mine: true })
     const uploadsPlaylistId = channelRes.data.items?.[0]?.contentDetails?.relatedPlaylists?.uploads
     if (!uploadsPlaylistId) throw new ApiError(404, "No uploads playlist found")
 
@@ -192,12 +178,10 @@ const getYoutubeVideos = asyncHandler(async (req, res) => {
     })
 
     const videos = statsRes.data.items?.map(v => {
-        // parse duration to determine if Short (<=60s)
         const dur = v.contentDetails?.duration || ""
         const match = dur.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)
         const seconds = (parseInt(match?.[1] || 0) * 3600) + (parseInt(match?.[2] || 0) * 60) + parseInt(match?.[3] || 0)
         const isShort = seconds > 0 && seconds <= 60
-
         return {
             id: v.id,
             title: v.snippet?.title,
@@ -212,7 +196,6 @@ const getYoutubeVideos = asyncHandler(async (req, res) => {
         }
     }) || []
 
-    // also update channel stats with summed views from videos (more accurate for new channels)
     const totalViewsFromVideos = videos.reduce((sum, v) => sum + Number(v.views || 0), 0)
     if (user.youtubeStats && totalViewsFromVideos > Number(user.youtubeStats.views || 0)) {
         user.youtubeStats = { ...user.youtubeStats, views: String(totalViewsFromVideos) }
@@ -222,7 +205,6 @@ const getYoutubeVideos = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, videos, "Videos fetched"))
 })
 
-// fetch YouTube Analytics data
 const getYoutubeAnalytics = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id)
     if (!user.googleAccessToken) throw new ApiError(400, "YouTube not connected")
@@ -234,21 +216,17 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
     })
 
     const youtubeAnalytics = google.youtubeAnalytics({ version: "v2", auth: oauth2Client })
-
-    // last 28 days
     const endDate = new Date().toISOString().split("T")[0]
     const startDate = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
 
     try {
         const [overviewRes, dailyRes] = await Promise.all([
-            // overall stats last 28 days
             youtubeAnalytics.reports.query({
                 ids: "channel==MINE",
                 startDate,
                 endDate,
                 metrics: "views,estimatedMinutesWatched,averageViewDuration,subscribersGained,subscribersLost,likes,comments,shares,impressions,impressionClickThroughRate",
             }),
-            // daily views last 28 days
             youtubeAnalytics.reports.query({
                 ids: "channel==MINE",
                 startDate,
@@ -272,8 +250,7 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
         })
 
         return res.status(200).json(new ApiResponse(200, { overview, daily }, "Analytics fetched"))
-    } catch (e) {
-        // Analytics API might not have data for new channels
+    } catch {
         return res.status(200).json(new ApiResponse(200, { overview: {}, daily: [] }, "No analytics data yet"))
     }
 })
