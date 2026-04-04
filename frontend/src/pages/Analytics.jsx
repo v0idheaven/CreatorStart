@@ -1,229 +1,22 @@
 import { useState, useMemo, useEffect } from "react"
-import { Youtube, Instagram, RefreshCw, TrendingUp, TrendingDown } from "lucide-react"
+import { Youtube, RefreshCw } from "lucide-react"
 import Sidebar from "../components/Sidebar"
 import { apiFetch } from "../utils/api"
 import { API_ENDPOINTS } from "../constants/api"
+import "./Analytics.css"
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://creator-start-backend.onrender.com"
 
 const COLORS = { youtube: "#ff4444", instagram: "#c13584", both: "#818cf8" }
 const STATUS_COLORS = { Idea: "#818cf8", Scripting: "#f59e0b", Filming: "#f97316", Editing: "#06b6d4", Published: "#4ade80" }
-const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
 
-function IGConnectView({ apiBase, igStats, onRefresh, refreshing, igError, igMedia, igInsights, loadingMedia }) {
-  const [isProfessional, setIsProfessional] = useState(false)
-  const [isLinked, setIsLinked] = useState(false)
-  const [showConnect, setShowConnect] = useState(false)
-  const canConnect = isProfessional && isLinked
-  const urlError = new URLSearchParams(window.location.search).get("ig_error")
-
-  // if already connected, show full analytics
-  if (igStats) {
-    return (
-      <div>
-        {/* Profile header */}
-        <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "20px" }}>
-          {igStats.profilePicture
-            ? <img src={igStats.profilePicture} alt="" style={{ width: "52px", height: "52px", borderRadius: "50%", objectFit: "cover" }} />
-            : <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "linear-gradient(135deg, #c13584, #f56040)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Instagram size={22} color="#fff" />
-              </div>
-          }
-          <div style={{ flex: 1 }}>
-            <p style={{ fontSize: "16px", fontWeight: "700", color: "var(--text)", margin: "0 0 2px" }}>@{igStats.username}</p>
-            {igStats.bio && <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>{igStats.bio}</p>}
-          </div>
-          <button onClick={onRefresh} disabled={refreshing}
-            style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--dim)", fontSize: "12px", cursor: "pointer" }}>
-            <RefreshCw size={11} style={{ animation: refreshing ? "spin 0.8s linear infinite" : "none" }} />
-            Refresh
-          </button>
-        </div>
-
-        {igError && <p style={{ fontSize: "12px", color: "#f87171", margin: "0 0 12px" }}>{igError}</p>}
-
-        {/* Stats panel */}
-        <div style={{ background: "var(--card)", borderRadius: "10px", border: "1px solid var(--border)", overflow: "hidden", marginBottom: "16px" }}>
-          {/* Profile counts */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", borderBottom: "1px solid var(--border)" }}>
-            {[
-              { label: "Followers", value: Number(igStats.followers || 0).toLocaleString() },
-              { label: "Following", value: Number(igStats.following || 0).toLocaleString() },
-              { label: "Posts", value: Number(igStats.posts || 0).toLocaleString() },
-            ].map((s, i) => (
-              <div key={s.label} style={{ padding: "18px 20px", borderRight: i < 2 ? "1px solid var(--border)" : "none" }}>
-                <p style={{ fontSize: "24px", fontWeight: "800", color: "#c13584", margin: "0 0 4px", letterSpacing: "-1px" }}>{s.value}</p>
-                <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{s.label}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Insights — last 28 days */}
-          {igInsights ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)" }}>
-              {[
-                { label: "Reach", value: fmt(igInsights.reach), sub: "last 28 days" },
-                { label: "Impressions", value: fmt(igInsights.impressions), sub: "last 28 days" },
-                { label: "Profile views", value: fmt(igInsights.profileViews), sub: "last 28 days" },
-              ].map((s, i) => (
-                <div key={s.label} style={{ padding: "16px 20px", borderRight: i < 2 ? "1px solid var(--border)" : "none" }}>
-                  <p style={{ fontSize: "11px", color: "var(--dim)", margin: "0 0 4px" }}>{s.label}</p>
-                  <p style={{ fontSize: "22px", fontWeight: "800", color: "var(--text)", margin: "0 0 2px", letterSpacing: "-1px" }}>{s.value}</p>
-                  <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{s.sub}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ padding: "16px 20px" }}>
-              <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>
-                Insights unavailable — requires <code style={{ fontSize: "11px", background: "var(--border)", padding: "1px 5px", borderRadius: "3px" }}>instagram_manage_insights</code> permission. Re-connect to grant access.
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Recent posts */}
-        <div style={{ background: "var(--card)", borderRadius: "10px", border: "1px solid var(--border)", overflow: "hidden" }}>
-          <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-              <Instagram size={14} color="#c13584" />
-              <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", margin: 0 }}>Recent posts</p>
-            </div>
-            {loadingMedia && <div style={{ width: "14px", height: "14px", border: "2px solid var(--border)", borderTopColor: "#c13584", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />}
-          </div>
-
-          {loadingMedia ? (
-            <div style={{ padding: "24px", textAlign: "center" }}>
-              <div style={{ width: "18px", height: "18px", border: "2px solid var(--border)", borderTopColor: "#c13584", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
-            </div>
-          ) : igMedia.length === 0 ? (
-            <p style={{ padding: "16px 20px", fontSize: "13px", color: "var(--dim)", margin: 0 }}>No posts found.</p>
-          ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                  {["", "Caption", "Type", "Likes", "Comments", "Posted"].map((h, i) => (
-                    <th key={i} style={{ padding: "9px 14px", textAlign: "left", fontSize: "11px", color: "var(--dim)", fontWeight: "500" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {igMedia.map(post => (
-                  <tr key={post.id} style={{ borderBottom: "1px solid var(--border)" }}
-                    onMouseEnter={e => e.currentTarget.style.background = "var(--sb)"}
-                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                    <td style={{ padding: "10px 14px", width: "60px" }}>
-                      <a href={post.permalink} target="_blank" rel="noreferrer">
-                        {post.mediaUrl
-                          ? <img src={post.mediaUrl} alt="" style={{ width: "44px", height: "44px", borderRadius: "6px", objectFit: "cover", display: "block" }} />
-                          : <div style={{ width: "44px", height: "44px", borderRadius: "6px", background: "var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                              <Instagram size={16} color="var(--dim)" />
-                            </div>
-                        }
-                      </a>
-                    </td>
-                    <td style={{ padding: "10px 14px", maxWidth: "260px" }}>
-                      <a href={post.permalink} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
-                        <p style={{ fontSize: "13px", color: "var(--text)", fontWeight: "500", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {post.caption || <span style={{ color: "var(--dim)" }}>No caption</span>}
-                        </p>
-                      </a>
-                    </td>
-                    <td style={{ padding: "10px 14px" }}>
-                      <span style={{ fontSize: "11px", fontWeight: "600", color: "#c13584", background: "#c1358415", padding: "2px 8px", borderRadius: "4px" }}>
-                        {post.type === "CAROUSEL_ALBUM" ? "Carousel" : post.type === "VIDEO" ? "Reel" : "Post"}
-                      </span>
-                    </td>
-                    <td style={{ padding: "10px 14px", fontSize: "13px", color: "var(--text)", fontWeight: "500" }}>{fmt(post.likes)}</td>
-                    <td style={{ padding: "10px 14px", fontSize: "13px", color: "var(--muted)" }}>{fmt(post.comments)}</td>
-                    <td style={{ padding: "10px 14px", fontSize: "12px", color: "var(--dim)", whiteSpace: "nowrap" }}>
-                      {new Date(post.timestamp).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div style={{ maxWidth: "420px", margin: "40px auto", display: "flex", flexDirection: "column", gap: "20px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-        <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "linear-gradient(135deg, #c13584, #f56040)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <Instagram size={20} color="#fff" />
-        </div>
-        <div>
-          <p style={{ fontSize: "15px", fontWeight: "700", color: "var(--text)", margin: 0 }}>Connect Instagram</p>
-          <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>Professional account required</p>
-        </div>
-      </div>
-
-      <div style={{ padding: "12px 14px", borderRadius: "8px", background: "#f8717110", border: "1px solid #f8717130", marginBottom: "4px" }}>
-        <p style={{ fontSize: "13px", fontWeight: "600", color: "#f87171", margin: "0 0 4px" }}>Setup required</p>
-        <p style={{ fontSize: "12px", color: "var(--muted)", margin: 0 }}>Instagram connection requires a Professional account linked to a Facebook Page. Once set up, come back and connect.</p>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>Steps to set up:</p>
-        {[
-          "Switch to Professional account: Instagram → Settings → Account → Switch to Professional Account",
-          "Create a Facebook Page (free): facebook.com/pages/create",
-          "Link Instagram to Facebook Page: Instagram → Settings → Account → Linked Accounts → Facebook",
-          "Come back here and connect"
-        ].map((step, i) => (
-          <div key={i} style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-            <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#c1358420", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
-              <span style={{ fontSize: "10px", fontWeight: "700", color: "#c13584" }}>{i + 1}</span>
-            </div>
-            <p style={{ fontSize: "12px", color: "var(--muted)", margin: 0, lineHeight: "1.5" }}>{step}</p>
-          </div>
-        ))}
-      </div>
-
-      {!showConnect ? (
-        <button onClick={() => setShowConnect(true)}
-          style={{ padding: "10px", borderRadius: "9px", border: "1px solid #c1358440", background: "transparent", color: "#c13584", fontSize: "13px", fontWeight: "600", cursor: "pointer" }}>
-          I've completed the setup — Connect now
-        </button>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "12px", borderTop: "1px solid var(--border)" }}>
-          <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>Confirm before connecting:</p>
-          <div onClick={() => setIsProfessional(p => !p)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${isProfessional ? "#c13584" : "var(--border)"}`, background: isProfessional ? "#c1358408" : "transparent" }}>
-            <div style={{ width: "16px", height: "16px", borderRadius: "3px", border: `2px solid ${isProfessional ? "#c13584" : "var(--border2)"}`, background: isProfessional ? "#c13584" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              {isProfessional && <svg width="9" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-            </div>
-            <span style={{ fontSize: "12px", color: "var(--text)" }}>My account is Professional (Creator or Business)</span>
-          </div>
-          <div onClick={() => setIsLinked(p => !p)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${isLinked ? "#c13584" : "var(--border)"}`, background: isLinked ? "#c1358408" : "transparent" }}>
-            <div style={{ width: "16px", height: "16px", borderRadius: "3px", border: `2px solid ${isLinked ? "#c13584" : "var(--border2)"}`, background: isLinked ? "#c13584" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              {isLinked && <svg width="9" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-            </div>
-            <span style={{ fontSize: "12px", color: "var(--text)" }}>My Instagram is linked to a Facebook Page</span>
-          </div>
-          <a href={canConnect ? `${apiBase}/api/v1/auth/instagram` : undefined}
-            onClick={e => { if (!canConnect) e.preventDefault() }}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "10px", borderRadius: "9px", background: canConnect ? "linear-gradient(135deg, #c13584, #f56040)" : "var(--border)", color: canConnect ? "#fff" : "var(--dim)", fontSize: "13px", fontWeight: "600", textDecoration: "none", cursor: canConnect ? "pointer" : "not-allowed" }}>
-            <Instagram size={14} /> Connect Instagram
-          </a>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function YTStudioView({ ytStats, ytVideos, ytAnalytics, loadingVideos, refreshingYT, ytError, onRefresh, fmt }) {
+function YTStudioView({ ytStats, ytAnalytics, refreshingYT, ytError, onRefresh, fmt }) {
   const [ytTab, setYtTab] = useState("overview")
   const [hoveredIdx, setHoveredIdx] = useState(null)
 
   const daily = ytAnalytics?.daily || []
   const ov = ytAnalytics?.overview || {}
 
-  // build graph coords
   const W = 800, H = 140, PADX = 40, PADY = 16
   const graphMetric = ytTab === "audience" ? "estimatedMinutesWatched" : "views"
   const maxV = Math.max(...daily.map(d => Number(d[graphMetric] || d.views || 0)), 1)
@@ -256,68 +49,60 @@ function YTStudioView({ ytStats, ytVideos, ytAnalytics, loadingVideos, refreshin
 
   return (
     <div>
-      {/* Channel header */}
-      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+      <div className="yt-channel-header">
         {ytStats.thumbnail
-          ? <img src={ytStats.thumbnail} alt="" style={{ width: "48px", height: "48px", borderRadius: "50%", objectFit: "cover" }} />
-          : <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "#ff444420", display: "flex", alignItems: "center", justifyContent: "center" }}><Youtube size={20} color="#ff4444" /></div>
+          ? <img src={ytStats.thumbnail} alt="" className="yt-channel-thumb" />
+          : <div className="yt-channel-thumb-placeholder"><Youtube size={20} color="#ff4444" /></div>
         }
-        <div style={{ flex: 1 }}>
-          <p style={{ fontSize: "15px", fontWeight: "700", color: "var(--text)", margin: "0 0 1px" }}>{ytStats.title}</p>
-          <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{fmt(ytStats.subscribers)} subscribers · {fmt(ytStats.videos)} videos</p>
+        <div className="yt-channel-info">
+          <p className="yt-channel-name">{ytStats.title}</p>
+          <p className="yt-channel-meta">{fmt(ytStats.subscribers)} subscribers · {fmt(ytStats.videos)} videos</p>
         </div>
-        <button onClick={onRefresh} disabled={refreshingYT}
-          style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--dim)", fontSize: "12px", cursor: "pointer" }}>
-          <RefreshCw size={11} style={{ animation: refreshingYT ? "spin 0.8s linear infinite" : "none" }} />
+        <button onClick={onRefresh} disabled={refreshingYT} className="yt-refresh-btn">
+          <RefreshCw size={11} className={refreshingYT ? "spin" : ""} />
           Refresh
         </button>
       </div>
 
-      {ytError && <p style={{ fontSize: "12px", color: "#f87171", margin: "0 0 12px" }}>{ytError}</p>}
+      {ytError && <p className="yt-error">{ytError}</p>}
 
-      {/* Channel analytics — YT Studio layout */}
-      <div style={{ background: "var(--card)", borderRadius: "10px", border: "1px solid var(--border)", overflow: "hidden", marginBottom: "16px" }}>
-        {/* Sub-tabs */}
-        <div style={{ display: "flex", borderBottom: "1px solid var(--border)", padding: "0 20px" }}>
+      <div className="chart-card yt-analytics-card">
+        <div className="yt-tab-row">
           {["overview", "audience"].map(t => (
-            <button key={t} onClick={() => setYtTab(t)}
-              style={{ padding: "12px 16px", background: "transparent", border: "none", borderBottom: `2px solid ${ytTab === t ? "#ff4444" : "transparent"}`, color: ytTab === t ? "var(--text)" : "var(--dim)", fontSize: "13px", fontWeight: ytTab === t ? "600" : "400", cursor: "pointer", textTransform: "capitalize", marginBottom: "-1px" }}>
+            <button key={t} onClick={() => setYtTab(t)} className={`yt-tab${ytTab === t ? " yt-tab--active" : ""}`}>
               {t}
             </button>
           ))}
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", padding: "0 4px" }}>
-            <span style={{ fontSize: "11px", color: "var(--dim)" }}>Last 28 days</span>
+          <div className="yt-tab-period">
+            <span className="yt-tab-period-label">Last 28 days</span>
           </div>
         </div>
 
-        {/* Metric tiles */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", borderBottom: "1px solid var(--border)" }}>
+        <div className="yt-metrics-grid">
           {metricTiles.map((m, i) => (
-            <div key={m.label} style={{ padding: "16px 20px", borderRight: i < 2 ? "1px solid var(--border)" : "none" }}>
-              <p style={{ fontSize: "11px", color: "var(--dim)", margin: "0 0 4px" }}>{m.label}</p>
-              <p style={{ fontSize: "24px", fontWeight: "800", color: "var(--text)", margin: 0, letterSpacing: "-1px" }}>{m.value}</p>
+            <div key={m.label} className={`yt-metric-cell${i < 2 ? " yt-metric-cell--border" : ""}`}>
+              <p className="yt-metric-label">{m.label}</p>
+              <p className="yt-metric-value">{m.value}</p>
             </div>
           ))}
         </div>
 
-        {/* Graph */}
-        <div style={{ padding: "20px", position: "relative" }}>
+        <div className="yt-graph-wrap">
           {daily.length === 0 ? (
-            <div style={{ height: "140px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <p style={{ fontSize: "13px", color: "var(--dim)", margin: 0 }}>No data for this period</p>
+            <div className="yt-graph-empty">
+              <p className="yt-graph-empty-text">No data for this period</p>
             </div>
           ) : (
-            <div style={{ position: "relative" }}>
-              {/* hover info */}
+            <div className="yt-graph-inner">
               {hoveredIdx !== null && coords[hoveredIdx] && (
-                <div style={{ position: "absolute", top: 0, left: 0, display: "flex", alignItems: "baseline", gap: "8px", pointerEvents: "none" }}>
-                  <span style={{ fontSize: "20px", fontWeight: "800", color: "var(--text)", letterSpacing: "-0.5px" }}>{fmt(coords[hoveredIdx].v)}</span>
-                  <span style={{ fontSize: "12px", color: "var(--dim)" }}>{coords[hoveredIdx].day}</span>
+                <div className="yt-hover-info">
+                  <span className="yt-hover-value">{fmt(coords[hoveredIdx].v)}</span>
+                  <span className="yt-hover-day">{coords[hoveredIdx].day}</span>
                 </div>
               )}
               <div style={{ marginTop: hoveredIdx !== null ? "32px" : "0" }}>
                 <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none"
-                  style={{ display: "block", overflow: "visible" }}
+                  className="yt-svg"
                   onMouseMove={e => {
                     const rect = e.currentTarget.getBoundingClientRect()
                     const svgX = ((e.clientX - rect.left) / rect.width) * W
@@ -326,7 +111,6 @@ function YTStudioView({ ytStats, ytVideos, ytAnalytics, loadingVideos, refreshin
                   }}
                   onMouseLeave={() => setHoveredIdx(null)}
                 >
-                  {/* y-axis grid lines */}
                   {yLabels.map((v, i) => {
                     const y = PADY + (1 - v / maxV) * (H - PADY * 2)
                     return (
@@ -336,11 +120,8 @@ function YTStudioView({ ytStats, ytVideos, ytAnalytics, loadingVideos, refreshin
                       </g>
                     )
                   })}
-                  {/* area */}
                   <path d={areaPath} fill="#ff4444" opacity="0.06" />
-                  {/* line */}
                   <path d={linePath} stroke="#ff4444" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                  {/* hover crosshair */}
                   {hoveredIdx !== null && coords[hoveredIdx] && (
                     <g>
                       <line x1={coords[hoveredIdx].x} x2={coords[hoveredIdx].x} y1={PADY} y2={H} stroke="var(--muted)" strokeWidth="1" strokeDasharray="3 3" opacity="0.5" />
@@ -349,10 +130,9 @@ function YTStudioView({ ytStats, ytVideos, ytAnalytics, loadingVideos, refreshin
                     </g>
                   )}
                 </svg>
-                {/* x-axis labels */}
-                <div style={{ display: "flex", position: "relative", height: "16px", marginTop: "4px" }}>
+                <div className="yt-x-axis">
                   {coords.filter((_, i) => i % 7 === 0 || i === coords.length - 1).map((c, i) => (
-                    <span key={i} style={{ position: "absolute", left: `${(c.x / W) * 100}%`, transform: "translateX(-50%)", fontSize: "10px", color: "var(--dim)", whiteSpace: "nowrap" }}>
+                    <span key={i} className="yt-x-label" style={{ left: `${(c.x / W) * 100}%` }}>
                       {c.day ? new Date(c.day).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : ""}
                     </span>
                   ))}
@@ -362,8 +142,6 @@ function YTStudioView({ ytStats, ytVideos, ytAnalytics, loadingVideos, refreshin
           )}
         </div>
       </div>
-
-      {/* Videos table removed — see Content page */}
     </div>
   )
 }
@@ -373,14 +151,6 @@ function fmt(n) {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + "M"
   if (num >= 1000) return (num / 1000).toFixed(1) + "K"
   return num.toLocaleString()
-}
-
-function Sparkline({ color }) {
-  return (
-    <svg width="100%" height="40" viewBox="0 0 160 40" preserveAspectRatio="none" fill="none">
-      <polyline points="0,36 25,28 50,22 75,16 100,20 125,10 160,6" stroke={color} strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
-    </svg>
-  )
 }
 
 export default function Analytics() {
@@ -396,13 +166,6 @@ export default function Analytics() {
   const [tab, setTab] = useState("overview")
   const [hoveredDay, setHoveredDay] = useState(null)
 
-  const [igStats, setIgStats] = useState(storedUser.instagramStats || null)
-  const [igMedia, setIgMedia] = useState([])
-  const [igInsights, setIgInsights] = useState(null)
-  const [loadingMedia, setLoadingMedia] = useState(false)
-  const [refreshingIG, setRefreshingIG] = useState(false)
-  const [igError, setIgError] = useState("")
-
   async function fetchYTVideos() {
     setLoadingVideos(true)
     try {
@@ -414,14 +177,20 @@ export default function Analytics() {
       const aData = await aRes.json()
       if (vRes.ok && Array.isArray(vData?.data)) setYtVideos(vData.data)
       if (aRes.ok && aData?.data) setYtAnalytics(aData.data)
-    } catch {}
+    } catch (error) {
+      console.warn("Failed to load YouTube analytics data", error)
+    }
     setLoadingVideos(false)
   }
 
-  // fetch videos on mount if YT connected
   useEffect(() => {
-    if (storedUser.youtubeStats) fetchYTVideos()
-  }, [])
+    if (!storedUser.youtubeStats) return
+    const timer = window.setTimeout(() => {
+      fetchYTVideos()
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [storedUser.youtubeStats])
+
   async function handleRefreshYT() {
     setRefreshingYT(true); setYtError("")
     try {
@@ -435,42 +204,6 @@ export default function Analytics() {
     } catch { setYtError("Network error") }
     setRefreshingYT(false)
   }
-
-  async function fetchIGMedia() {
-    setLoadingMedia(true)
-    try {
-      const [mRes, iRes] = await Promise.all([
-        apiFetch(API_ENDPOINTS.instagramMedia),
-        apiFetch(API_ENDPOINTS.instagramInsights),
-      ])
-      const mData = await mRes.json()
-      const iData = await iRes.json()
-      if (mRes.ok && Array.isArray(mData?.data)) setIgMedia(mData.data)
-      if (iRes.ok && iData?.data) setIgInsights(iData.data)
-    } catch {}
-    setLoadingMedia(false)
-  }
-
-  async function handleRefreshIG() {
-    setRefreshingIG(true); setIgError("")
-    try {
-      const res = await apiFetch(API_ENDPOINTS.instagramRefresh, { method: "POST" })
-      const data = await res.json()
-      if (res.ok && data?.data?.instagramStats) {
-        const stats = data.data.instagramStats
-        setIgStats(stats)
-        const u = JSON.parse(localStorage.getItem("user") || "{}")
-        localStorage.setItem("user", JSON.stringify({ ...u, instagramStats: stats }))
-        await fetchIGMedia()
-      } else setIgError(data.message || "Failed to refresh")
-    } catch { setIgError("Network error") }
-    setRefreshingIG(false)
-  }
-
-  // fetch IG media on mount if connected
-  useEffect(() => {
-    if (storedUser.instagramStats) fetchIGMedia()
-  }, [])
 
   const ov = useMemo(() => {
     const plan = JSON.parse(localStorage.getItem(`planner_data_${platform}`) || "null")
@@ -495,7 +228,6 @@ export default function Analytics() {
     const year = today.getFullYear(), month = today.getMonth()
     const daysInMonth = new Date(year, month + 1, 0).getDate()
 
-    // real post dates from YouTube videos — IST timezone
     const realPostDates = new Set()
     ytVideos.forEach(v => {
       if (v.publishedAt) {
@@ -503,18 +235,15 @@ export default function Analytics() {
         if (d.getFullYear() === year && d.getMonth() === month) realPostDates.add(d.getDate())
       }
     })
-    // if YT connected but no videos yet — use empty data, NOT planner fallback
     const ytConnected = !!(storedUser.youtubeStats)
-    const useRealData = ytConnected // always use real mode when YT connected
+    const useRealData = ytConnected
     const todayIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
-    // todayPosted = true only if a video was published TODAY (not just this month)
     const todayPosted = useRealData && ytVideos.some(v => {
       if (!v.publishedAt) return false
       const d = new Date(new Date(v.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
       return d.getDate() === todayIST.getDate() && d.getMonth() === todayIST.getMonth() && d.getFullYear() === todayIST.getFullYear()
     })
 
-    // monthly activity graph — real YT data if available, else planner
     const monthlyActivity = Array.from({ length: daysInMonth }, (_, i) => {
       const date = new Date(year, month, i + 1); date.setHours(0,0,0,0)
       let v = 0
@@ -527,7 +256,6 @@ export default function Analytics() {
       return { day: i + 1, v, isToday: date.getTime() === today.getTime() }
     })
 
-    // weekly — real YT data if available
     const weeks = Array.from({ length: 4 }, (_, wi) => {
       if (useRealData) {
         const weekVideos = ytVideos.filter(v => {
@@ -561,35 +289,34 @@ export default function Analytics() {
     const consistency = Math.round((weeks.filter(w => w.done > 0).length / 4) * 100)
 
     return { active: active.length, done: done.length, rate, total: streakArr.length, missed, upcoming, weeks, dayCounts, bestDay, statusCounts, recent, consistency, planInfo: plan?.planInfo, contentTotal: contentArr.length, contentItems: contentArr, monthlyActivity, todayPosted, useRealData }
-  }, [platform, ytVideos])
+  }, [platform, ytVideos, storedUser.youtubeStats])
 
   const showYT = platform === "youtube" || platform === "both"
-  const showIG = platform === "instagram" || platform === "both"
-  const tabs = ["overview", ...(showYT ? ["youtube"] : []), ...(showIG ? ["instagram"] : [])]
+  const tabs = ["overview", ...(showYT ? ["youtube"] : [])]
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)" }}>
+    <div className="page-root">
       <Sidebar />
-      <div style={{ marginLeft: "72px", flex: 1, display: "flex", flexDirection: "column" }}>
+      <div className="analytics-page-content">
 
-        <div style={{ padding: "24px 40px 0", borderBottom: "1px solid var(--border)" }}>
-          <h1 style={{ fontSize: "17px", fontWeight: "700", color: "var(--text)", margin: "0 0 18px" }}>Analytics</h1>
-          <div style={{ display: "flex" }}>
+        <div className="analytics-tabs">
+          <h1 className="analytics-tabs-title">Analytics</h1>
+          <div className="analytics-tab-row">
             {tabs.map(t => (
               <button key={t} onClick={() => setTab(t)}
-                style={{ padding: "7px 16px", background: "transparent", border: "none", borderBottom: `2px solid ${tab === t ? accent : "transparent"}`, color: tab === t ? "var(--text)" : "var(--dim)", fontSize: "13px", fontWeight: tab === t ? "600" : "400", cursor: "pointer", marginBottom: "-1px", transition: "color 0.15s" }}>
+                className={`analytics-tab${tab === t ? " active" : ""}`}
+                style={{ borderBottomColor: tab === t ? accent : "transparent" }}>
                 {t === "youtube" ? "YouTube" : t === "instagram" ? "Instagram" : "Overview"}
               </button>
             ))}
           </div>
         </div>
 
-        <div style={{ flex: 1, padding: "24px 40px", overflowY: "auto" }}>
+        <div className="analytics-body">
 
           {tab === "overview" && (
             <div>
-              {/* 4 numbers — real YT data when connected */}
-              <div style={{ display: "flex", gap: "0", paddingBottom: "28px", marginBottom: "28px", borderBottom: "1px solid var(--border)" }}>
+              <div className="metrics-row">
                 {(() => {
                   const thisMonthVideos = ytVideos.filter(v => {
                     if (!v.publishedAt) return false
@@ -607,17 +334,16 @@ export default function Analytics() {
                     { n: ov.missed, label: "missed", sub: "past days", red: ov.missed > 0 },
                     { n: ov.total, label: "all-time posts", sub: "across plans" },
                   ]
-                  return items.map((s, i) => (
-                    <div key={s.label} style={{ flex: 1, paddingRight: "32px", marginRight: "32px", borderRight: i < 3 ? "1px solid var(--border)" : "none" }}>
-                      <p style={{ fontSize: "36px", fontWeight: "800", color: s.green ? "#4ade80" : s.red ? "#f87171" : "var(--text)", margin: "0 0 4px", letterSpacing: "-2px", lineHeight: 1 }}>{s.n}</p>
-                      <p style={{ fontSize: "12px", color: "var(--muted)", margin: "0 0 1px" }}>{s.label}</p>
-                      <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{s.sub}</p>
+                  return items.map((s) => (
+                    <div key={s.label} className="metric-item">
+                      <p className="metric-value" style={{ color: s.green ? "#4ade80" : s.red ? "#f87171" : "var(--text)" }}>{s.n}</p>
+                      <p className="metric-label">{s.label}</p>
+                      <p className="metric-sub">{s.sub}</p>
                     </div>
                   ))
                 })()}
               </div>
 
-              {/* main activity graph */}
               {(() => {
                 const W = 800, H = 120, PAD = 16
                 const pts = ov.monthlyActivity
@@ -632,20 +358,20 @@ export default function Analytics() {
                 const areaPath = `${linePath} L ${coords[coords.length - 1]?.x} ${H} L ${PAD} ${H} Z`
 
                 return (
-                  <div style={{ background: "var(--card)", borderRadius: "10px", border: "1px solid var(--border)", padding: "20px", marginBottom: "16px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                  <div className="chart-card">
+                    <div className="activity-graph-header">
                       <div>
-                        <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", margin: "0 0 2px" }}>
+                        <p className="activity-graph-month">
                           {new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
                         </p>
                         {(() => {
                           const todayEntry = ov.monthlyActivity.find(d => d.isToday)
                           const posted = ov.useRealData ? ov.todayPosted : todayEntry?.v > 0
                           return (
-                            <p style={{ fontSize: "22px", fontWeight: "800", color: "var(--text)", margin: 0, letterSpacing: "-1px", lineHeight: 1 }}>
+                            <p className="activity-graph-status">
                               {posted
-                                ? <><span style={{ color: "#4ade80" }}>Posted</span> <span style={{ fontSize: "13px", fontWeight: "400", color: "var(--dim)", letterSpacing: 0 }}>today</span></>
-                                : <><span style={{ color: "var(--muted)" }}>Not posted</span> <span style={{ fontSize: "13px", fontWeight: "400", color: "var(--dim)", letterSpacing: 0 }}>today</span></>
+                                ? <><span className="activity-status--posted">Posted</span> <span className="activity-status-sub">today</span></>
+                                : <><span className="activity-status--not">Not posted</span> <span className="activity-status-sub">today</span></>
                               }
                             </p>
                           )
@@ -653,89 +379,79 @@ export default function Analytics() {
                       </div>
                     </div>
 
-                    {/* graph with hover overlay */}
-                    <div style={{ position: "relative" }}>
-                      {/* hover info — top left inside graph */}
+                    <div className="activity-graph-body">
                       {hoveredDay !== null && (() => {
                         const c = coords.find(c => c.day === hoveredDay)
                         if (!c) return null
                         const date = new Date(new Date().getFullYear(), new Date().getMonth(), c.day)
                         const dateStr = date.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })
                         return (
-                          <div style={{ position: "absolute", top: "8px", left: "8px", zIndex: 5, pointerEvents: "none" }}>
-                            <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-                              <span style={{ fontSize: "22px", fontWeight: "800", color: "var(--text)", letterSpacing: "-1px", lineHeight: 1 }}>{c.v > 0 ? "1" : "0"}</span>
-                              <span style={{ fontSize: "13px", color: "var(--dim)" }}>{dateStr}</span>
+                          <div className="activity-hover-info">
+                            <div className="activity-hover-row">
+                              <span className="activity-hover-value">{c.v > 0 ? "1" : "0"}</span>
+                              <span className="activity-hover-date">{dateStr}</span>
                             </div>
                           </div>
                         )
                       })()}
 
-                    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none"
-                      style={{ display: "block", overflow: "visible", cursor: "default" }}
-                      onMouseMove={e => {
-                        const rect = e.currentTarget.getBoundingClientRect()
-                        const svgX = ((e.clientX - rect.left) / rect.width) * W
-                        const closest = coords.reduce((a, b) => Math.abs(b.x - svgX) < Math.abs(a.x - svgX) ? b : a)
-                        setHoveredDay(closest.day)
-                      }}
-                      onMouseLeave={() => setHoveredDay(null)}
-                    >
-                      {/* grid lines */}
-                      {[0.25, 0.5, 0.75, 1].map(f => (
-                        <line key={f} x1={PAD} x2={W - PAD} y1={PAD + (1 - f) * (H - PAD * 2)} y2={PAD + (1 - f) * (H - PAD * 2)} stroke="var(--border)" strokeWidth="0.5" />
-                      ))}
-                      {/* area fill */}
-                      <path d={areaPath} fill={accent} opacity="0.08" />
-                      {/* line */}
-                      <path d={linePath} stroke={accent} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                      {/* dots for posted days */}
-                      {coords.filter(c => c.v > 0).map((c, i) => (
-                        <circle key={i} cx={c.x} cy={c.y} r="3.5" fill={accent} />
-                      ))}
-                      {/* hover crosshair */}
-                      {hoveredDay !== null && (() => {
-                        const c = coords.find(c => c.day === hoveredDay)
-                        if (!c) return null
-                        return (
-                          <g>
-                            <line x1={c.x} x2={c.x} y1={PAD} y2={H} stroke="var(--muted)" strokeWidth="1" strokeDasharray="3 3" opacity="0.6" />
-                            <circle cx={c.x} cy={c.y} r="5" fill={accent} />
-                            <circle cx={c.x} cy={c.y} r="3" fill="var(--card)" />
-                          </g>
-                        )
-                      })()}
-                    </svg>
+                      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none"
+                        className="activity-svg"
+                        onMouseMove={e => {
+                          const rect = e.currentTarget.getBoundingClientRect()
+                          const svgX = ((e.clientX - rect.left) / rect.width) * W
+                          const closest = coords.reduce((a, b) => Math.abs(b.x - svgX) < Math.abs(a.x - svgX) ? b : a)
+                          setHoveredDay(closest.day)
+                        }}
+                        onMouseLeave={() => setHoveredDay(null)}
+                      >
+                        {[0.25, 0.5, 0.75, 1].map(f => (
+                          <line key={f} x1={PAD} x2={W - PAD} y1={PAD + (1 - f) * (H - PAD * 2)} y2={PAD + (1 - f) * (H - PAD * 2)} stroke="var(--border)" strokeWidth="0.5" />
+                        ))}
+                        <path d={areaPath} fill={accent} opacity="0.08" />
+                        <path d={linePath} stroke={accent} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                        {coords.filter(c => c.v > 0).map((c, i) => (
+                          <circle key={i} cx={c.x} cy={c.y} r="3.5" fill={accent} />
+                        ))}
+                        {hoveredDay !== null && (() => {
+                          const c = coords.find(c => c.day === hoveredDay)
+                          if (!c) return null
+                          return (
+                            <g>
+                              <line x1={c.x} x2={c.x} y1={PAD} y2={H} stroke="var(--muted)" strokeWidth="1" strokeDasharray="3 3" opacity="0.6" />
+                              <circle cx={c.x} cy={c.y} r="5" fill={accent} />
+                              <circle cx={c.x} cy={c.y} r="3" fill="var(--card)" />
+                            </g>
+                          )
+                        })()}
+                      </svg>
 
-                    {/* x-axis labels */}
-                    <div style={{ display: "flex", marginTop: "6px", position: "relative", height: "14px" }}>
-                      {coords.filter((_, i) => i % 5 === 0 || i === coords.length - 1).map(c => (
-                        <span key={c.day} style={{ position: "absolute", left: `${(c.x / W) * 100}%`, transform: "translateX(-50%)", fontSize: "10px", color: c.isToday ? accent : "var(--dim)", fontWeight: c.isToday ? "700" : "400" }}>
-                          {c.day}
-                        </span>
-                      ))}
-                    </div>
+                      <div className="activity-x-axis">
+                        {coords.filter((_, i) => i % 5 === 0 || i === coords.length - 1).map(c => (
+                          <span key={c.day} className="activity-x-label" style={{ left: `${(c.x / W) * 100}%`, color: c.isToday ? accent : "var(--dim)", fontWeight: c.isToday ? "700" : "400" }}>
+                            {c.day}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )
               })()}
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
-                {/* weekly bar chart */}
-                <div style={{ background: "var(--card)", borderRadius: "10px", border: "1px solid var(--border)", padding: "20px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                    <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", margin: 0 }}>Weekly posting</p>
-                    <span style={{ fontSize: "11px", color: "var(--dim)" }}>{ov.consistency}% consistent</span>
+              <div className="two-col">
+                <div className="chart-card">
+                  <div className="weekly-chart-header">
+                    <p className="weekly-chart-title">Weekly posting</p>
+                    <span className="weekly-chart-consistency">{ov.consistency}% consistent</span>
                   </div>
                   {(() => {
                     const maxTotal = Math.max(...ov.weeks.map(x => x.total), 1)
                     const chartH = 80
                     return (
-                      <div style={{ display: "flex", alignItems: "flex-end", gap: "8px", height: `${chartH}px`, borderBottom: "1px solid var(--border)", position: "relative" }}>
+                      <div className="weekly-bars" style={{ height: `${chartH}px` }}>
                         {ov.weeks.map((w, wi) => {
                           const bgH = w.total ? Math.round((w.total / maxTotal) * chartH) : 3
                           const doneH = w.total ? Math.round((w.done / w.total) * bgH) : 0
-                          const isThis = w.label === "This week"
                           const today = new Date()
                           const weeksAgo = ov.weeks.length - 1 - wi
                           const endDate = new Date(today); endDate.setDate(today.getDate() - weeksAgo * 7)
@@ -743,7 +459,7 @@ export default function Analytics() {
                           const dateRange = `${startDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })} – ${endDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`
 
                           return (
-                            <div key={w.label} style={{ flex: 1, height: `${chartH}px`, display: "flex", alignItems: "flex-end", position: "relative" }}
+                            <div key={w.label} className="weekly-bar-col" style={{ height: `${chartH}px` }}
                               onMouseEnter={e => {
                                 const tip = e.currentTarget.querySelector(".bar-tip")
                                 if (tip) tip.style.opacity = "1"
@@ -752,20 +468,13 @@ export default function Analytics() {
                                 const tip = e.currentTarget.querySelector(".bar-tip")
                                 if (tip) tip.style.opacity = "0"
                               }}>
-                              {/* floating tooltip */}
-                              <div className="bar-tip" style={{
-                                position: "absolute", bottom: `${bgH + 10}px`, left: "50%", transform: "translateX(-50%)",
-                                background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px",
-                                padding: "7px 10px", whiteSpace: "nowrap", opacity: 0,
-                                transition: "opacity 0.12s", pointerEvents: "none", zIndex: 20,
-                                boxShadow: "0 4px 16px rgba(0,0,0,0.4)"
-                              }}>
-                                <p style={{ fontSize: "14px", fontWeight: "700", color: "var(--text)", margin: "0 0 2px", letterSpacing: "-0.3px" }}>{w.done}/{w.total} posts</p>
-                                <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{dateRange}</p>
+                              <div className="bar-tip" style={{ bottom: `${bgH + 10}px` }}>
+                                <p className="bar-tip-value">{w.done}/{w.total} posts</p>
+                                <p className="bar-tip-range">{dateRange}</p>
                               </div>
-                              <div style={{ width: "100%", height: `${bgH}px`, background: "var(--border)", borderRadius: "3px 3px 0 0", position: "relative", overflow: "hidden" }}>
+                              <div className="weekly-bar-bg" style={{ height: `${bgH}px` }}>
                                 {doneH > 0 && (
-                                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: `${(doneH / bgH) * 100}%`, background: doneH === bgH ? "#4ade80" : accent, borderRadius: "3px 3px 0 0" }} />
+                                  <div className="weekly-bar-fill" style={{ height: `${(doneH / bgH) * 100}%`, background: doneH === bgH ? "#4ade80" : accent }} />
                                 )}
                               </div>
                             </div>
@@ -774,12 +483,12 @@ export default function Analytics() {
                       </div>
                     )
                   })()}
-                  <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                  <div className="weekly-labels">
                     {ov.weeks.map(w => {
                       const isThis = w.label === "This week"
                       return (
-                        <div key={w.label} style={{ flex: 1, textAlign: "center" }}>
-                          <span style={{ fontSize: "11px", color: isThis ? accent : "var(--dim)", fontWeight: isThis ? "600" : "400" }}>
+                        <div key={w.label} className="weekly-label-item">
+                          <span className="weekly-label-text" style={{ color: isThis ? accent : "var(--dim)", fontWeight: isThis ? "600" : "400" }}>
                             {w.label === "This week" ? "This" : w.label === "Last week" ? "Last" : w.label}
                           </span>
                         </div>
@@ -788,17 +497,16 @@ export default function Analytics() {
                   </div>
                 </div>
 
-                {/* upcoming */}
-                <div style={{ background: "var(--card)", borderRadius: "10px", border: "1px solid var(--border)", padding: "20px" }}>
-                  <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", margin: "0 0 16px" }}>Next 7 days</p>
+                <div className="chart-card">
+                  <p className="upcoming-title">Next 7 days</p>
                   {ov.upcoming.length === 0 ? (
-                    <p style={{ fontSize: "13px", color: "var(--dim)", margin: 0 }}>Nothing scheduled.</p>
+                    <p className="upcoming-empty">Nothing scheduled.</p>
                   ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div className="upcoming-list">
                       {ov.upcoming.map((e, i) => (
-                        <div key={i} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
-                          <span style={{ fontSize: "11px", color: accent, fontWeight: "700", minWidth: "30px", paddingTop: "1px", flexShrink: 0 }}>{e.dateLabel?.split(" ")[0]}</span>
-                          <p style={{ fontSize: "13px", color: "var(--text)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.content}</p>
+                        <div key={i} className="upcoming-item">
+                          <span className="upcoming-date" style={{ color: accent }}>{e.dateLabel?.split(" ")[0]}</span>
+                          <p className="upcoming-content">{e.content}</p>
                         </div>
                       ))}
                     </div>
@@ -806,46 +514,43 @@ export default function Analytics() {
                 </div>
               </div>
 
-              {/* content posts list — YT Studio style */}
               {ov.contentTotal > 0 && (
-                <div style={{ background: "var(--card)", borderRadius: "10px", border: "1px solid var(--border)", overflow: "hidden" }}>
-                  <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", margin: 0 }}>Your content</p>
-                    <span style={{ fontSize: "11px", color: "var(--dim)" }}>{ov.contentTotal} pieces</span>
+                <div className="chart-card content-table-card">
+                  <div className="content-table-header">
+                    <p className="content-table-title">Your content</p>
+                    <span className="content-table-count">{ov.contentTotal} pieces</span>
                   </div>
-                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <table className="table-full">
                     <thead>
-                      <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                      <tr className="table-row">
                         {["", "Title", "Type", "Status", "Views", "Likes", "Comments"].map((h, i) => (
-                          <th key={i} style={{ padding: "9px 14px", textAlign: "left", fontSize: "11px", color: "var(--dim)", fontWeight: "500", whiteSpace: "nowrap" }}>{h}</th>
+                          <th key={i} className="table-th">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {ov.contentItems.map(item => (
-                        <tr key={item.id} style={{ borderBottom: "1px solid var(--border)" }}
+                        <tr key={item.id} className="table-row"
                           onMouseEnter={e => e.currentTarget.style.background = "var(--sb)"}
                           onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                          <td style={{ padding: "10px 14px", width: "60px" }}>
+                          <td className="table-td content-thumb-cell">
                             {item.thumbnail
-                              ? <img src={item.thumbnail} alt="" style={{ width: "52px", height: "30px", borderRadius: "4px", objectFit: "cover", display: "block" }} />
-                              : <div style={{ width: "52px", height: "30px", borderRadius: "4px", background: "var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                  <span style={{ fontSize: "9px", color: "var(--dim)" }}>No img</span>
-                                </div>
+                              ? <img src={item.thumbnail} alt="" className="content-thumb" />
+                              : <div className="content-thumb-placeholder"><span className="content-thumb-none">No img</span></div>
                             }
                           </td>
-                          <td style={{ padding: "10px 14px", maxWidth: "240px" }}>
-                            <p style={{ fontSize: "13px", color: "var(--text)", fontWeight: "500", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</p>
+                          <td className="table-td content-title-cell">
+                            <p className="content-title-text">{item.title}</p>
                           </td>
-                          <td style={{ padding: "10px 14px" }}>
-                            <span style={{ fontSize: "11px", color: accent, background: accent + "15", padding: "2px 8px", borderRadius: "4px", fontWeight: "600" }}>{item.type || "—"}</span>
+                          <td className="table-td">
+                            <span className="badge" style={{ color: accent, background: accent + "15" }}>{item.type || "—"}</span>
                           </td>
-                          <td style={{ padding: "10px 14px" }}>
-                            <span style={{ fontSize: "11px", color: STATUS_COLORS[item.status] || "var(--dim)", fontWeight: "600" }}>{item.status}</span>
+                          <td className="table-td">
+                            <span className="content-status" style={{ color: STATUS_COLORS[item.status] || "var(--dim)" }}>{item.status}</span>
                           </td>
-                          <td style={{ padding: "10px 14px", fontSize: "13px", color: "var(--muted)" }}>{item.views ? Number(item.views).toLocaleString() : "—"}</td>
-                          <td style={{ padding: "10px 14px", fontSize: "13px", color: "var(--muted)" }}>{item.likes ? Number(item.likes).toLocaleString() : "—"}</td>
-                          <td style={{ padding: "10px 14px", fontSize: "13px", color: "var(--muted)" }}>{item.comments ? Number(item.comments).toLocaleString() : "—"}</td>
+                          <td className="table-td">{item.views ? Number(item.views).toLocaleString() : "—"}</td>
+                          <td className="table-td">{item.likes ? Number(item.likes).toLocaleString() : "—"}</td>
+                          <td className="table-td">{item.comments ? Number(item.comments).toLocaleString() : "—"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -853,59 +558,57 @@ export default function Analytics() {
                 </div>
               )}
 
-              {/* recent YouTube videos */}
               {showYT && ytStats && (
-                <div style={{ background: "var(--card)", borderRadius: "10px", border: "1px solid var(--border)", overflow: "hidden", marginTop: "12px" }}>
-                  <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                <div className="chart-card yt-videos-card">
+                  <div className="yt-videos-header">
+                    <div className="yt-videos-title-row">
                       <Youtube size={14} color="#ff4444" />
-                      <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", margin: 0 }}>Recent videos</p>
+                      <p className="yt-videos-title">Recent videos</p>
                     </div>
-                    <button onClick={fetchYTVideos} disabled={loadingVideos}
-                      style={{ display: "flex", alignItems: "center", gap: "4px", padding: "4px 10px", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--dim)", fontSize: "11px", cursor: "pointer" }}>
-                      <RefreshCw size={10} style={{ animation: loadingVideos ? "spin 0.8s linear infinite" : "none" }} />
+                    <button onClick={fetchYTVideos} disabled={loadingVideos} className="yt-videos-refresh">
+                      <RefreshCw size={10} className={loadingVideos ? "spin" : ""} />
                       Refresh
                     </button>
                   </div>
                   {loadingVideos ? (
-                    <div style={{ padding: "20px", textAlign: "center" }}>
-                      <div style={{ width: "18px", height: "18px", border: "2px solid var(--border)", borderTopColor: "#ff4444", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
+                    <div className="yt-videos-loading">
+                      <div className="spinner spinner-sm" style={{ borderTopColor: "#ff4444" }} />
                     </div>
                   ) : ytVideos.length === 0 ? (
-                    <p style={{ padding: "16px 20px", fontSize: "13px", color: "var(--dim)", margin: 0 }}>No videos found.</p>
+                    <p className="yt-videos-empty">No videos found.</p>
                   ) : (
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <table className="table-full">
                       <thead>
-                        <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                        <tr className="table-row">
                           {["", "Title", "Type", "Views", "Likes", "Comments", "Published"].map((h, i) => (
-                            <th key={i} style={{ padding: "9px 14px", textAlign: "left", fontSize: "11px", color: "var(--dim)", fontWeight: "500" }}>{h}</th>
+                            <th key={i} className="table-th">{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
                         {ytVideos.map(v => (
-                          <tr key={v.id} style={{ borderBottom: "1px solid var(--border)" }}
+                          <tr key={v.id} className="table-row"
                             onMouseEnter={e => e.currentTarget.style.background = "var(--sb)"}
                             onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                            <td style={{ padding: "10px 14px", width: "80px" }}>
+                            <td className="table-td yt-video-thumb-cell">
                               <a href={v.url} target="_blank" rel="noreferrer">
-                                <img src={v.thumbnail} alt="" style={{ width: "64px", height: "36px", borderRadius: "4px", objectFit: "cover", display: "block" }} />
+                                <img src={v.thumbnail} alt="" className="yt-video-thumb" />
                               </a>
                             </td>
-                            <td style={{ padding: "10px 14px", maxWidth: "220px" }}>
-                              <a href={v.url} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
-                                <p style={{ fontSize: "13px", color: "var(--text)", fontWeight: "500", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v.title}</p>
+                            <td className="table-td yt-video-title-cell">
+                              <a href={v.url} target="_blank" rel="noreferrer" className="yt-video-link">
+                                <p className="yt-video-title-text">{v.title}</p>
                               </a>
                             </td>
-                            <td style={{ padding: "10px 14px" }}>
-                              <span style={{ fontSize: "11px", fontWeight: "600", color: v.type === "Short" ? "#06b6d4" : "#ff4444", background: v.type === "Short" ? "#06b6d415" : "#ff444415", padding: "2px 8px", borderRadius: "4px" }}>
+                            <td className="table-td">
+                              <span className="badge" style={{ color: v.type === "Short" ? "#06b6d4" : "#ff4444", background: v.type === "Short" ? "#06b6d415" : "#ff444415" }}>
                                 {v.type || "Video"}
                               </span>
                             </td>
-                            <td style={{ padding: "10px 14px", fontSize: "13px", color: "var(--text)", fontWeight: "500" }}>{fmt(v.views)}</td>
-                            <td style={{ padding: "10px 14px", fontSize: "13px", color: "var(--muted)" }}>{fmt(v.likes)}</td>
-                            <td style={{ padding: "10px 14px", fontSize: "13px", color: "var(--muted)" }}>{fmt(v.comments)}</td>
-                            <td style={{ padding: "10px 14px", fontSize: "12px", color: "var(--dim)", whiteSpace: "nowrap" }}>
+                            <td className="table-td yt-video-views">{fmt(v.views)}</td>
+                            <td className="table-td">{fmt(v.likes)}</td>
+                            <td className="table-td">{fmt(v.comments)}</td>
+                            <td className="table-td yt-video-date">
                               {new Date(v.publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                             </td>
                           </tr>
@@ -919,40 +622,27 @@ export default function Analytics() {
             </div>
           )}
 
-          {tab === "youtube" && (            <div>
+          {tab === "youtube" && (
+            <div>
               {ytStats ? (
                 <YTStudioView
-                  ytStats={ytStats} ytVideos={ytVideos} ytAnalytics={ytAnalytics}
-                  loadingVideos={loadingVideos} refreshingYT={refreshingYT}
+                  ytStats={ytStats} ytAnalytics={ytAnalytics}
+                  refreshingYT={refreshingYT}
                   ytError={ytError} onRefresh={handleRefreshYT} fmt={fmt}
                 />
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "60px 0", gap: "14px" }}>
+                <div className="yt-connect-empty">
                   <Youtube size={28} color="#ff4444" />
-                  <div style={{ textAlign: "center" }}>
-                    <p style={{ fontSize: "15px", fontWeight: "600", color: "var(--text)", margin: "0 0 6px" }}>Connect YouTube</p>
-                    <p style={{ fontSize: "13px", color: "var(--dim)", margin: "0 0 20px" }}>See subscribers, views and video count.</p>
-                    <a href={`${API_BASE}/api/v1/auth/google`}
-                      style={{ padding: "8px 18px", borderRadius: "8px", background: "#ff4444", color: "#fff", fontSize: "13px", fontWeight: "600", textDecoration: "none" }}>
+                  <div className="yt-connect-text">
+                    <p className="yt-connect-title">Connect YouTube</p>
+                    <p className="yt-connect-sub">See subscribers, views and video count.</p>
+                    <a href={`${API_BASE}/api/v1/auth/google`} className="yt-connect-btn">
                       Connect with Google
                     </a>
                   </div>
                 </div>
               )}
             </div>
-          )}
-
-          {tab === "instagram" && (
-            <IGConnectView
-              apiBase={API_BASE}
-              igStats={igStats}
-              onRefresh={handleRefreshIG}
-              refreshing={refreshingIG}
-              igError={igError}
-              igMedia={igMedia}
-              igInsights={igInsights}
-              loadingMedia={loadingMedia}
-            />
           )}
 
         </div>
