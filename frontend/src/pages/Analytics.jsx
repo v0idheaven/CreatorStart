@@ -13,6 +13,7 @@ const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
 function IGConnectView({ apiBase, igStats }) {
   const [isProfessional, setIsProfessional] = useState(false)
   const [isLinked, setIsLinked] = useState(false)
+  const [showConnect, setShowConnect] = useState(false)
   const canConnect = isProfessional && isLinked
   const urlError = new URLSearchParams(window.location.search).get("ig_error")
 
@@ -78,6 +79,36 @@ function IGConnectView({ apiBase, igStats }) {
           </div>
         ))}
       </div>
+
+      {!showConnect ? (
+        <button onClick={() => setShowConnect(true)}
+          style={{ padding: "10px", borderRadius: "9px", border: "1px solid #c1358440", background: "transparent", color: "#c13584", fontSize: "13px", fontWeight: "600", cursor: "pointer" }}>
+          I've completed the setup — Connect now
+        </button>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "12px", borderTop: "1px solid var(--border)" }}>
+          <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>Confirm before connecting:</p>
+          <div onClick={() => setIsProfessional(p => !p)}
+            style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${isProfessional ? "#c13584" : "var(--border)"}`, background: isProfessional ? "#c1358408" : "transparent" }}>
+            <div style={{ width: "16px", height: "16px", borderRadius: "3px", border: `2px solid ${isProfessional ? "#c13584" : "var(--border2)"}`, background: isProfessional ? "#c13584" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              {isProfessional && <svg width="9" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+            </div>
+            <span style={{ fontSize: "12px", color: "var(--text)" }}>My account is Professional (Creator or Business)</span>
+          </div>
+          <div onClick={() => setIsLinked(p => !p)}
+            style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${isLinked ? "#c13584" : "var(--border)"}`, background: isLinked ? "#c1358408" : "transparent" }}>
+            <div style={{ width: "16px", height: "16px", borderRadius: "3px", border: `2px solid ${isLinked ? "#c13584" : "var(--border2)"}`, background: isLinked ? "#c13584" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              {isLinked && <svg width="9" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+            </div>
+            <span style={{ fontSize: "12px", color: "var(--text)" }}>My Instagram is linked to a Facebook Page</span>
+          </div>
+          <a href={canConnect ? `${apiBase}/api/v1/auth/instagram` : undefined}
+            onClick={e => { if (!canConnect) e.preventDefault() }}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "10px", borderRadius: "9px", background: canConnect ? "linear-gradient(135deg, #c13584, #f56040)" : "var(--border)", color: canConnect ? "#fff" : "var(--dim)", fontSize: "13px", fontWeight: "600", textDecoration: "none", cursor: canConnect ? "pointer" : "not-allowed" }}>
+            <Instagram size={14} /> Connect Instagram
+          </a>
+        </div>
+      )}
     </div>
   )
 }
