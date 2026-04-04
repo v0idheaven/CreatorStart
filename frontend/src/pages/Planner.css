@@ -560,3 +560,377 @@
   display: flex;
   gap: 8px;
 }
+
+.planner-filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.planner-filter-chips {
+  display: flex;
+  gap: 6px;
+}
+
+.planner-filter-chip {
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.planner-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.planner-progress-label {
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.planner-progress-bar {
+  width: 80px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.planner-progress-fill-bar {
+  height: 100%;
+  background: #4ade80;
+  border-radius: 2px;
+  transition: width 0.4s;
+}
+
+.planner-progress-pct {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4ade80;
+}
+
+.planner-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.planner-weekday {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--dim);
+  padding: 4px 0;
+  letter-spacing: 0.5px;
+}
+
+.planner-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-bottom: 20px;
+}
+
+.planner-blank {
+  min-height: 76px;
+}
+
+.planner-day-card {
+  border-radius: 8px;
+  padding: 8px 7px;
+  transition: border-color 0.12s, background 0.12s;
+  min-height: 76px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+}
+
+.planner-day-card--empty {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.planner-day-card--clickable {
+  cursor: pointer;
+}
+
+.planner-day-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.planner-day-date-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.planner-day-date {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.planner-day-today-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  margin-top: 2px;
+}
+
+.planner-day-platform-badge {
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.planner-day-content {
+  font-size: 10px;
+  margin: 0;
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  flex: 1;
+}
+
+.planner-day-done-dot {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #4ade80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.planner-day-note-dot {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #f59e0b;
+}
+
+.planner-day-extra-badge {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.planner-day-add-btn {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.planner-day-add-btn-sm {
+  width: 18px;
+  height: 18px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.planner-day-card:hover .planner-day-add-btn-sm {
+  opacity: 1;
+}
+
+.planner-detail-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.planner-detail-done-tag {
+  font-size: 11px;
+  color: #4ade80;
+  background: #4ade8015;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.planner-detail-today-tag {
+  font-size: 10px;
+  background: var(--accent);
+  color: #fff;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.planner-detail-date {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.planner-detail-status-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid #4ade8040;
+  background: transparent;
+  color: #4ade80;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.planner-detail-edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.planner-detail-delete-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid #f8717130;
+  background: transparent;
+  color: #f87171;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.planner-detail-close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--dim);
+  display: flex;
+  padding: 6px;
+}
+
+.planner-detail-unavailable {
+  font-size: 11px;
+  color: var(--dim);
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+}
+
+.planner-extra-post {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.planner-extra-posts {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.planner-extra-num {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.planner-extra-text {
+  font-size: 13px;
+  color: var(--text);
+  margin: 0;
+  flex: 1;
+  line-height: 1.5;
+}
+
+.planner-extra-brief-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: transparent;
+  font-size: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.planner-extra-remove-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--dim);
+  display: flex;
+  flex-shrink: 0;
+  padding: 2px;
+}
+
+.planner-add-post-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.planner-brief-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.planner-header-month {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--dim);
+}

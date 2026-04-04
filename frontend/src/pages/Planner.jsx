@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Sparkles, Check, Pencil, X, StickyNote, Users, Flame, Zap, Target, DollarSign, Heart, Youtube, Instagram, Scale, Calendar, Plus, Trash2 } from "lucide-react"
+
 import Sidebar from "../components/Sidebar"
 import "./Planner.css"
 import {
@@ -294,8 +295,6 @@ export default function Planner() {
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState("")
   const [activeExtraIdx, setActiveExtraIdx] = useState(null)
-  const [extraAiDetail, setExtraAiDetail] = useState(null)
-  const [extraAiLoading, setExtraAiLoading] = useState(false)
 
   // load from backend on mount, merge with localStorage
   useState(() => {
@@ -322,7 +321,9 @@ export default function Planner() {
             localStorage.setItem(STORAGE_KEYS.getStreakData(), JSON.stringify(streakData.data))
           }
         }
-      } catch {}
+      } catch (error) {
+        console.warn("Failed to load planner/streak data", error)
+      }
     }
     loadFromBackend()
   })
@@ -362,11 +363,9 @@ export default function Planner() {
       setActiveDay(null)
       setAiDetail(null)
       setActiveExtraIdx(null)
-      setExtraAiDetail(null)
     } else {
       setActiveDay(day)
       setActiveExtraIdx(null)
-      setExtraAiDetail(null)
       const entry = entries.find(e => e.day === day)
       if (entry?.content) generateDayDetail(entry)
     }
@@ -394,49 +393,6 @@ export default function Planner() {
       method: "POST",
       body: JSON.stringify({ platform, streakData: merged })
     }).catch(() => {})
-  }
-
-  async function callGroqForPlan(goal, topic, freq, focus) {
-    const goalLabel = GOALS.find(g => g.id === goal)?.label || goal
-    const topicLabel = TOPICS.find(t => t.id === topic)?.label || topic
-    const freqLabel = FREQUENCIES.find(f => f.id === freq)?.label || freq
-    const plat = platform === "both" ? (focus === "youtube" ? "YouTube (70%) + Instagram (30%)" : focus === "instagram" ? "Instagram (70%) + YouTube (30%)" : "YouTube + Instagram equally") : platform === "youtube" ? "YouTube" : "Instagram"
-
-    const nowISTg = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
-    const todayIST = new Date(nowISTg.getFullYear(), nowISTg.getMonth(), nowISTg.getDate())
-    const totalDays = new Date(todayIST.getFullYear(), todayIST.getMonth() + 1, 0).getDate()
-
-    const prompt = `You are a content strategist. Create a ${totalDays}-day content plan for a ${plat} creator.
-Goal: ${goalLabel}
-Topic/Niche: ${topicLabel}
-Posting frequency: ${freqLabel}
-
-Return ONLY a JSON array with exactly ${totalDays} objects. Each object: {"day": number, "content": string}
-For "${freqLabel}": Every 2 days = odd days have content, even days have "". Weekdays only = Mon-Fri have content, Sat-Sun have "". Every day = all days have content.
-Make content specific and actionable. Return only the JSON array.`
-
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 8000)
-
-    try {
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${import.meta.env.VITE_GROQ_API_KEY}` },
-        body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: [{ role: "user", content: prompt }], temperature: 0.8 }),
-        signal: controller.signal
-      })
-      clearTimeout(timeout)
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error?.message || "Groq error")
-      const text = data.choices?.[0]?.message?.content || ""
-      const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
-      const match = cleaned.match(/\[[\s\S]*\]/)
-      if (!match) throw new Error("Parse error")
-      return JSON.parse(match[0])
-    } catch {
-      clearTimeout(timeout)
-      throw new Error("Groq failed")
-    }
   }
 
   async function handleGenerate(goal, topic, freq, focus) {
@@ -515,7 +471,7 @@ Make content specific and actionable. Return only the JSON array.`
             <p className="planner-header-kicker">Content</p>
             <h1 className="planner-header-title">
               30-Day Planner &nbsp;
-              <span style={{ fontSize: "16px", fontWeight: "500", color: "var(--dim)" }}>
+              <span className="planner-header-month">
                 {new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric", timeZone: "Asia/Kolkata" })}
               </span>
             </h1>
@@ -540,35 +496,31 @@ Make content specific and actionable. Return only the JSON array.`
 
         {screen === "plan" && (
           <>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-              <div style={{ display: "flex", gap: "6px" }}>
-                {[
-                  { id: "all", label: "All" },
-                  { id: "pending", label: "Pending" },
-                  { id: "done", label: "Done" },
-                ].map(f => (
-                  <button key={f.id} onClick={() => setFilter(f.id)}
-                    style={{ padding: "5px 14px", borderRadius: "20px", border: `1px solid ${filter === f.id ? accent : "var(--border)"}`, background: filter === f.id ? accent : "transparent", color: filter === f.id ? "#fff" : "var(--muted)", fontSize: "12px", cursor: "pointer", transition: "all 0.15s" }}>
+            <div className="planner-filter-row">
+              <div className="planner-filter-chips">
+                {[{ id: "all", label: "All" }, { id: "pending", label: "Pending" }, { id: "done", label: "Done" }].map(f => (
+                  <button key={f.id} onClick={() => setFilter(f.id)} className="planner-filter-chip"
+                    style={{ border: `1px solid ${filter === f.id ? accent : "var(--border)"}`, background: filter === f.id ? accent : "transparent", color: filter === f.id ? "#fff" : "var(--muted)" }}>
                     {f.label}
                   </button>
                 ))}
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span style={{ fontSize: "12px", color: "var(--dim)" }}>{completed} of {active.length} done</span>
-                <div style={{ width: "80px", height: "4px", background: "var(--border)", borderRadius: "2px", overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${active.length ? (completed / active.length) * 100 : 0}%`, background: "#4ade80", borderRadius: "2px", transition: "width 0.4s" }} />
+              <div className="planner-progress-row">
+                <span className="planner-progress-label">{completed} of {active.length} done</span>
+                <div className="planner-progress-bar">
+                  <div className="planner-progress-fill-bar" style={{ width: `${active.length ? (completed / active.length) * 100 : 0}%` }} />
                 </div>
-                <span style={{ fontSize: "12px", fontWeight: "600", color: "#4ade80" }}>{active.length ? Math.round((completed / active.length) * 100) : 0}%</span>
+                <span className="planner-progress-pct">{active.length ? Math.round((completed / active.length) * 100) : 0}%</span>
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px", marginBottom: "6px" }}>
+            <div className="planner-weekdays">
               {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(d => (
-                <div key={d} style={{ textAlign: "center", fontSize: "10px", fontWeight: "600", color: "var(--dim)", padding: "4px 0", letterSpacing: "0.5px" }}>{d}</div>
+                <div key={d} className="planner-weekday">{d}</div>
               ))}
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "5px", marginBottom: "20px" }}>
+            <div className="planner-calendar">
               {(() => {
                 const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
                 const today = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate())
@@ -576,7 +528,7 @@ Make content specific and actionable. Return only the JSON array.`
                 const startDow = firstOfMonth.getDay()
                 const mondayOffset = startDow === 0 ? 6 : startDow - 1
                 const blanks = Array.from({ length: mondayOffset }, (_, i) => (
-                  <div key={`b${i}`} style={{ minHeight: "76px" }} />
+                  <div key={`b${i}`} className="planner-blank" />
                 ))
 
                 const allEntries = filter === "all"
@@ -588,8 +540,7 @@ Make content specific and actionable. Return only the JSON array.`
                 const cards = allEntries.map(entry => {
                   const pc = PC[entry.platform] || PC.both
                   const isSelected = activeDay === entry.day
-                  const dateNum = entry.date ? new Date(entry.date).getDate() : entry.day
-                  const dateLabel = entry.dateLabel || String(dateNum)
+                  const dateLabel = entry.dateLabel || String(entry.date ? new Date(entry.date).getDate() : entry.day)
                   const isEmpty = !entry.active || !entry.content
 
                   const _istNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
@@ -601,66 +552,42 @@ Make content specific and actionable. Return only the JSON array.`
 
                   return (
                     <div key={entry.id}
-                      onClick={() => {
-                        if (!isEmpty) handleDayClick(entry.day)
-                      }}
+                      onClick={() => { if (!isEmpty) handleDayClick(entry.day) }}
+                      className={`planner-day-card ${isEmpty ? "planner-day-card--empty" : "planner-day-card--clickable"}`}
                       style={{
-                        borderRadius: "8px",
-                        border: `1.5px solid ${isSelected ? accent : entry.isCompleted ? "#4ade8040" : isTodayNow ? accent + "70" : isEmpty ? "var(--border)" : "var(--border)"}`,
+                        border: `1.5px solid ${isSelected ? accent : entry.isCompleted ? "#4ade8040" : isTodayNow ? accent + "70" : "var(--border)"}`,
                         background: isSelected ? accent + "12" : entry.isCompleted ? "#4ade8008" : isTodayNow && !isEmpty ? accent + "08" : "var(--card)",
-                        padding: "8px 7px",
-                        cursor: isEmpty ? "default" : "pointer",
-                        transition: "border-color 0.12s, background 0.12s",
-                        minHeight: "76px",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "4px",
-                        position: "relative",
-                        opacity: isEmpty ? 0.4 : 1,
-                      }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-                          <span style={{ fontSize: "12px", fontWeight: "700", lineHeight: 1, color: isTodayNow ? accent : entry.isCompleted ? "#4ade80" : "var(--text)" }}>
-                            {dateLabel}
-                          </span>
-                          {isTodayNow && <div style={{ width: "4px", height: "4px", borderRadius: "50%", background: accent, marginTop: "2px" }} />}
+                      }}>
+                      <div className="planner-day-card-top">
+                        <div className="planner-day-date-col">
+                          <span className="planner-day-date" style={{ color: isTodayNow ? accent : entry.isCompleted ? "#4ade80" : "var(--text)" }}>{dateLabel}</span>
+                          {isTodayNow && <div className="planner-day-today-dot" style={{ background: accent }} />}
                         </div>
-                        {!isEmpty && <span style={{ fontSize: "8px", fontWeight: "700", color: pc.color, background: pc.bg, padding: "1px 4px", borderRadius: "3px" }}>{pc.label}</span>}
+                        {!isEmpty && <span className="planner-day-platform-badge" style={{ color: pc.color, background: pc.bg }}>{pc.label}</span>}
                       </div>
                       {!isEmpty && entry.content && (
-                        <p style={{ fontSize: "10px", color: entry.isCompleted ? "var(--dim)" : "var(--muted)", margin: 0, lineHeight: "1.3", textDecoration: entry.isCompleted ? "line-through" : "none", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", flex: 1 }}>
+                        <p className="planner-day-content" style={{ color: entry.isCompleted ? "var(--dim)" : "var(--muted)", textDecoration: entry.isCompleted ? "line-through" : "none" }}>
                           {entry.content}
                         </p>
                       )}
                       {entry.isCompleted && (
-                        <div style={{ position: "absolute", bottom: "5px", right: "5px", width: "12px", height: "12px", borderRadius: "50%", background: "#4ade80", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <Check size={7} color="#fff" strokeWidth={3} />
-                        </div>
+                        <div className="planner-day-done-dot"><Check size={7} color="#fff" strokeWidth={3} /></div>
                       )}
-                      {entry.note && !entry.isCompleted && (
-                        <div style={{ position: "absolute", bottom: "5px", right: "5px", width: "5px", height: "5px", borderRadius: "50%", background: "#f59e0b" }} />
-                      )}
+                      {entry.note && !entry.isCompleted && <div className="planner-day-note-dot" />}
                       {entry.extraPosts?.length > 0 && (
-                        <div style={{ position: "absolute", top: "5px", left: "5px", fontSize: "8px", fontWeight: "700", color: accent, background: accent + "20", padding: "1px 4px", borderRadius: "3px" }}>
-                          +{entry.extraPosts.length}
-                        </div>
+                        <div className="planner-day-extra-badge" style={{ color: accent, background: accent + "20" }}>+{entry.extraPosts.length}</div>
                       )}
                       {isEmpty && planInfo?.freq !== "daily" && !isPastNow && (
-                        <button
-                          onClick={e => { e.stopPropagation(); setAddDayModal(entry); setAddDayContent("") }}
-                          style={{ position: "absolute", bottom: "6px", right: "6px", width: "22px", height: "22px", borderRadius: "50%", border: `1.5px solid ${accent}`, background: accent + "30", color: accent, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 0 }}
-                        >
+                        <button onClick={e => { e.stopPropagation(); setAddDayModal(entry); setAddDayContent("") }}
+                          className="planner-day-add-btn"
+                          style={{ border: `1.5px solid ${accent}`, background: accent + "30", color: accent }}>
                           <Plus size={12} strokeWidth={2.5} />
                         </button>
                       )}
                       {!isEmpty && !isPastNow && (
-                        <button
-                          onClick={e => { e.stopPropagation(); setAddDayModal(entry); setAddDayContent("") }}
-                          style={{ position: "absolute", bottom: "6px", right: "6px", width: "18px", height: "18px", borderRadius: "50%", border: `1px solid ${accent}50`, background: accent + "20", color: accent, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 0, opacity: 0 }}
-                          onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-                          onMouseLeave={e => e.currentTarget.style.opacity = "0"}
-                        >
+                        <button onClick={e => { e.stopPropagation(); setAddDayModal(entry); setAddDayContent("") }}
+                          className="planner-day-add-btn planner-day-add-btn-sm"
+                          style={{ border: `1px solid ${accent}50`, background: accent + "20", color: accent }}>
                           <Plus size={10} strokeWidth={2.5} />
                         </button>
                       )}
@@ -670,20 +597,19 @@ Make content specific and actionable. Return only the JSON array.`
                 return [...blanks, ...cards]
               })()}
             </div>
-
           </>
         )}
 
       </main>
 
       {activeEntry && (
-        <div className="planner-detail-wrap" style={{ borderTop: `2px solid ${accent}`, marginTop: "0" }}>
+        <div className="planner-detail-wrap" style={{ borderTop: `2px solid ${accent}` }}>
           <div className="planner-detail-head">
             <div className="planner-detail-head-left">
-              <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--text)" }}>{activeEntry.dayName}, {activeEntry.dateLabel}</span>
-              {activeEntry.isToday && <span style={{ fontSize: "10px", background: accent, color: "#fff", padding: "1px 8px", borderRadius: "10px", fontWeight: "700" }}>Today</span>}
-              <span style={{ fontSize: "11px", color: PC[activeEntry.platform].color, background: PC[activeEntry.platform].bg, padding: "2px 8px", borderRadius: "4px", fontWeight: "600" }}>{PC[activeEntry.platform].label}</span>
-              {activeEntry.isCompleted && <span style={{ fontSize: "11px", color: "#4ade80", background: "#4ade8015", padding: "2px 8px", borderRadius: "4px", fontWeight: "600" }}>✓ Done</span>}
+              <span className="planner-detail-date">{activeEntry.dayName}, {activeEntry.dateLabel}</span>
+              {activeEntry.isToday && <span className="planner-detail-today-tag">Today</span>}
+              <span className="planner-detail-tag" style={{ color: PC[activeEntry.platform].color, background: PC[activeEntry.platform].bg }}>{PC[activeEntry.platform].label}</span>
+              {activeEntry.isCompleted && <span className="planner-detail-done-tag">✓ Done</span>}
             </div>
             <div className="planner-detail-head-right">
               {(() => {
@@ -691,29 +617,18 @@ Make content specific and actionable. Return only the JSON array.`
                 const today = new Date(_nowIST.getFullYear(), _nowIST.getMonth(), _nowIST.getDate()); today.setHours(0,0,0,0)
                 const entryDate = activeEntry.date ? new Date(activeEntry.date) : null
                 if (entryDate) entryDate.setHours(0,0,0,0)
-                const isToday = entryDate && entryDate.getTime() === today.getTime()
                 const isFuture = entryDate && entryDate > today
                 const isPast = entryDate && entryDate < today
 
-                if (isFuture) return (
-                  <span style={{ fontSize: "11px", color: "var(--dim)", padding: "6px 12px", borderRadius: "7px", border: "1px solid var(--border)" }}>
-                    Available on {activeEntry.dateLabel}
-                  </span>
-                )
-                if (isPast) return (
-                  <span style={{ fontSize: "11px", color: "var(--dim)", padding: "6px 12px", borderRadius: "7px", border: "1px solid var(--border)" }}>
-                    {activeEntry.isCompleted ? "✓ Completed" : "Missed"}
-                  </span>
-                )
+                if (isFuture) return <span className="planner-detail-unavailable">Available on {activeEntry.dateLabel}</span>
+                if (isPast) return <span className="planner-detail-unavailable">{activeEntry.isCompleted ? "✓ Completed" : "Missed"}</span>
                 return (
-                  <button onClick={() => toggleDone(activeEntry.id)}
-                    style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "7px", border: `1px solid ${activeEntry.isCompleted ? "#4ade8040" : "#4ade8030"}`, background: "transparent", color: "#4ade80", fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>
+                  <button onClick={() => toggleDone(activeEntry.id)} className="planner-detail-status-btn">
                     <Check size={11} />{activeEntry.isCompleted ? "Undo" : "Mark done"}
                   </button>
                 )
               })()}
-              <button onClick={() => openEdit(activeEntry)}
-                style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "7px", border: `1px solid ${accent}30`, background: "transparent", color: accent, fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>
+              <button onClick={() => openEdit(activeEntry)} className="planner-detail-edit-btn" style={{ border: `1px solid ${accent}30`, color: accent }}>
                 <Pencil size={11} />Edit
               </button>
               {(() => {
@@ -721,60 +636,49 @@ Make content specific and actionable. Return only the JSON array.`
                 const _today = new Date(_n.getFullYear(), _n.getMonth(), _n.getDate()); _today.setHours(0,0,0,0)
                 const _ed = activeEntry.date ? new Date(activeEntry.date) : null
                 if (_ed) _ed.setHours(0,0,0,0)
-                const _isPast = _ed && _ed < _today
-                if (_isPast) return null
+                if (_ed && _ed < _today) return null
                 return (
                   <button onClick={() => {
-                    const updated = entries.map(e => e.id === activeEntry.id
-                      ? { ...e, content: "", active: false, isCompleted: false, note: "", extraPosts: [] }
-                      : e)
-                    setEntries(updated)
-                    savePlan(updated, planInfo)
-                    setActiveDay(null)
-                    setAiDetail(null)
-                  }}
-                    style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "7px", border: "1px solid #f8717130", background: "transparent", color: "#f87171", fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>
+                    const updated = entries.map(e => e.id === activeEntry.id ? { ...e, content: "", active: false, isCompleted: false, note: "", extraPosts: [] } : e)
+                    setEntries(updated); savePlan(updated, planInfo); setActiveDay(null); setAiDetail(null)
+                  }} className="planner-detail-delete-btn">
                     <Trash2 size={11} />Delete
                   </button>
                 )
               })()}
-              <button onClick={() => { setActiveDay(null); setAiDetail(null) }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--dim)", display: "flex", padding: "6px" }}>
+              <button onClick={() => { setActiveDay(null); setAiDetail(null) }} className="planner-detail-close-btn">
                 <X size={14} />
               </button>
             </div>
           </div>
           <div className="planner-detail-body">
-            <div style={{ marginBottom: "12px" }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
-                <p className="planner-detail-content" style={{ margin: 0, flex: 1 }}>{activeEntry.content}</p>
-              </div>
+            <div>
+              <p className="planner-detail-content">{activeEntry.content}</p>
               {activeEntry.extraPosts?.length > 0 && (
-                <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div className="planner-extra-posts">
                   {activeEntry.extraPosts.map((post, i) => (
-                    <div key={i}>
-                      <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", padding: "8px 12px", background: "var(--bg)", borderRadius: "8px", border: `1px solid ${activeExtraIdx === i ? accent + "60" : "var(--border)"}` }}>
-                        <span style={{ fontSize: "10px", fontWeight: "700", color: accent, background: accent + "15", padding: "1px 6px", borderRadius: "4px", flexShrink: 0, marginTop: "2px" }}>#{i + 2}</span>
-                        <p style={{ fontSize: "13px", color: "var(--text)", margin: 0, flex: 1, lineHeight: "1.5" }}>{post}</p>
-                        <button onClick={async () => {
-                          setActiveExtraIdx(i)
-                          setExtraAiDetail(null)
-                          setExtraAiLoading(true)
-                          const fakeEntry = { ...activeEntry, content: post }
-                          try {
-                            await generateDayDetail(fakeEntry)
-                          } catch {}
-                          setExtraAiLoading(false)
-                        }} style={{ display: "flex", alignItems: "center", gap: "4px", padding: "3px 8px", borderRadius: "5px", border: `1px solid ${accent}30`, background: "transparent", color: accent, fontSize: "10px", cursor: "pointer", flexShrink: 0 }}>
-                          <Sparkles size={10} /> Brief
-                        </button>
-                        <button onClick={() => {
-                          const updated = entries.map(e => e.id === activeEntry.id ? { ...e, extraPosts: e.extraPosts.filter((_, j) => j !== i) } : e)
-                          setEntries(updated); savePlan(updated, planInfo)
-                          if (activeExtraIdx === i) { setActiveExtraIdx(null); setExtraAiDetail(null) }
-                        }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--dim)", display: "flex", flexShrink: 0, padding: "2px" }}>
-                          <X size={12} />
-                        </button>
-                      </div>
+                    <div key={i} className="planner-extra-post" style={{ borderColor: activeExtraIdx === i ? accent + "60" : "var(--border)" }}>
+                      <span className="planner-extra-num" style={{ color: accent, background: accent + "15" }}>#{i + 2}</span>
+                      <p className="planner-extra-text">{post}</p>
+                      <button onClick={async () => {
+                        setActiveExtraIdx(i)
+                        try {
+                          await generateDayDetail({ ...activeEntry, content: post })
+                        } catch (error) {
+                          console.warn("Failed to generate extra post brief", error)
+                        }
+                      }} className="planner-extra-brief-btn" style={{ border: `1px solid ${accent}30`, color: accent }}>
+                        <Sparkles size={10} /> Brief
+                      </button>
+                      <button onClick={() => {
+                        const updated = entries.map(e => e.id === activeEntry.id ? { ...e, extraPosts: e.extraPosts.filter((_, j) => j !== i) } : e)
+                        setEntries(updated); savePlan(updated, planInfo)
+                        if (activeExtraIdx === i) {
+                          setActiveExtraIdx(null)
+                        }
+                      }} className="planner-extra-remove-btn">
+                        <X size={12} />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -784,11 +688,10 @@ Make content specific and actionable. Return only the JSON array.`
                 const todayCheck = new Date(_n.getFullYear(), _n.getMonth(), _n.getDate())
                 const entryDateCheck = activeEntry.date ? new Date(activeEntry.date) : null
                 if (entryDateCheck) entryDateCheck.setHours(0,0,0,0)
-                const isPastEntry = entryDateCheck && entryDateCheck < todayCheck
-                if (isPastEntry) return null
+                if (entryDateCheck && entryDateCheck < todayCheck) return null
                 return (
                   <button onClick={() => { setAddDayModal(activeEntry); setAddDayContent("") }}
-                    style={{ marginTop: "10px", display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "7px", border: `1px solid ${accent}30`, background: "transparent", color: accent, fontSize: "12px", cursor: "pointer" }}>
+                    className="planner-add-post-btn" style={{ border: `1px solid ${accent}30`, color: accent }}>
                     <Plus size={12} /> Add another post for this day
                   </button>
                 )
@@ -803,13 +706,7 @@ Make content specific and actionable. Return only the JSON array.`
             {aiError && <p style={{ fontSize: "12px", color: "#f87171", margin: 0 }}>{aiError}</p>}
             {aiDetail && (
               <div className="planner-ai-grid">
-                {[
-                  { key: "hook", label: "Hook" },
-                  { key: "cta", label: "Call to Action" },
-                  { key: "whatToSay", label: "What to Say" },
-                  { key: "tip", label: "Pro Tip" },
-                  { key: "script", label: "Script Outline" },
-                ].map(({ key, label }) => aiDetail[key] && (
+                {[{ key: "hook", label: "Hook" }, { key: "cta", label: "Call to Action" }, { key: "whatToSay", label: "What to Say" }, { key: "tip", label: "Pro Tip" }, { key: "script", label: "Script Outline" }].map(({ key, label }) => aiDetail[key] && (
                   <div key={key} className="planner-ai-card">
                     <p className="planner-ai-card-label" style={{ color: accent }}>{label}</p>
                     <p className="planner-ai-card-text">{aiDetail[key]}</p>
@@ -819,7 +716,7 @@ Make content specific and actionable. Return only the JSON array.`
             )}
             {!aiLoading && !aiDetail && !aiError && (
               <button onClick={() => generateDayDetail(activeEntry)}
-                style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 14px", borderRadius: "8px", border: `1px solid ${accent}40`, background: accent + "12", color: accent, fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>
+                className="planner-brief-btn" style={{ border: `1px solid ${accent}40`, background: accent + "12", color: accent }}>
                 <Sparkles size={13} /> Generate content brief
               </button>
             )}
@@ -859,8 +756,7 @@ Make content specific and actionable. Return only the JSON array.`
                         style={{ flex: 1, padding: "8px", borderRadius: "8px", border: `1.5px solid ${editPlatform === p ? PC[p].color : "var(--border2)"}`, background: editPlatform === p ? PC[p].bg : "transparent", color: editPlatform === p ? PC[p].color : "var(--muted)", fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>
                         {PC[p].label}
                       </button>
-                    ))}
-                  </div>
+                    ))}                  </div>
                 </div>
               )}
             </div>
@@ -897,7 +793,9 @@ Make content specific and actionable. Return only the JSON array.`
                     method: "POST",
                     body: JSON.stringify({ platform, planData: null })
                   })
-                } catch {}
+                } catch (error) {
+                  console.warn("Failed to clear plan on server", error)
+                }
                 setConfirmNew(false)
                 setEntries([])
                 setPlanInfo(null)
