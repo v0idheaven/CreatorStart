@@ -1,12 +1,12 @@
 import { createElement, useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
-import { Zap, CalendarDays, FileText, TrendingUp, Clock, CheckCheck, AlignLeft, Users, Eye, PlaySquare, Timer, Heart, MessageCircle, Image } from "lucide-react"
+import { Zap, CalendarDays, FileText, TrendingUp, Clock, CheckCheck, AlignLeft, Users, Eye, PlaySquare, Timer, Heart, Image } from "lucide-react"
 import Sidebar from "../components/Sidebar"
 import StreakCard from "../components/StreakCard"
 import { apiFetch } from "../utils/api"
 import { API_ENDPOINTS } from "../constants/api"
-
+import "./Dashboard.css"
 
 const DATA = {
   overall: {
@@ -20,11 +20,7 @@ const DATA = {
       { day: "Mon", value: 2 }, { day: "Tue", value: 1 }, { day: "Wed", value: 4 },
       { day: "Thu", value: 3 }, { day: "Fri", value: 2 }, { day: "Sat", value: 5 }, { day: "Sun", value: 3 },
     ],
-    chartLabel: "Content Activity",
-    chartSub: "Posts this week",
-    chartKey: "value",
-    chartColor: "#818cf8",
-    chartType: "line",
+    chartLabel: "Content Activity", chartSub: "Posts this week", chartKey: "value", chartColor: "#818cf8", chartType: "line",
     recentLabel: "Recent Posts",
     recent: [
       { id: 1, title: "How to grow on YouTube in 2025", meta: "Day 1", status: "done" },
@@ -45,11 +41,7 @@ const DATA = {
       { day: "Mon", value: 1200 }, { day: "Tue", value: 980 }, { day: "Wed", value: 2100 },
       { day: "Thu", value: 1800 }, { day: "Fri", value: 2400 }, { day: "Sat", value: 3100 }, { day: "Sun", value: 2700 },
     ],
-    chartLabel: "Views this week",
-    chartSub: "Daily view count",
-    chartKey: "value",
-    chartColor: "#ff4444",
-    chartType: "bar",
+    chartLabel: "Views this week", chartSub: "Daily view count", chartKey: "value", chartColor: "#ff4444", chartType: "bar",
     recentLabel: "Recent Videos",
     recent: [
       { id: 1, title: "How to grow on YouTube in 2025", meta: "14:32 · Video", status: "done" },
@@ -69,11 +61,7 @@ const DATA = {
       { day: "Mon", value: 3200 }, { day: "Tue", value: 2800 }, { day: "Wed", value: 5100 },
       { day: "Thu", value: 4400 }, { day: "Fri", value: 6200 }, { day: "Sat", value: 8900 }, { day: "Sun", value: 7100 },
     ],
-    chartLabel: "Reach this week",
-    chartSub: "Daily accounts reached",
-    chartKey: "value",
-    chartColor: "#c13584",
-    chartType: "bar",
+    chartLabel: "Reach this week", chartSub: "Daily accounts reached", chartKey: "value", chartColor: "#c13584", chartType: "bar",
     recentLabel: "Recent Posts",
     recent: [
       { id: 1, title: "Behind the scenes reel", meta: "Reel", status: "done" },
@@ -97,9 +85,17 @@ function fmt(n) {
   return String(n)
 }
 
+function getGreeting() {
+  const h = new Date().getHours()
+  if (h < 12) return "Good morning"
+  if (h < 17) return "Good afternoon"
+  return "Good evening"
+}
+
 export default function DashboardBoth() {
   const navigate = useNavigate()
   const [view, setView] = useState("overall")
+  const [hovered, setHovered] = useState(null)
   const [ytVideos, setYtVideos] = useState([])
 
   useEffect(() => {
@@ -110,19 +106,11 @@ export default function DashboardBoth() {
       }).catch(() => {})
     }
   }, [])
-  const [hovered, setHovered] = useState(null)
 
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}")
   const firstName = storedUser.fullName?.split(" ")[0] || "Creator"
   const d = DATA[view]
   const accent = SWITCHER.find(s => s.id === view).color
-
-  function getGreeting() {
-    const h = new Date().getHours()
-    if (h < 12) return "Good morning"
-    if (h < 17) return "Good afternoon"
-    return "Good evening"
-  }
 
   const quickActions = [
     { icon: Zap, title: "Content Generator", desc: "Generate hooks, scripts & CTAs.", href: "/generator" },
@@ -130,116 +118,113 @@ export default function DashboardBoth() {
   ]
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)" }}>
+    <div className="dash-root">
       <Sidebar />
-      <div style={{ marginLeft: "72px", flex: 1, display: "flex", justifyContent: "center" }}>
-      <main style={{ width: "100%", maxWidth: "1100px", padding: "40px" }}>
+      <div className="dash-content">
+        <main className="dash-main">
 
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "32px" }}>
-          <div>
-            <p style={{ fontSize: "11px", color: "var(--dim)", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 8px" }}>Dashboard</p>
-            <h1 style={{ fontSize: "26px", fontWeight: "700", color: "var(--text)", letterSpacing: "-0.5px", margin: "0 0 6px" }}>
-              {getGreeting()}, <span style={{ color: "#818cf8" }}>{firstName}</span> 👋
-            </h1>
-            <p style={{ fontSize: "13px", color: "var(--dim)", margin: 0 }}>Here's how your content is performing today.</p>
-          </div>
-
-          <div className="platform-switcher">
-            {SWITCHER.map(({ id, label, color }) => (
-              <button key={id} className="platform-btn" onClick={() => setView(id)}
-                style={{
-                  background: view === id ? "var(--border2)" : "transparent",
-                  color: view === id ? color : "var(--dim)",
-                }}>
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="stat-grid" style={{ marginBottom: "20px" }}>
-          {d.stats.map(({ label, value, icon, color }) => (
-            <div key={label} className="card" style={{ padding: "20px 20px 16px" }}>
-              <div className="stat-card-top">
-                <span style={{ fontSize: "12px", color: "var(--muted)", fontWeight: "500" }}>{label}</span>
-                <div className="stat-icon" style={{ background: color + "20" }}>
-                  {createElement(icon, { size: 14, color, strokeWidth: 2 })}
-                </div>
-              </div>
-              <p style={{ fontSize: "28px", fontWeight: "700", color: "var(--text)", margin: "0 0 6px", lineHeight: 1 }}>{fmt(value)}</p>
-              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                <TrendingUp size={11} color="#4ade80" />
-                <span style={{ fontSize: "11px", color: "#4ade80" }}>this month</span>
-              </div>
+          <div className="dash-header-row">
+            <div>
+              <p className="page-kicker">Dashboard</p>
+              <h1 className="dash-greeting">
+                {getGreeting()}, <span style={{ color: "#818cf8" }}>{firstName}</span> 👋
+              </h1>
+              <p className="dash-sub">Here's how your content is performing today.</p>
             </div>
-          ))}
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "12px", marginBottom: "20px" }}>
-          <div className="card" style={{ padding: "20px" }}>
-            <div className="chart-header">
-              <div>
-                <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", margin: "0 0 3px" }}>{d.chartLabel}</p>
-                <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{d.chartSub}</p>
-              </div>
-              <span className="chart-badge" style={{ color: accent, borderColor: accent + "30", background: accent + "10" }}>
-                {SWITCHER.find(s => s.id === view).label}
-              </span>
+            <div className="platform-switcher">
+              {SWITCHER.map(({ id, label, color }) => (
+                <button key={id} className="platform-btn" onClick={() => setView(id)}
+                  style={{ background: view === id ? "var(--border2)" : "transparent", color: view === id ? color : "var(--dim)" }}>
+                  {label}
+                </button>
+              ))}
             </div>
-            <ResponsiveContainer width="100%" height={180}>
-              {d.chartType === "bar" ? (
-                <BarChart data={d.chartData}>
-                  <XAxis dataKey="day" tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ background: "var(--sb)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--text)", fontSize: "12px" }} />
-                  <Bar dataKey={d.chartKey} fill={accent} radius={[4, 4, 0, 0]} opacity={0.85} />
-                </BarChart>
-              ) : (
-                <LineChart data={d.chartData}>
-                  <XAxis dataKey="day" tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <Tooltip contentStyle={{ background: "var(--sb)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--text)", fontSize: "12px" }} />
-                  <Line type="monotone" dataKey={d.chartKey} stroke={accent} strokeWidth={2} dot={{ fill: accent, strokeWidth: 0, r: 3 }} />
-                </LineChart>
-              )}
-            </ResponsiveContainer>
           </div>
 
-          <StreakCard accent={accent} platform="both" ytVideos={ytVideos} />
-        </div>
-
-        <div style={{ marginBottom: "20px" }}>
-          <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", margin: "0 0 12px" }}>Quick Actions</p>
-          <div className="quick-actions-grid">
-            {quickActions.map(({ icon, title, desc, href }) => (
-              <div key={title} className="card" onClick={() => navigate(href)}
-                onMouseEnter={() => setHovered(title)} onMouseLeave={() => setHovered(null)}
-                style={{ padding: "20px", cursor: "pointer", borderColor: hovered === title ? accent : "var(--border)", transition: "border-color 0.15s" }}>
-                <div className="quick-action-icon" style={{ background: accent + "15" }}>
-                  {createElement(icon, { size: 16, color: accent, strokeWidth: 2 })}
+          <div className="stat-grid" style={{ marginBottom: "20px" }}>
+            {d.stats.map(({ label, value, icon, color }) => (
+              <div key={label} className="card" style={{ padding: "20px 20px 16px" }}>
+                <div className="stat-card-top">
+                  <span className="dash-stat-label">{label}</span>
+                  <div className="stat-icon" style={{ background: color + "20" }}>
+                    {createElement(icon, { size: 14, color, strokeWidth: 2 })}
+                  </div>
                 </div>
-                <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", margin: "0 0 5px" }}>{title}</p>
-                <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0, lineHeight: "1.6" }}>{desc}</p>
+                <p className="dash-stat-value">{fmt(value)}</p>
+                <div className="dash-stat-trend">
+                  <TrendingUp size={11} color="#4ade80" />
+                  <span className="dash-stat-trend-text">this month</span>
+                </div>
               </div>
             ))}
           </div>
-        </div>
 
-        <div className="card" style={{ overflow: "hidden" }}>
-          <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>{d.recentLabel}</span>
-          </div>
-          {d.recent.map(post => (
-            <div key={post.id} className="post-row">
-              <FileText size={13} color="var(--dim)" style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: "13px", color: "var(--text)", flex: 1 }}>{post.title}</span>
-              <span style={{ fontSize: "11px", color: "var(--dim)" }}>{post.meta}</span>
-              <span className={`post-badge ${post.status}`}>{post.status}</span>
+          <div className="dash-chart-row">
+            <div className="card dash-chart-card">
+              <div className="chart-header">
+                <div>
+                  <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", margin: "0 0 3px" }}>{d.chartLabel}</p>
+                  <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{d.chartSub}</p>
+                </div>
+                <span className="chart-badge" style={{ color: accent, borderColor: accent + "30", background: accent + "10" }}>
+                  {SWITCHER.find(s => s.id === view).label}
+                </span>
+              </div>
+              <ResponsiveContainer width="100%" height={180}>
+                {d.chartType === "bar" ? (
+                  <BarChart data={d.chartData}>
+                    <XAxis dataKey="day" tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ background: "var(--sb)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--text)", fontSize: "12px" }} />
+                    <Bar dataKey={d.chartKey} fill={accent} radius={[4, 4, 0, 0]} opacity={0.85} />
+                  </BarChart>
+                ) : (
+                  <LineChart data={d.chartData}>
+                    <XAxis dataKey="day" tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <Tooltip contentStyle={{ background: "var(--sb)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--text)", fontSize: "12px" }} />
+                    <Line type="monotone" dataKey={d.chartKey} stroke={accent} strokeWidth={2} dot={{ fill: accent, strokeWidth: 0, r: 3 }} />
+                  </LineChart>
+                )}
+              </ResponsiveContainer>
             </div>
-          ))}
-        </div>
+            <StreakCard accent={accent} platform="both" ytVideos={ytVideos} />
+          </div>
 
-      </main>
+          <div style={{ marginBottom: "20px" }}>
+            <p className="dash-quick-label">Quick Actions</p>
+            <div className="quick-actions-grid">
+              {quickActions.map(({ icon, title, desc, href }) => (
+                <div key={title} className="card dash-quick-card"
+                  onClick={() => navigate(href)}
+                  onMouseEnter={() => setHovered(title)}
+                  onMouseLeave={() => setHovered(null)}
+                  style={{ borderColor: hovered === title ? accent : "var(--border)" }}>
+                  <div className="quick-action-icon" style={{ background: accent + "15" }}>
+                    {createElement(icon, { size: 16, color: accent, strokeWidth: 2 })}
+                  </div>
+                  <p className="dash-quick-title">{title}</p>
+                  <p className="dash-quick-desc">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="card" style={{ overflow: "hidden" }}>
+            <div className="dash-table-header">
+              <span className="dash-table-title">{d.recentLabel}</span>
+            </div>
+            {d.recent.map(post => (
+              <div key={post.id} className="post-row">
+                <FileText size={13} color="var(--dim)" style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: "13px", color: "var(--text)", flex: 1 }}>{post.title}</span>
+                <span style={{ fontSize: "11px", color: "var(--dim)" }}>{post.meta}</span>
+                <span className={`post-badge ${post.status}`}>{post.status}</span>
+              </div>
+            ))}
+          </div>
+
+        </main>
       </div>
     </div>
   )
