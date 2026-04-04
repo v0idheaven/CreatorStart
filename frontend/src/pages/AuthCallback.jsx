@@ -22,14 +22,12 @@ export default function AuthCallback() {
     } else {
       navigate("/auth", { replace: true })
     }
-  }, [])
+  }, [navigate, params])
 
   return (
-    <div style={{ minHeight: "100vh", background: "#050505", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ textAlign: "center" }}>
-        <div style={{ width: "36px", height: "36px", border: "3px solid #818cf8", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
-        <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px" }}>Signing you in...</p>
-      </div>
+    <div className="callback-page">
+      <div className="spinner spinner-md" style={{ borderTopColor: "#818cf8" }} />
+      <p className="callback-text">Signing you in...</p>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
