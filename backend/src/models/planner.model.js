@@ -1,6 +1,5 @@
 import mongoose, { Schema } from "mongoose"
 
-// stores the full plan blob per user per platform
 const plannerSchema = new Schema(
     {
         owner: {

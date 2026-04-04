@@ -4,7 +4,6 @@ import {
     getCurrentUser, updateProfile, updatePassword, updateAvatar, deleteAccount
 } from "../controllers/auth.controller.js"
 import { googleAuthRedirect, googleAuthCallback, refreshYoutubeStats, getYoutubeVideos, getYoutubeAnalytics } from "../controllers/google.controller.js"
-import { instagramAuthRedirect, instagramAuthCallback, refreshInstagramStats, linkInstagram, checkInstagramUsername, getInstagramMedia, getInstagramInsights } from "../controllers/instagram.controller.js"
 import { verifyJWT } from "../middleware/auth.middleware.js"
 import { upload } from "../middleware/multer.middleware.js"
 
@@ -18,10 +17,6 @@ router.post("/refresh", refreshAccessToken)
 router.get("/google", googleAuthRedirect)
 router.get("/google/callback", googleAuthCallback)
 
-// Instagram OAuth
-router.get("/instagram", instagramAuthRedirect)
-router.get("/instagram/callback", instagramAuthCallback)
-
 router.use(verifyJWT)
 
 router.post("/logout", logoutUser)
@@ -33,10 +28,5 @@ router.delete("/account", deleteAccount)
 router.post("/youtube/refresh", refreshYoutubeStats)
 router.get("/youtube/videos", getYoutubeVideos)
 router.get("/youtube/analytics", getYoutubeAnalytics)
-router.post("/instagram/refresh", refreshInstagramStats)
-router.post("/instagram/link", linkInstagram)
-router.get("/instagram/check/:username", checkInstagramUsername)
-router.get("/instagram/media", getInstagramMedia)
-router.get("/instagram/insights", getInstagramInsights)
 
 export default router
