@@ -20,7 +20,7 @@ const instagramAuthRedirect = asyncHandler(async (req, res) => {
     const params = new URLSearchParams({
         client_id: process.env.META_APP_ID,
         redirect_uri: REDIRECT_URI,
-        scope: "public_profile,pages_show_list,instagram_basic",
+        scope: "public_profile",
         response_type: "code",
         state: "instagram_connect"
     })
