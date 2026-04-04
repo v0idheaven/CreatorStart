@@ -10,37 +10,140 @@ const COLORS = { youtube: "#ff4444", instagram: "#c13584", both: "#818cf8" }
 const STATUS_COLORS = { Idea: "#818cf8", Scripting: "#f59e0b", Filming: "#f97316", Editing: "#06b6d4", Published: "#4ade80" }
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
 
-function IGConnectView({ apiBase, igStats }) {
+function IGConnectView({ apiBase, igStats, onRefresh, refreshing, igError, igMedia, igInsights, loadingMedia }) {
   const [isProfessional, setIsProfessional] = useState(false)
   const [isLinked, setIsLinked] = useState(false)
   const [showConnect, setShowConnect] = useState(false)
   const canConnect = isProfessional && isLinked
   const urlError = new URLSearchParams(window.location.search).get("ig_error")
 
-  // if already connected, show stats
+  // if already connected, show full analytics
   if (igStats) {
     return (
       <div>
+        {/* Profile header */}
         <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "20px" }}>
-          <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "linear-gradient(135deg, #c13584, #f56040)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <Instagram size={22} color="#fff" />
-          </div>
+          {igStats.profilePicture
+            ? <img src={igStats.profilePicture} alt="" style={{ width: "52px", height: "52px", borderRadius: "50%", objectFit: "cover" }} />
+            : <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "linear-gradient(135deg, #c13584, #f56040)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Instagram size={22} color="#fff" />
+              </div>
+          }
           <div style={{ flex: 1 }}>
             <p style={{ fontSize: "16px", fontWeight: "700", color: "var(--text)", margin: "0 0 2px" }}>@{igStats.username}</p>
             {igStats.bio && <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>{igStats.bio}</p>}
           </div>
+          <button onClick={onRefresh} disabled={refreshing}
+            style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--dim)", fontSize: "12px", cursor: "pointer" }}>
+            <RefreshCw size={11} style={{ animation: refreshing ? "spin 0.8s linear infinite" : "none" }} />
+            Refresh
+          </button>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", borderRadius: "10px", overflow: "hidden", border: "1px solid var(--border)" }}>
-          {[
-            { label: "Followers", value: Number(igStats.followers || 0).toLocaleString() },
-            { label: "Following", value: Number(igStats.following || 0).toLocaleString() },
-            { label: "Posts", value: Number(igStats.posts || 0).toLocaleString() },
-          ].map((s, i) => (
-            <div key={s.label} style={{ padding: "18px 20px", background: "var(--card)", borderRight: i < 2 ? "1px solid var(--border)" : "none" }}>
-              <p style={{ fontSize: "24px", fontWeight: "800", color: "#c13584", margin: "0 0 4px", letterSpacing: "-1px" }}>{s.value}</p>
-              <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{s.label}</p>
+
+        {igError && <p style={{ fontSize: "12px", color: "#f87171", margin: "0 0 12px" }}>{igError}</p>}
+
+        {/* Stats panel */}
+        <div style={{ background: "var(--card)", borderRadius: "10px", border: "1px solid var(--border)", overflow: "hidden", marginBottom: "16px" }}>
+          {/* Profile counts */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", borderBottom: "1px solid var(--border)" }}>
+            {[
+              { label: "Followers", value: Number(igStats.followers || 0).toLocaleString() },
+              { label: "Following", value: Number(igStats.following || 0).toLocaleString() },
+              { label: "Posts", value: Number(igStats.posts || 0).toLocaleString() },
+            ].map((s, i) => (
+              <div key={s.label} style={{ padding: "18px 20px", borderRight: i < 2 ? "1px solid var(--border)" : "none" }}>
+                <p style={{ fontSize: "24px", fontWeight: "800", color: "#c13584", margin: "0 0 4px", letterSpacing: "-1px" }}>{s.value}</p>
+                <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Insights — last 28 days */}
+          {igInsights ? (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)" }}>
+              {[
+                { label: "Reach", value: fmt(igInsights.reach), sub: "last 28 days" },
+                { label: "Impressions", value: fmt(igInsights.impressions), sub: "last 28 days" },
+                { label: "Profile views", value: fmt(igInsights.profileViews), sub: "last 28 days" },
+              ].map((s, i) => (
+                <div key={s.label} style={{ padding: "16px 20px", borderRight: i < 2 ? "1px solid var(--border)" : "none" }}>
+                  <p style={{ fontSize: "11px", color: "var(--dim)", margin: "0 0 4px" }}>{s.label}</p>
+                  <p style={{ fontSize: "22px", fontWeight: "800", color: "var(--text)", margin: "0 0 2px", letterSpacing: "-1px" }}>{s.value}</p>
+                  <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{s.sub}</p>
+                </div>
+              ))}
             </div>
-          ))}
+          ) : (
+            <div style={{ padding: "16px 20px" }}>
+              <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>
+                Insights unavailable — requires <code style={{ fontSize: "11px", background: "var(--border)", padding: "1px 5px", borderRadius: "3px" }}>instagram_manage_insights</code> permission. Re-connect to grant access.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Recent posts */}
+        <div style={{ background: "var(--card)", borderRadius: "10px", border: "1px solid var(--border)", overflow: "hidden" }}>
+          <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+              <Instagram size={14} color="#c13584" />
+              <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", margin: 0 }}>Recent posts</p>
+            </div>
+            {loadingMedia && <div style={{ width: "14px", height: "14px", border: "2px solid var(--border)", borderTopColor: "#c13584", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />}
+          </div>
+
+          {loadingMedia ? (
+            <div style={{ padding: "24px", textAlign: "center" }}>
+              <div style={{ width: "18px", height: "18px", border: "2px solid var(--border)", borderTopColor: "#c13584", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
+            </div>
+          ) : igMedia.length === 0 ? (
+            <p style={{ padding: "16px 20px", fontSize: "13px", color: "var(--dim)", margin: 0 }}>No posts found.</p>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                  {["", "Caption", "Type", "Likes", "Comments", "Posted"].map((h, i) => (
+                    <th key={i} style={{ padding: "9px 14px", textAlign: "left", fontSize: "11px", color: "var(--dim)", fontWeight: "500" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {igMedia.map(post => (
+                  <tr key={post.id} style={{ borderBottom: "1px solid var(--border)" }}
+                    onMouseEnter={e => e.currentTarget.style.background = "var(--sb)"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                    <td style={{ padding: "10px 14px", width: "60px" }}>
+                      <a href={post.permalink} target="_blank" rel="noreferrer">
+                        {post.mediaUrl
+                          ? <img src={post.mediaUrl} alt="" style={{ width: "44px", height: "44px", borderRadius: "6px", objectFit: "cover", display: "block" }} />
+                          : <div style={{ width: "44px", height: "44px", borderRadius: "6px", background: "var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <Instagram size={16} color="var(--dim)" />
+                            </div>
+                        }
+                      </a>
+                    </td>
+                    <td style={{ padding: "10px 14px", maxWidth: "260px" }}>
+                      <a href={post.permalink} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+                        <p style={{ fontSize: "13px", color: "var(--text)", fontWeight: "500", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {post.caption || <span style={{ color: "var(--dim)" }}>No caption</span>}
+                        </p>
+                      </a>
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>
+                      <span style={{ fontSize: "11px", fontWeight: "600", color: "#c13584", background: "#c1358415", padding: "2px 8px", borderRadius: "4px" }}>
+                        {post.type === "CAROUSEL_ALBUM" ? "Carousel" : post.type === "VIDEO" ? "Reel" : "Post"}
+                      </span>
+                    </td>
+                    <td style={{ padding: "10px 14px", fontSize: "13px", color: "var(--text)", fontWeight: "500" }}>{fmt(post.likes)}</td>
+                    <td style={{ padding: "10px 14px", fontSize: "13px", color: "var(--muted)" }}>{fmt(post.comments)}</td>
+                    <td style={{ padding: "10px 14px", fontSize: "12px", color: "var(--dim)", whiteSpace: "nowrap" }}>
+                      {new Date(post.timestamp).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     )
@@ -293,6 +396,13 @@ export default function Analytics() {
   const [tab, setTab] = useState("overview")
   const [hoveredDay, setHoveredDay] = useState(null)
 
+  const [igStats, setIgStats] = useState(storedUser.instagramStats || null)
+  const [igMedia, setIgMedia] = useState([])
+  const [igInsights, setIgInsights] = useState(null)
+  const [loadingMedia, setLoadingMedia] = useState(false)
+  const [refreshingIG, setRefreshingIG] = useState(false)
+  const [igError, setIgError] = useState("")
+
   async function fetchYTVideos() {
     setLoadingVideos(true)
     try {
@@ -325,6 +435,42 @@ export default function Analytics() {
     } catch { setYtError("Network error") }
     setRefreshingYT(false)
   }
+
+  async function fetchIGMedia() {
+    setLoadingMedia(true)
+    try {
+      const [mRes, iRes] = await Promise.all([
+        apiFetch(API_ENDPOINTS.instagramMedia),
+        apiFetch(API_ENDPOINTS.instagramInsights),
+      ])
+      const mData = await mRes.json()
+      const iData = await iRes.json()
+      if (mRes.ok && Array.isArray(mData?.data)) setIgMedia(mData.data)
+      if (iRes.ok && iData?.data) setIgInsights(iData.data)
+    } catch {}
+    setLoadingMedia(false)
+  }
+
+  async function handleRefreshIG() {
+    setRefreshingIG(true); setIgError("")
+    try {
+      const res = await apiFetch(API_ENDPOINTS.instagramRefresh, { method: "POST" })
+      const data = await res.json()
+      if (res.ok && data?.data?.instagramStats) {
+        const stats = data.data.instagramStats
+        setIgStats(stats)
+        const u = JSON.parse(localStorage.getItem("user") || "{}")
+        localStorage.setItem("user", JSON.stringify({ ...u, instagramStats: stats }))
+        await fetchIGMedia()
+      } else setIgError(data.message || "Failed to refresh")
+    } catch { setIgError("Network error") }
+    setRefreshingIG(false)
+  }
+
+  // fetch IG media on mount if connected
+  useEffect(() => {
+    if (storedUser.instagramStats) fetchIGMedia()
+  }, [])
 
   const ov = useMemo(() => {
     const plan = JSON.parse(localStorage.getItem(`planner_data_${platform}`) || "null")
@@ -797,7 +943,16 @@ export default function Analytics() {
           )}
 
           {tab === "instagram" && (
-            <IGConnectView apiBase={API_BASE} igStats={storedUser.instagramStats || null} />
+            <IGConnectView
+              apiBase={API_BASE}
+              igStats={igStats}
+              onRefresh={handleRefreshIG}
+              refreshing={refreshingIG}
+              igError={igError}
+              igMedia={igMedia}
+              igInsights={igInsights}
+              loadingMedia={loadingMedia}
+            />
           )}
 
         </div>

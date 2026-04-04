@@ -11,6 +11,8 @@ export const API_ENDPOINTS = {
     instagramRefresh: `${BASE}/api/v1/auth/instagram/refresh`,
     instagramLink: `${BASE}/api/v1/auth/instagram/link`,
     instagramCheck: (username) => `${BASE}/api/v1/auth/instagram/check/${username}`,
+    instagramMedia: `${BASE}/api/v1/auth/instagram/media`,
+    instagramInsights: `${BASE}/api/v1/auth/instagram/insights`,
     // auth
     register: `${BASE}/api/v1/auth/register`,
     login: `${BASE}/api/v1/auth/login`,

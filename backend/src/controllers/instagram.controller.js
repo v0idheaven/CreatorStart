@@ -20,7 +20,7 @@ const instagramAuthRedirect = asyncHandler(async (req, res) => {
     const params = new URLSearchParams({
         client_id: process.env.META_APP_ID,
         redirect_uri: REDIRECT_URI,
-        scope: "public_profile",
+        scope: "public_profile,pages_show_list,pages_read_engagement,instagram_basic,instagram_manage_insights",
         response_type: "code",
         state: "instagram_connect"
     })
@@ -218,6 +218,77 @@ const linkInstagram = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, { user: safeUser }, "Instagram connected"))
 })
 
+// get recent Instagram media
+const getInstagramMedia = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id)
+    if (!user.metaAccessToken) throw new ApiError(400, "Instagram not connected")
+    if (!user.instagramStats?.id) throw new ApiError(400, "No Instagram account linked")
+
+    const igId = user.instagramStats.id
+    const token = user.metaAccessToken
+
+    const mediaRes = await axios.get(`https://graph.facebook.com/v19.0/${igId}/media`, {
+        params: {
+            fields: "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count",
+            limit: 20,
+            access_token: token
+        }
+    })
+
+    const media = (mediaRes.data?.data || []).map(m => ({
+        id: m.id,
+        caption: m.caption || "",
+        type: m.media_type, // IMAGE, VIDEO, CAROUSEL_ALBUM
+        mediaUrl: m.media_url || m.thumbnail_url || "",
+        permalink: m.permalink,
+        timestamp: m.timestamp,
+        likes: m.like_count || 0,
+        comments: m.comments_count || 0,
+    }))
+
+    return res.status(200).json(new ApiResponse(200, media, "Instagram media fetched"))
+})
+
+// get Instagram account insights
+const getInstagramInsights = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id)
+    if (!user.metaAccessToken) throw new ApiError(400, "Instagram not connected")
+    if (!user.instagramStats?.id) throw new ApiError(400, "No Instagram account linked")
+
+    const igId = user.instagramStats.id
+    const token = user.metaAccessToken
+
+    // account-level insights: last 28 days
+    const insightsRes = await axios.get(`https://graph.facebook.com/v19.0/${igId}/insights`, {
+        params: {
+            metric: "reach,impressions,profile_views,follower_count",
+            period: "day",
+            since: Math.floor(Date.now() / 1000) - 28 * 86400,
+            until: Math.floor(Date.now() / 1000),
+            access_token: token
+        }
+    })
+
+    const raw = insightsRes.data?.data || []
+    const byMetric = {}
+    raw.forEach(m => { byMetric[m.name] = m.values || [] })
+
+    // sum totals over 28 days
+    const sum = (arr) => (arr || []).reduce((s, v) => s + (v.value || 0), 0)
+    const last = (arr) => (arr || []).slice(-1)[0]?.value || 0
+
+    return res.status(200).json(new ApiResponse(200, {
+        reach: sum(byMetric.reach),
+        impressions: sum(byMetric.impressions),
+        profileViews: sum(byMetric.profile_views),
+        followerCount: last(byMetric.follower_count),
+        daily: {
+            reach: byMetric.reach || [],
+            impressions: byMetric.impressions || [],
+        }
+    }, "Instagram insights fetched"))
+})
+
 // check if Instagram username exists via oEmbed
 const checkInstagramUsername = asyncHandler(async (req, res) => {
     const { username } = req.params
@@ -243,4 +314,4 @@ const checkInstagramUsername = asyncHandler(async (req, res) => {
     }
 })
 
-export { instagramAuthRedirect, instagramAuthCallback, refreshInstagramStats, linkInstagram, checkInstagramUsername }
+export { instagramAuthRedirect, instagramAuthCallback, refreshInstagramStats, linkInstagram, checkInstagramUsername, getInstagramMedia, getInstagramInsights }
