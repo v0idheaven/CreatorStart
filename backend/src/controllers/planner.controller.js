@@ -5,6 +5,7 @@ import { Planner } from "../models/planner.model.js"
 import fetch from "node-fetch"
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+const GROQ_MODEL = "llama-3.3-70b-versatile"
 
 const callGroq = async (prompt, temperature = 0.8) => {
     const apiKey = process.env.GROQ_API_KEY
@@ -13,14 +14,22 @@ const callGroq = async (prompt, temperature = 0.8) => {
     const res = await fetch(GROQ_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: [{ role: "user", content: prompt }], temperature })
+        body: JSON.stringify({ model: GROQ_MODEL, messages: [{ role: "user", content: prompt }], temperature })
     })
     const data = await res.json()
     if (!res.ok) throw new ApiError(res.status, data?.error?.message || "Groq API error")
     return data?.choices?.[0]?.message?.content || ""
 }
 
-// Save full plan data for a user+platform
+const parseJson = (text) => {
+    const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
+    try { return JSON.parse(cleaned) } catch {
+        const match = cleaned.match(/\{[\s\S]*\}/)
+        if (match) return JSON.parse(match[0])
+        return null
+    }
+}
+
 const savePlanData = asyncHandler(async (req, res) => {
     const { platform, planData } = req.body
     if (!platform) throw new ApiError(400, "platform is required")
@@ -30,11 +39,9 @@ const savePlanData = asyncHandler(async (req, res) => {
         { $set: { planData: planData || null } },
         { upsert: true, new: true }
     )
-
     return res.status(200).json(new ApiResponse(200, doc, "Plan saved"))
 })
 
-// Get plan data for a user+platform
 const getPlanData = asyncHandler(async (req, res) => {
     const { platform } = req.params
     if (!platform) throw new ApiError(400, "platform is required")
@@ -43,7 +50,6 @@ const getPlanData = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, doc?.planData || null, "Plan fetched"))
 })
 
-// Save streak data for a user+platform
 const saveStreakData = asyncHandler(async (req, res) => {
     const { platform, streakData } = req.body
     if (!platform || !Array.isArray(streakData)) throw new ApiError(400, "platform and streakData array are required")
@@ -53,11 +59,9 @@ const saveStreakData = asyncHandler(async (req, res) => {
         { $set: { streakData } },
         { upsert: true, new: true }
     )
-
     return res.status(200).json(new ApiResponse(200, doc, "Streak saved"))
 })
 
-// Get streak data for a user+platform
 const getStreakData = asyncHandler(async (req, res) => {
     const { platform } = req.params
     const doc = await Planner.findOne({ owner: req.user._id, platform })
@@ -83,12 +87,7 @@ Return ONLY a raw JSON object (no markdown, no code blocks) with these exact key
 Example: {"hook":"...","whatToSay":"...","script":"...","cta":"...","tip":"..."}`
 
     const text = await callGroq(prompt, 0.7)
-    const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
-    let parsed = null
-    try { parsed = JSON.parse(cleaned) } catch {
-        const match = cleaned.match(/\{[\s\S]*\}/)
-        if (match) parsed = JSON.parse(match[0])
-    }
+    const parsed = parseJson(text)
     if (!parsed) throw new ApiError(422, "Could not parse AI response")
 
     return res.status(200).json(new ApiResponse(200, parsed, "AI detail generated"))
@@ -118,12 +117,7 @@ Return ONLY a valid raw JSON object using this schema: ${schemas[platform] || sc
 Keep it practical, specific, and creator-ready.`
 
     const text = await callGroq(prompt, 0.8)
-    const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
-    let parsed = null
-    try { parsed = JSON.parse(cleaned) } catch {
-        const match = cleaned.match(/\{[\s\S]*\}/)
-        if (match) parsed = JSON.parse(match[0])
-    }
+    const parsed = parseJson(text)
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new ApiError(422, "Could not parse AI response")
 
     return res.status(200).json(new ApiResponse(200, parsed, "Content idea generated"))
