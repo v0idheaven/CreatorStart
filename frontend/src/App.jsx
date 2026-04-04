@@ -9,7 +9,6 @@ import Settings from './pages/Settings'
 import Content from './pages/Content'
 import Analytics from './pages/Analytics'
 import AuthCallback from './pages/AuthCallback'
-import InstagramCallback from './pages/InstagramCallback'
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("accessToken")
@@ -24,7 +23,6 @@ const App = () => {
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/auth/instagram/callback" element={<PrivateRoute><InstagramCallback /></PrivateRoute>} />
         <Route path="/select-platform" element={<PrivateRoute><PlatformSelect /></PrivateRoute>} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/generator" element={<PrivateRoute><ContentGenerator /></PrivateRoute>} />
