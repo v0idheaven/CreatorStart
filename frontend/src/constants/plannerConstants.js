@@ -42,7 +42,7 @@ export const STEP_TITLES = [
 ]
 
 export const FOCUS_OPTIONS = [
-  { id: "youtube", label: "More YouTube (70/30)", desc: "70% YouTube content, 30% Instagram", color: "#ff4444" },
-  { id: "instagram", label: "More Instagram (70/30)", desc: "70% Instagram content, 30% YouTube", color: "#c13584" },
-  { id: "both", label: "Equal split (50/50)", desc: "Balanced content across both platforms", color: "#818cf8" },
+  { id: "youtube", label: "More YouTube", desc: "70% YouTube content, 30% Instagram", color: "#ff4444" },
+  { id: "instagram", label: "More Instagram", desc: "70% Instagram content, 30% YouTube", color: "#c13584" },
+  { id: "both", label: "Equal split", desc: "Balanced content across both platforms", color: "#818cf8" },
 ]
