@@ -1,11 +1,17 @@
 import { useState, useMemo } from "react"
-import { Search, Youtube, Film, BarChart2 } from "lucide-react"
+import { Search, Youtube, Film, BarChart2, Instagram, Layers } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { MOCK_CONTENT } from "./mockContent"
 import VideoDetailPanel from "./VideoDetailPanel"
 
 const COLORS = { youtube: "#ff4444", instagram: "#c13584", both: "#818cf8" }
 const TYPE_COLORS = { Video: "#818cf8", Short: "#06b6d4", Reel: "#c13584", Carousel: "#f59e0b", Post: "#4ade80", Story: "#f97316", Live: "#ff4444" }
+
+const PLATFORM_TABS = [
+  { id: "all", label: "Overall", icon: Layers, color: "#818cf8" },
+  { id: "youtube", label: "YouTube", icon: Youtube, color: "#ff4444" },
+  { id: "instagram", label: "Instagram", icon: Instagram, color: "#c13584" },
+]
 
 function fmt(n) {
   const num = Number(n || 0)
@@ -85,19 +91,22 @@ function ContentCard({ item, accent, onClick }) {
 
 export default function Content() {
   const platform = localStorage.getItem("platform") || "both"
-  const accent = COLORS[platform] || COLORS.both
+  const tabAccent = platformTab === "youtube" ? "#ff4444" : platformTab === "instagram" ? "#c13584" : COLORS[platform] || COLORS.both
+  const accent = tabAccent
 
   const [search, setSearch] = useState("")
   const [filterType, setFilterType] = useState("All")
   const [selectedVideo, setSelectedVideo] = useState(null)
+  const [platformTab, setPlatformTab] = useState("all")
 
   const types = [...new Set(MOCK_CONTENT.map(c => c.type))]
 
   const filtered = useMemo(() => MOCK_CONTENT.filter(item => {
+    if (platformTab !== "all" && item.platform !== platformTab) return false
     if (filterType !== "All" && item.type !== filterType) return false
     if (search && !item.title.toLowerCase().includes(search.toLowerCase())) return false
     return true
-  }), [filterType, search])
+  }), [filterType, search, platformTab])
 
   // Summary stats
   const totalViews = MOCK_CONTENT.reduce((s, c) => s + c.views, 0)
@@ -130,6 +139,17 @@ export default function Content() {
                 <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Videos</p>
               </div>
             </div>
+          </div>
+
+          {/* Platform tabs */}
+          <div style={{ display: "flex", gap: "4px", marginBottom: "20px", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "4px", width: "fit-content" }}>
+            {PLATFORM_TABS.map(({ id, label, icon: Icon, color }) => (
+              <button key={id} onClick={() => { setPlatformTab(id); setFilterType("All") }}
+                style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 16px", borderRadius: "7px", border: "none", cursor: "pointer", fontSize: "13px", fontWeight: platformTab === id ? "600" : "400", background: platformTab === id ? color + "18" : "transparent", color: platformTab === id ? color : "var(--muted)", transition: "all 0.15s" }}>
+                <Icon size={13} strokeWidth={platformTab === id ? 2.5 : 1.8} />
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* Filters */}
