@@ -36,7 +36,9 @@ app.use('/api/v1/planner', plannerRouter)
 
 app.use((err, _req, res, _next) => {
     const statusCode = err?.statusCode || 500
-    const message = err?.message || 'Internal Server Error'
+    // Strip HTML tags from error messages (e.g. YouTube API quota errors contain HTML links)
+    const rawMessage = err?.message || "Internal Server Error"
+    const message = rawMessage.replace(/<[^>]*>/g, "").trim()
     return res.status(statusCode).json({
         success: false,
         message,

@@ -160,22 +160,43 @@ const getYoutubeVideos = asyncHandler(async (req, res) => {
 
     const youtube = google.youtube({ version: "v3", auth: oauth2Client })
 
-    const channelRes = await youtube.channels.list({ part: ["contentDetails"], mine: true })
+    let channelRes, playlistRes, statsRes
+    try {
+        channelRes = await youtube.channels.list({ part: ["contentDetails"], mine: true })
+    } catch (e) {
+        const msg = String(e?.message || "").replace(/<[^>]*>/g, "").trim()
+        if (msg.toLowerCase().includes("quota")) throw new ApiError(429, "YouTube API quota exceeded for today. Try again after midnight Pacific Time.")
+        throw new ApiError(502, msg || "Failed to fetch YouTube channel")
+    }
+
     const uploadsPlaylistId = channelRes.data.items?.[0]?.contentDetails?.relatedPlaylists?.uploads
     if (!uploadsPlaylistId) throw new ApiError(404, "No uploads playlist found")
 
-    const playlistRes = await youtube.playlistItems.list({
-        part: ["snippet", "contentDetails"],
-        playlistId: uploadsPlaylistId,
-        maxResults: 10
-    })
+    try {
+        playlistRes = await youtube.playlistItems.list({
+            part: ["snippet", "contentDetails"],
+            playlistId: uploadsPlaylistId,
+            maxResults: 10
+        })
+    } catch (e) {
+        const msg = String(e?.message || "").replace(/<[^>]*>/g, "").trim()
+        if (msg.toLowerCase().includes("quota")) throw new ApiError(429, "YouTube API quota exceeded for today. Try again after midnight Pacific Time.")
+        throw new ApiError(502, msg || "Failed to fetch playlist")
+    }
+
     const videoIds = playlistRes.data.items?.map(i => i.contentDetails?.videoId).filter(Boolean)
     if (!videoIds?.length) return res.status(200).json(new ApiResponse(200, [], "No videos found"))
 
-    const statsRes = await youtube.videos.list({
-        part: ["snippet", "statistics", "contentDetails"],
-        id: videoIds.join(",")
-    })
+    try {
+        statsRes = await youtube.videos.list({
+            part: ["snippet", "statistics", "contentDetails"],
+            id: videoIds.join(",")
+        })
+    } catch (e) {
+        const msg = String(e?.message || "").replace(/<[^>]*>/g, "").trim()
+        if (msg.toLowerCase().includes("quota")) throw new ApiError(429, "YouTube API quota exceeded for today. Try again after midnight Pacific Time.")
+        throw new ApiError(502, msg || "Failed to fetch video stats")
+    }
 
     const videos = statsRes.data.items?.map(v => {
         const dur = v.contentDetails?.duration || ""
@@ -250,7 +271,12 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
         })
 
         return res.status(200).json(new ApiResponse(200, { overview, daily }, "Analytics fetched"))
-    } catch {
+    } catch (e) {
+        const msg = String(e?.message || "").replace(/<[^>]*>/g, "").trim()
+        if (msg.toLowerCase().includes("quota")) {
+            throw new ApiError(429, "YouTube API quota exceeded for today. Try again after midnight Pacific Time.")
+        }
+        // For other analytics errors (e.g. new channel with no data), return empty gracefully
         return res.status(200).json(new ApiResponse(200, { overview: {}, daily: [] }, "No analytics data yet"))
     }
 })
