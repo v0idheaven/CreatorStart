@@ -20,8 +20,9 @@ export default function useYouTubeData(youtubeStats) {
   const [loadingVideos, setLoadingVideos] = useState(false)
   const [refreshingYT, setRefreshingYT] = useState(false)
   const [ytError, setYtError] = useState("")
+  const [days, setDays] = useState(28)
 
-  async function fetchYTVideos() {
+  async function fetchYTVideos(d = days) {
     setLoadingVideos(true)
     setYtError("")
     const controller = new AbortController()
@@ -29,7 +30,7 @@ export default function useYouTubeData(youtubeStats) {
     try {
       const [vRes, aRes] = await Promise.all([
         apiFetch(API_ENDPOINTS.youtubeVideos, { signal: controller.signal }),
-        apiFetch(API_ENDPOINTS.youtubeAnalytics, { signal: controller.signal }),
+        apiFetch(`${API_ENDPOINTS.youtubeAnalytics}?days=${d}`, { signal: controller.signal }),
       ])
       clearTimeout(timeout)
       const [vData, aData] = await Promise.all([vRes.json(), aRes.json()])
@@ -73,9 +74,14 @@ export default function useYouTubeData(youtubeStats) {
   const ytConnected = !!youtubeStats
   useEffect(() => {
     if (!ytConnected) return
-    const timer = window.setTimeout(fetchYTVideos, 0)
+    const timer = window.setTimeout(() => fetchYTVideos(days), 0)
     return () => window.clearTimeout(timer)
   }, [ytConnected]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { ytStats, ytVideos, ytAnalytics, loadingVideos, refreshingYT, ytError, fetchYTVideos, handleRefreshYT }
+  function changeDays(d) {
+    setDays(d)
+    fetchYTVideos(d)
+  }
+
+  return { ytStats, ytVideos, ytAnalytics, loadingVideos, refreshingYT, ytError, days, changeDays, fetchYTVideos, handleRefreshYT }
 }
