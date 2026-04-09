@@ -28,9 +28,9 @@ export default function YTStudioView({ ytStats, ytAnalytics, refreshingYT, ytErr
     { label: "CTR", value: `${((ov.impressionClickThroughRate || 0) * 100).toFixed(1)}%` },
     { label: "Avg view duration", value: (() => { const s = ov.averageViewDuration || 0; return `${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,"0")}` })() },
   ] : [
-    { label: "Unique viewers", value: fmt(ov.views || 0) },
-    { label: "Subs gained", value: `+${fmt(ov.subscribersGained || 0)}` },
-    { label: "Subs lost", value: `-${fmt(ov.subscribersLost || 0)}` },
+    { label: "Unique viewers", value: fmt(ov.views || 0), color: "var(--text)" },
+    { label: "Subs gained", value: fmt(ov.subscribersGained || 0), color: "#4ade80" },
+    { label: "Subs lost", value: fmt(ov.subscribersLost || 0), color: "#f87171" },
   ]
 
   return (
@@ -68,7 +68,7 @@ export default function YTStudioView({ ytStats, ytAnalytics, refreshingYT, ytErr
           {metricTiles.map((m, i) => (
             <div key={m.label} className={`yt-metric-cell${i < 2 ? " yt-metric-cell--border" : ""}`}>
               <p className="yt-metric-label">{m.label}</p>
-              <p className="yt-metric-value">{m.value}</p>
+              <p className="yt-metric-value" style={{ color: m.color || "var(--text)" }}>{m.value}</p>
             </div>
           ))}
         </div>
@@ -81,7 +81,11 @@ export default function YTStudioView({ ytStats, ytAnalytics, refreshingYT, ytErr
               {hoveredIdx !== null && coords[hoveredIdx] && (
                 <div className="yt-hover-info">
                   <span className="yt-hover-value">{fmt(coords[hoveredIdx].v)}</span>
-                  <span className="yt-hover-day">{coords[hoveredIdx].day}</span>
+                  <span className="yt-hover-day">
+                    {coords[hoveredIdx].day
+                      ? new Date(coords[hoveredIdx].day).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+                      : ""}
+                  </span>
                 </div>
               )}
               <div style={{ marginTop: hoveredIdx !== null ? "32px" : "0" }}>
