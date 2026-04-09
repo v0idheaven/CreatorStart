@@ -108,9 +108,11 @@ export default function Content() {
     return true
   }), [filterType, search, platformTab])
 
-  // Summary stats
-  const totalViews = MOCK_CONTENT.reduce((s, c) => s + c.views, 0)
-  const totalLikes = MOCK_CONTENT.reduce((s, c) => s + c.likes, 0)
+  // Summary stats — filtered by platform tab
+  const tabContent = platformTab === "all" ? MOCK_CONTENT : MOCK_CONTENT.filter(c => c.platform === platformTab)
+  const totalViews = tabContent.reduce((s, c) => s + c.views, 0)
+  const totalLikes = tabContent.reduce((s, c) => s + c.likes, 0)
+  const totalCount = tabContent.length
 
   return (
     <div className="page-root">
@@ -135,8 +137,8 @@ export default function Content() {
                 <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Total likes</p>
               </div>
               <div style={{ textAlign: "right" }}>
-                <p style={{ fontSize: "20px", fontWeight: "800", color: "var(--text)", margin: 0, letterSpacing: "-0.5px" }}>{MOCK_CONTENT.length}</p>
-                <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Videos</p>
+                <p style={{ fontSize: "20px", fontWeight: "800", color: "var(--text)", margin: 0, letterSpacing: "-0.5px" }}>{totalCount}</p>
+                <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{platformTab === "instagram" ? "Posts" : "Videos"}</p>
               </div>
             </div>
           </div>
