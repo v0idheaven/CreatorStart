@@ -10,6 +10,8 @@ const allowedOrigins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://creator-start.vercel.app",
+    "https://creatorstart.in",
+    "https://www.creatorstart.in",
     process.env.FRONTEND_URL,
     process.env.CORS_ORIGIN,
 ].filter(Boolean)
