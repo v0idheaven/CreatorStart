@@ -7,6 +7,8 @@ export default function LandingFooter({ scrollTo }) {
           {["features", "planner", "pricing", "about"].map(s => (
             <button key={s} onClick={() => scrollTo(s)} className="landing-nav-btn">{s}</button>
           ))}
+          <a href="/privacy" style={{ fontSize: "13px", color: "var(--dim)", textDecoration: "none" }}>Privacy</a>
+          <a href="/terms" style={{ fontSize: "13px", color: "var(--dim)", textDecoration: "none" }}>Terms</a>
         </div>
         <p className="landing-footer-copy">© 2026 CreatorStart. All rights reserved.</p>
       </div>
