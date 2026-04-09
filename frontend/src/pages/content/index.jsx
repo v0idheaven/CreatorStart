@@ -91,13 +91,13 @@ function ContentCard({ item, accent, onClick }) {
 
 export default function Content() {
   const platform = localStorage.getItem("platform") || "both"
-  const tabAccent = platformTab === "youtube" ? "#ff4444" : platformTab === "instagram" ? "#c13584" : COLORS[platform] || COLORS.both
-  const accent = tabAccent
 
   const [search, setSearch] = useState("")
   const [filterType, setFilterType] = useState("All")
   const [selectedVideo, setSelectedVideo] = useState(null)
   const [platformTab, setPlatformTab] = useState("all")
+
+  const accent = platformTab === "youtube" ? "#ff4444" : platformTab === "instagram" ? "#c13584" : COLORS[platform] || COLORS.both
 
   const types = [...new Set(MOCK_CONTENT.map(c => c.type))]
 
