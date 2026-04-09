@@ -22,7 +22,7 @@ export default function Analytics() {
   const [storedUser] = useState(() => JSON.parse(localStorage.getItem("user") || "{}"))
   const [tab, setTab] = useState("overview")
 
-  const { ytStats, ytVideos, ytAnalytics, loadingVideos, refreshingYT, ytError, fetchYTVideos, handleRefreshYT } = useYouTubeData(storedUser.youtubeStats)
+  const { ytStats, ytVideos, ytAnalytics, loadingVideos, refreshingYT, ytError, days, changeDays, fetchYTVideos, handleRefreshYT } = useYouTubeData(storedUser.youtubeStats)
   const ov = useOverviewData(platform, ytVideos, storedUser.youtubeStats)
 
   const showYT = platform === "youtube" || platform === "both"
@@ -54,6 +54,7 @@ export default function Analytics() {
             <YouTubeTab
               ytStats={ytStats} ytAnalytics={ytAnalytics} ytVideos={ytVideos}
               loadingVideos={loadingVideos} refreshingYT={refreshingYT} ytError={ytError}
+              days={days} onChangeDays={changeDays}
               onRefresh={handleRefreshYT} fetchYTVideos={fetchYTVideos} fmt={fmt}
             />
           )}

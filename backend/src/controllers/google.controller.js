@@ -237,8 +237,9 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
     })
 
     const youtubeAnalytics = google.youtubeAnalytics({ version: "v2", auth: oauth2Client })
+    const days = parseInt(req.query.days) || 28
     const endDate = new Date().toISOString().split("T")[0]
-    const startDate = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
 
     try {
         const [overviewRes, dailyRes] = await Promise.all([

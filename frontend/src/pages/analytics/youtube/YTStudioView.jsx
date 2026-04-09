@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Youtube, RefreshCw } from "lucide-react"
 
 // YouTube Studio tab — channel header + metrics + 28-day graph
-export default function YTStudioView({ ytStats, ytAnalytics, refreshingYT, ytError, onRefresh, fmt }) {
+export default function YTStudioView({ ytStats, ytAnalytics, refreshingYT, ytError, onRefresh, days, onChangeDays, fmt }) {
   const [ytTab, setYtTab] = useState("overview")
   const [hoveredIdx, setHoveredIdx] = useState(null)
 
@@ -61,7 +61,14 @@ export default function YTStudioView({ ytStats, ytAnalytics, refreshingYT, ytErr
           {["overview", "audience"].map(t => (
             <button key={t} onClick={() => setYtTab(t)} className={`yt-tab${ytTab === t ? " yt-tab--active" : ""}`}>{t}</button>
           ))}
-          <div className="yt-tab-period"><span className="yt-tab-period-label">Last 28 days</span></div>
+          <div className="yt-tab-period">
+            {[7, 28, 90].map(d => (
+              <button key={d} onClick={() => onChangeDays(d)}
+                style={{ padding: "3px 10px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "11px", fontWeight: days === d ? "600" : "400", background: days === d ? "#ff444420" : "transparent", color: days === d ? "#ff4444" : "var(--dim)", transition: "all 0.15s" }}>
+                {d}d
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="yt-metrics-grid">
