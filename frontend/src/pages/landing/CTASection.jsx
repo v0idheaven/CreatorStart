@@ -15,12 +15,6 @@ export default function CTASection({ scrollTo }) {
           <button onClick={() => scrollTo("features")} className="landing-btn-lg landing-btn-lg-outline">See features</button>
         </div>
         <p className="landing-cta-hint">No credit card. Built to scale with your channel.</p>
-        <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.2)", margin: "16px 0 0" }}>
-          By signing up you agree to our{" "}
-          <a href="/terms" style={{ color: "rgba(255,255,255,0.4)", textDecoration: "underline" }}>Terms</a>
-          {" "}and{" "}
-          <a href="/privacy" style={{ color: "rgba(255,255,255,0.4)", textDecoration: "underline" }}>Privacy Policy</a>
-        </p>
       </div>
     </section>
   )
