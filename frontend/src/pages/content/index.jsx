@@ -1,78 +1,173 @@
 import { useState, useMemo } from "react"
-import { Plus } from "lucide-react"
+import { Search, Youtube, ExternalLink } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
-import ContentFilters from "./ContentFilters"
-import ContentTable from "./ContentTable"
-import { ContentFormModal, DeleteModal } from "./ContentModal"
-import { COLORS, YT_TYPES, IG_TYPES, BOTH_TYPES, EMPTY_FORM, loadContent, saveContent } from "./contentConfig"
+import { MOCK_CONTENT } from "./mockContent"
+
+const COLORS = { youtube: "#ff4444", instagram: "#c13584", both: "#818cf8" }
+const TYPE_COLORS = { Video: "#818cf8", Short: "#06b6d4", Reel: "#c13584", Carousel: "#f59e0b", Post: "#4ade80", Story: "#f97316", Live: "#ff4444" }
+
+function fmt(n) {
+  const num = Number(n || 0)
+  if (num >= 1000000) return (num / 1000000).toFixed(1) + "M"
+  if (num >= 1000) return (num / 1000).toFixed(1) + "K"
+  return num.toLocaleString()
+}
+
+function StatPill({ label, value }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+      <span style={{ fontSize: "13px", fontWeight: "700", color: "var(--text)" }}>{fmt(value)}</span>
+      <span style={{ fontSize: "10px", color: "var(--dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</span>
+    </div>
+  )
+}
+
+function ContentCard({ item, accent }) {
+  const typeColor = TYPE_COLORS[item.type] || accent
+  const date = new Date(item.publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+
+  return (
+    <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "14px", overflow: "hidden", transition: "border-color 0.15s, transform 0.15s" }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = accent + "60"; e.currentTarget.style.transform = "translateY(-2px)" }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.transform = "translateY(0)" }}>
+
+      {/* Thumbnail */}
+      <div style={{ position: "relative", aspectRatio: "16/9", background: "var(--border)", overflow: "hidden" }}>
+        {item.thumbnail
+          ? <img src={item.thumbnail} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Youtube size={28} color="var(--dim)" />
+            </div>
+        }
+        {/* Type badge */}
+        <span style={{ position: "absolute", top: "8px", left: "8px", padding: "3px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "700", background: typeColor + "dd", color: "#fff", backdropFilter: "blur(4px)" }}>
+          {item.type}
+        </span>
+        {/* Duration */}
+        {item.duration && (
+          <span style={{ position: "absolute", bottom: "8px", right: "8px", padding: "2px 7px", borderRadius: "5px", fontSize: "11px", fontWeight: "600", background: "rgba(0,0,0,0.75)", color: "#fff" }}>
+            {item.duration}
+          </span>
+        )}
+      </div>
+
+      {/* Content */}
+      <div style={{ padding: "14px" }}>
+        <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", margin: "0 0 8px", lineHeight: "1.4", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+          {item.title}
+        </p>
+
+        {/* Platform + date */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+            <Youtube size={11} color="#ff4444" />
+            <span style={{ fontSize: "11px", color: "var(--dim)" }}>YouTube</span>
+          </div>
+          <span style={{ fontSize: "11px", color: "var(--dim)" }}>{date}</span>
+        </div>
+
+        {/* Stats */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", padding: "10px 0", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", marginBottom: "12px" }}>
+          <StatPill label="Views" value={item.views} />
+          <StatPill label="Likes" value={item.likes} />
+          <StatPill label="Comments" value={item.comments} />
+        </div>
+
+        {/* Action */}
+        <a href={item.url || "#"} target="_blank" rel="noreferrer"
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", padding: "7px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted)", fontSize: "12px", fontWeight: "500", textDecoration: "none", transition: "all 0.15s" }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = accent; e.currentTarget.style.color = accent }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted)" }}>
+          <ExternalLink size={12} /> View on YouTube
+        </a>
+      </div>
+    </div>
+  )
+}
 
 export default function Content() {
   const platform = localStorage.getItem("platform") || "both"
   const accent = COLORS[platform] || COLORS.both
-  const types = platform === "youtube" ? YT_TYPES : platform === "instagram" ? IG_TYPES : BOTH_TYPES
 
-  const [items, setItems] = useState(() => loadContent(platform))
-  const [filterStatus, setFilterStatus] = useState("All")
+  const [search, setSearch] = useState("")
   const [filterType, setFilterType] = useState("All")
-  const [modal, setModal] = useState(null) // null | "add" | item object
-  const [form, setForm] = useState(EMPTY_FORM)
-  const [deleteId, setDeleteId] = useState(null)
 
-  function openAdd() { setForm({ ...EMPTY_FORM, platform: platform === "both" ? "youtube" : platform }); setModal("add") }
-  function openEdit(item) { setForm({ ...item }); setModal(item) }
-  function handleChange(k, v) { setForm(f => ({ ...f, [k]: v })) }
+  const types = [...new Set(MOCK_CONTENT.map(c => c.type))]
 
-  function handleSave() {
-    if (!form.title.trim()) return
-    const updated = modal === "add"
-      ? [{ ...form, id: Date.now() }, ...items]
-      : items.map(i => i.id === modal.id ? { ...form, id: modal.id } : i)
-    setItems(updated); saveContent(platform, updated); setModal(null)
-  }
-
-  function handleDelete(id) {
-    const updated = items.filter(i => i.id !== id)
-    setItems(updated); saveContent(platform, updated); setDeleteId(null)
-  }
-
-  const filtered = useMemo(() => items.filter(i => {
-    if (filterStatus !== "All" && i.status !== filterStatus) return false
-    if (filterType !== "All" && i.type !== filterType) return false
+  const filtered = useMemo(() => MOCK_CONTENT.filter(item => {
+    if (filterType !== "All" && item.type !== filterType) return false
+    if (search && !item.title.toLowerCase().includes(search.toLowerCase())) return false
     return true
-  }), [items, filterStatus, filterType])
+  }), [filterType, search])
+
+  // Summary stats
+  const totalViews = MOCK_CONTENT.reduce((s, c) => s + c.views, 0)
+  const totalLikes = MOCK_CONTENT.reduce((s, c) => s + c.likes, 0)
 
   return (
     <div className="page-root">
       <Sidebar />
       <div className="page-content">
         <main className="page-main">
-          <div className="page-header">
+
+          {/* Header */}
+          <div className="page-header" style={{ marginBottom: "20px" }}>
             <div>
               <p className="page-kicker">Library</p>
               <h1 className="page-title">Content</h1>
             </div>
-            <button onClick={openAdd} className="btn-primary" style={{ background: accent, display: "flex", alignItems: "center", gap: "6px" }}>
-              <Plus size={14} /> Add Content
-            </button>
+            {/* Summary */}
+            <div style={{ display: "flex", gap: "20px" }}>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ fontSize: "20px", fontWeight: "800", color: accent, margin: 0, letterSpacing: "-0.5px" }}>{fmt(totalViews)}</p>
+                <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Total views</p>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ fontSize: "20px", fontWeight: "800", color: "#4ade80", margin: 0, letterSpacing: "-0.5px" }}>{fmt(totalLikes)}</p>
+                <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Total likes</p>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ fontSize: "20px", fontWeight: "800", color: "var(--text)", margin: 0, letterSpacing: "-0.5px" }}>{MOCK_CONTENT.length}</p>
+                <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Videos</p>
+              </div>
+            </div>
           </div>
 
-          <ContentFilters types={types} filterStatus={filterStatus} filterType={filterType} accent={accent} onStatus={setFilterStatus} onType={setFilterType} />
+          {/* Filters */}
+          <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
+            {/* Search */}
+            <div style={{ position: "relative", flex: 1, minWidth: "200px", maxWidth: "320px" }}>
+              <Search size={13} color="var(--dim)" style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)" }} />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search videos..."
+                style={{ width: "100%", padding: "8px 12px 8px 34px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)", color: "var(--text)", fontSize: "13px", outline: "none", boxSizing: "border-box" }} />
+            </div>
 
+            {/* Type filter */}
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+              {["All", ...types].map(t => (
+                <button key={t} onClick={() => setFilterType(t)}
+                  style={{ padding: "7px 14px", borderRadius: "8px", border: `1px solid ${filterType === t ? accent : "var(--border)"}`, background: filterType === t ? accent + "15" : "transparent", color: filterType === t ? accent : "var(--muted)", fontSize: "12px", fontWeight: "500", cursor: "pointer" }}>
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Grid */}
           {filtered.length === 0 ? (
             <div className="card empty-state">
               <div style={{ fontSize: "32px", marginBottom: "12px" }}>🎬</div>
-              <p className="empty-title">{items.length === 0 ? "No content yet" : "No results"}</p>
-              <p className="empty-sub">{items.length === 0 ? "Track your videos, reels, and posts here." : "Try changing your filters."}</p>
-              {items.length === 0 && <button onClick={openAdd} className="btn-primary" style={{ background: accent, marginTop: "4px" }}>Add your first piece</button>}
+              <p className="empty-title">No videos found</p>
+              <p className="empty-sub">Try a different search or filter.</p>
             </div>
           ) : (
-            <ContentTable items={filtered} accent={accent} onEdit={openEdit} onDelete={setDeleteId} />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "16px" }}>
+              {filtered.map(item => <ContentCard key={item.id} item={item} accent={accent} />)}
+            </div>
           )}
+
         </main>
       </div>
-
-      {modal && <ContentFormModal modal={modal} form={form} types={types} accent={accent} onChange={handleChange} onSave={handleSave} onClose={() => setModal(null)} />}
-      {deleteId && <DeleteModal onClose={() => setDeleteId(null)} onConfirm={() => handleDelete(deleteId)} />}
     </div>
   )
 }
