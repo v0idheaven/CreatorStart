@@ -1,14 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import LandingPage from './pages/LandingPage'
-import Auth from './pages/Auth'
-import PlatformSelect from './pages/PlatformSelect'
-import Dashboard from './pages/Dashboard'
-import ContentGenerator from './pages/ContentGenerator'
-import Planner from './pages/Planner'
-import Settings from './pages/Settings'
-import Content from './pages/Content'
-import Analytics from './pages/Analytics'
-import AuthCallback from './pages/AuthCallback'
+import LandingPage from './pages/landing'
+import Auth from './pages/auth'
+import AuthCallback from './pages/auth/AuthCallback'
+import PlatformSelect from './pages/platform'
+import Dashboard from './pages/dashboard'
+import ContentGenerator from './pages/generator'
+import Planner from './pages/planner'
+import Settings from './pages/settings'
+import Content from './pages/content'
+import Analytics from './pages/analytics'
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("accessToken")
@@ -16,7 +16,7 @@ function PrivateRoute({ children }) {
   return children
 }
 
-const App = () => {
+export default function App() {
   return (
     <BrowserRouter>
       <Routes>
@@ -34,5 +34,3 @@ const App = () => {
     </BrowserRouter>
   )
 }
-
-export default App
