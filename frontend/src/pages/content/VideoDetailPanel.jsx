@@ -47,7 +47,7 @@ export default function VideoDetailPanel({ video, onClose }) {
   return (
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 50, backdropFilter: "blur(2px)" }} />
-      <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(560px, 100vw)", background: "var(--card)", borderLeft: "1px solid var(--border)", zIndex: 51, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+      <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(560px, 100vw)", background: "var(--card)", borderLeft: "1px solid var(--border)", zIndex: 51, overflowY: "auto", overscrollBehavior: "contain", display: "flex", flexDirection: "column" }}>
 
         {/* Header */}
         <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--card)", zIndex: 1 }}>
