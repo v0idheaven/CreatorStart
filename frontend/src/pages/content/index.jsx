@@ -60,9 +60,10 @@ export default function Content() {
 
           {filtered.length === 0 ? (
             <div className="card empty-state">
-              <p className="empty-title">No content yet</p>
-              <p className="empty-sub">Track your videos, reels, and posts here.</p>
-              <button onClick={openAdd} className="btn-primary" style={{ background: accent }}>Add your first piece</button>
+              <div style={{ fontSize: "32px", marginBottom: "12px" }}>🎬</div>
+              <p className="empty-title">{items.length === 0 ? "No content yet" : "No results"}</p>
+              <p className="empty-sub">{items.length === 0 ? "Track your videos, reels, and posts here." : "Try changing your filters."}</p>
+              {items.length === 0 && <button onClick={openAdd} className="btn-primary" style={{ background: accent, marginTop: "4px" }}>Add your first piece</button>}
             </div>
           ) : (
             <ContentTable items={filtered} accent={accent} onEdit={openEdit} onDelete={setDeleteId} />
