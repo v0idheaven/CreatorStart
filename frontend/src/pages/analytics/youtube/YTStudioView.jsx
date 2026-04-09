@@ -49,7 +49,12 @@ export default function YTStudioView({ ytStats, ytAnalytics, refreshingYT, ytErr
         </button>
       </div>
 
-      {ytError && <p className="yt-error">{ytError}</p>}
+      {ytError && (
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "12px 16px", borderRadius: "10px", background: "#f8717115", border: "1px solid #f8717130", marginBottom: "16px" }}>
+          <span style={{ fontSize: "16px", flexShrink: 0 }}>⚠️</span>
+          <p style={{ fontSize: "13px", color: "#f87171", margin: 0, lineHeight: "1.5" }}>{ytError}</p>
+        </div>
+      )}
 
       <div className="chart-card yt-analytics-card">
         <div className="yt-tab-row">
