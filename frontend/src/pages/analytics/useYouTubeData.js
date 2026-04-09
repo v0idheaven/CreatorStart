@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react"
 import { apiFetch } from "../../utils/api"
 import { API_ENDPOINTS } from "../../constants/api"
-import { MOCK_MODE, MOCK_YT_STATS, MOCK_YT_VIDEOS, MOCK_YT_ANALYTICS } from "./mockData"
 
 // Strip HTML tags + detect quota errors from YouTube API error messages
 function cleanError(msg) {
@@ -15,9 +14,9 @@ function cleanError(msg) {
 
 // Manages YouTube videos, analytics, and refresh state
 export default function useYouTubeData(youtubeStats) {
-  const [ytStats, setYtStats] = useState(MOCK_MODE ? MOCK_YT_STATS : (youtubeStats || null))
-  const [ytVideos, setYtVideos] = useState(MOCK_MODE ? MOCK_YT_VIDEOS : [])
-  const [ytAnalytics, setYtAnalytics] = useState(MOCK_MODE ? MOCK_YT_ANALYTICS : null)
+  const [ytStats, setYtStats] = useState(youtubeStats || null)
+  const [ytVideos, setYtVideos] = useState([])
+  const [ytAnalytics, setYtAnalytics] = useState(null)
   const [loadingVideos, setLoadingVideos] = useState(false)
   const [refreshingYT, setRefreshingYT] = useState(false)
   const [ytError, setYtError] = useState("")
@@ -36,7 +35,6 @@ export default function useYouTubeData(youtubeStats) {
       const [vData, aData] = await Promise.all([vRes.json(), aRes.json()])
       if (vRes.ok && Array.isArray(vData?.data)) setYtVideos(vData.data)
       if (aRes.ok && aData?.data) setYtAnalytics(aData.data)
-      // Show first error encountered
       if (!vRes.ok) setYtError(cleanError(vData?.message))
       else if (!aRes.ok) setYtError(cleanError(aData?.message))
     } catch (error) {
@@ -71,10 +69,10 @@ export default function useYouTubeData(youtubeStats) {
     }
   }
 
-  // Use boolean dep — object reference changes every render causing infinite loops
-  const ytConnected = MOCK_MODE ? true : !!youtubeStats
+  // Use boolean dep —> object reference changes every render causing infinite loops
+  const ytConnected = !!youtubeStats
   useEffect(() => {
-    if (MOCK_MODE || !ytConnected) return
+    if (!ytConnected) return
     const timer = window.setTimeout(fetchYTVideos, 0)
     return () => window.clearTimeout(timer)
   }, [ytConnected]) // eslint-disable-line react-hooks/exhaustive-deps
