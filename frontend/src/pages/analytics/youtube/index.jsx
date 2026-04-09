@@ -21,8 +21,10 @@ export default function YouTubeTab({ ytStats, ytAnalytics, ytVideos, loadingVide
 
   return (
     <div>
+      {/* Error shown once at the top — not repeated in video table */}
       <YTStudioView ytStats={ytStats} ytAnalytics={ytAnalytics} refreshingYT={refreshingYT} ytError={ytError} onRefresh={onRefresh} fmt={fmt} />
-      <YTVideoTable ytVideos={ytVideos} loadingVideos={loadingVideos} ytError={ytError} onRefresh={fetchYTVideos} fmt={fmt} />
+      {/* Video table only shows its own loading/empty state, error already shown above */}
+      <YTVideoTable ytVideos={ytVideos} loadingVideos={loadingVideos} ytError="" onRefresh={fetchYTVideos} fmt={fmt} />
     </div>
   )
 }
