@@ -1,0 +1,10 @@
+export const MOCK_CONTENT = [
+  { id: "1", title: "How I grew my YouTube channel to 10K in 3 months", type: "Video", platform: "youtube", views: 42300, likes: 2100, comments: 187, publishedAt: "2026-04-08", thumbnail: "https://picsum.photos/seed/c1/320/180", status: "Published", duration: "14:32" },
+  { id: "2", title: "Morning routine that changed my life ☀️", type: "Short", platform: "youtube", views: 91000, likes: 8400, comments: 432, publishedAt: "2026-04-05", thumbnail: "https://picsum.photos/seed/c2/320/180", status: "Published", duration: "0:58" },
+  { id: "3", title: "Top 10 AI tools for content creators 2026", type: "Video", platform: "youtube", views: 28700, likes: 1340, comments: 98, publishedAt: "2026-04-01", thumbnail: "https://picsum.photos/seed/c3/320/180", status: "Published", duration: "18:44" },
+  { id: "4", title: "My editing workflow (full breakdown)", type: "Video", platform: "youtube", views: 19200, likes: 870, comments: 64, publishedAt: "2026-03-28", thumbnail: "https://picsum.photos/seed/c4/320/180", status: "Published", duration: "22:10" },
+  { id: "5", title: "5 mistakes every new creator makes", type: "Short", platform: "youtube", views: 54000, likes: 3200, comments: 211, publishedAt: "2026-03-24", thumbnail: "https://picsum.photos/seed/c5/320/180", status: "Published", duration: "0:55" },
+  { id: "6", title: "Behind the scenes — my studio setup", type: "Video", platform: "youtube", views: 11400, likes: 620, comments: 43, publishedAt: "2026-03-20", thumbnail: "https://picsum.photos/seed/c6/320/180", status: "Published", duration: "9:21" },
+  { id: "7", title: "Reacting to my first ever YouTube video 😂", type: "Video", platform: "youtube", views: 33800, likes: 2900, comments: 318, publishedAt: "2026-03-15", thumbnail: "https://picsum.photos/seed/c7/320/180", status: "Published", duration: "16:05" },
+  { id: "8", title: "How to script a YouTube video fast", type: "Short", platform: "youtube", views: 67000, likes: 4100, comments: 289, publishedAt: "2026-03-10", thumbnail: "https://picsum.photos/seed/c8/320/180", status: "Published", duration: "0:52" },
+]
