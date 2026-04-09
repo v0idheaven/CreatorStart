@@ -1,7 +1,17 @@
+import { useState, useEffect } from "react"
 import { Youtube, RefreshCw } from "lucide-react"
 
-// Recent YouTube videos table with error state
+// Recent YouTube videos table with error + slow-backend awareness
 export default function YTVideoTable({ ytVideos, loadingVideos, ytError, onRefresh, fmt }) {
+  const [slowWarning, setSlowWarning] = useState(false)
+
+  // After 5s of loading, show a "this is taking a while" hint
+  useEffect(() => {
+    if (!loadingVideos) { setSlowWarning(false); return }
+    const t = setTimeout(() => setSlowWarning(true), 5000)
+    return () => clearTimeout(t)
+  }, [loadingVideos])
+
   return (
     <div className="chart-card yt-videos-card">
       <div className="yt-videos-header">
@@ -16,12 +26,17 @@ export default function YTVideoTable({ ytVideos, loadingVideos, ytError, onRefre
       </div>
 
       {loadingVideos ? (
-        <div className="yt-videos-loading">
+        <div className="yt-videos-loading" style={{ flexDirection: "column", gap: "8px" }}>
           <div className="spinner spinner-sm" style={{ borderTopColor: "#ff4444" }} />
+          {slowWarning && (
+            <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0, textAlign: "center" }}>
+              Backend is waking up (free tier)...
+            </p>
+          )}
         </div>
       ) : ytError ? (
         <div className="yt-videos-loading" style={{ flexDirection: "column", gap: "10px" }}>
-          <p style={{ fontSize: "13px", color: "#f87171", margin: 0 }}>{ytError}</p>
+          <p style={{ fontSize: "13px", color: "#f87171", margin: 0, textAlign: "center" }}>{ytError}</p>
           <button onClick={onRefresh} style={{ fontSize: "12px", color: "#ff4444", background: "#ff444415", border: "1px solid #ff444430", borderRadius: "7px", padding: "6px 14px", cursor: "pointer" }}>
             Try again
           </button>

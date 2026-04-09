@@ -14,11 +14,12 @@ export default function useYouTubeData(youtubeStats) {
   async function fetchYTVideos() {
     setLoadingVideos(true)
     setYtError("")
-    try {
-      // 15s timeout so spinner doesn't spin forever on slow/sleeping backend
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 15000)
 
+    // Race fetch against a 20s timeout
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 20000)
+
+    try {
       const [vRes, aRes] = await Promise.all([
         apiFetch(API_ENDPOINTS.youtubeVideos, { signal: controller.signal }),
         apiFetch(API_ENDPOINTS.youtubeAnalytics, { signal: controller.signal }),
@@ -29,13 +30,13 @@ export default function useYouTubeData(youtubeStats) {
 
       if (vRes.ok && Array.isArray(vData?.data)) setYtVideos(vData.data)
       if (aRes.ok && aData?.data) setYtAnalytics(aData.data)
-
       if (!vRes.ok) setYtError(vData?.message || "Failed to load videos")
     } catch (error) {
+      clearTimeout(timeout)
       if (error.name === "AbortError") {
-        setYtError("Request timed out. Backend may be waking up — try refreshing.")
+        setYtError("Backend is waking up (free tier). Click Refresh in a moment.")
       } else {
-        setYtError("Failed to load YouTube data.")
+        setYtError("Could not load videos. Check your connection.")
       }
       console.warn("YouTube fetch error:", error)
     } finally {
