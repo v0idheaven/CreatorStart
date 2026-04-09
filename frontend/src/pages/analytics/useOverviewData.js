@@ -2,7 +2,11 @@ import { useMemo } from "react"
 
 // Computes all overview stats from localStorage + ytVideos
 export default function useOverviewData(platform, ytVideos, youtubeStats) {
+  // Use boolean as memo dep — object reference changes every render causing infinite loops
+  const ytConnected = !!youtubeStats
   return useMemo(() => {
+    const useRealData = ytConnected
+
     const plan = JSON.parse(localStorage.getItem(`planner_data_${platform}`) || "null")
     const streakArr = JSON.parse(localStorage.getItem(`streak_data_${platform}`) || "[]")
     const contentArr = JSON.parse(localStorage.getItem(`content_data_${platform}`) || "[]")
@@ -24,7 +28,6 @@ export default function useOverviewData(platform, ytVideos, youtubeStats) {
 
     const year = today.getFullYear(), month = today.getMonth()
     const daysInMonth = new Date(year, month + 1, 0).getDate()
-    const useRealData = !!(youtubeStats)
 
     const realPostDates = new Set()
     ytVideos.forEach(v => {
@@ -75,5 +78,5 @@ export default function useOverviewData(platform, ytVideos, youtubeStats) {
       upcoming, weeks, consistency, monthlyActivity, todayPosted, useRealData,
       contentTotal: contentArr.length, contentItems: contentArr,
     }
-  }, [platform, ytVideos, youtubeStats])
+  }, [platform, ytVideos, ytConnected])
 }
