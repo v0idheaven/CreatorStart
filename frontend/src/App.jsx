@@ -9,6 +9,8 @@ import Planner from './pages/planner'
 import Settings from './pages/settings'
 import Content from './pages/content'
 import Analytics from './pages/analytics'
+import Privacy from './pages/legal/Privacy'
+import Terms from './pages/legal/Terms'
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("accessToken")
@@ -23,6 +25,8 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
         <Route path="/select-platform" element={<PrivateRoute><PlatformSelect /></PrivateRoute>} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/generator" element={<PrivateRoute><ContentGenerator /></PrivateRoute>} />
