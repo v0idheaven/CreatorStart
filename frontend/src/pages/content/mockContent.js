@@ -1,4 +1,4 @@
-export const MOCK_CONTENT = [
+﻿export const MOCK_CONTENT = [
   {
     id: "1", title: "How I grew my YouTube channel to 10K in 3 months", type: "Video", platform: "youtube",
     views: 42300, likes: 2100, comments: 187, shares: 340, publishedAt: "2026-04-08",
@@ -8,7 +8,7 @@ export const MOCK_CONTENT = [
     description: "In this video I share my exact strategy for growing from 0 to 10K subscribers in just 3 months.",
   },
   {
-    id: "2", title: "Morning routine that changed my life ☀️", type: "Short", platform: "youtube",
+    id: "2", title: "Morning routine that changed my life â˜€ï¸", type: "Short", platform: "youtube",
     views: 91000, likes: 8400, comments: 432, shares: 1200, publishedAt: "2026-04-05",
     thumbnail: "https://picsum.photos/seed/c2/320/180", status: "Published", duration: "0:58",
     url: "#", impressions: 420000, ctr: 8.2, avgViewDuration: "0:48", watchTime: 7280,
@@ -40,15 +40,15 @@ export const MOCK_CONTENT = [
     description: "Avoid these 5 common mistakes that most new YouTube creators make.",
   },
   {
-    id: "6", title: "Behind the scenes — my studio setup", type: "Video", platform: "youtube",
+    id: "6", title: "Behind the scenes â€” my studio setup", type: "Video", platform: "youtube",
     views: 11400, likes: 620, comments: 43, shares: 89, publishedAt: "2026-03-20",
     thumbnail: "https://picsum.photos/seed/c6/320/180", status: "Published", duration: "9:21",
     url: "#", impressions: 54000, ctr: 4.2, avgViewDuration: "6:10", watchTime: 1170,
     dailyViews: [980, 1600, 1400, 1100, 900, 780, 680, 580, 520, 460, 420, 380, 340, 300],
-    description: "Tour of my entire studio setup — cameras, lights, microphones and desk setup.",
+    description: "Tour of my entire studio setup â€” cameras, lights, microphones and desk setup.",
   },
   {
-    id: "7", title: "Reacting to my first ever YouTube video 😂", type: "Video", platform: "youtube",
+    id: "7", title: "Reacting to my first ever YouTube video ðŸ˜‚", type: "Video", platform: "youtube",
     views: 33800, likes: 2900, comments: 318, shares: 420, publishedAt: "2026-03-15",
     thumbnail: "https://picsum.photos/seed/c7/320/180", status: "Published", duration: "16:05",
     url: "#", impressions: 148000, ctr: 7.1, avgViewDuration: "9:40", watchTime: 5460,
@@ -64,3 +64,4 @@ export const MOCK_CONTENT = [
     description: "My 3-step framework for scripting any YouTube video in under 30 minutes.",
   },
 ]
+
