@@ -2,6 +2,7 @@ import { useState, useMemo } from "react"
 import { Search, Youtube, ExternalLink } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { MOCK_CONTENT } from "./mockContent"
+import VideoDetailPanel from "./VideoDetailPanel"
 
 const COLORS = { youtube: "#ff4444", instagram: "#c13584", both: "#818cf8" }
 const TYPE_COLORS = { Video: "#818cf8", Short: "#06b6d4", Reel: "#c13584", Carousel: "#f59e0b", Post: "#4ade80", Story: "#f97316", Live: "#ff4444" }
@@ -22,12 +23,12 @@ function StatPill({ label, value }) {
   )
 }
 
-function ContentCard({ item, accent }) {
+function ContentCard({ item, accent, onClick }) {
   const typeColor = TYPE_COLORS[item.type] || accent
   const date = new Date(item.publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
 
   return (
-    <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "14px", overflow: "hidden", transition: "border-color 0.15s, transform 0.15s" }}
+    <div onClick={onClick} style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "14px", overflow: "hidden", transition: "border-color 0.15s, transform 0.15s", cursor: "pointer" }}
       onMouseEnter={e => { e.currentTarget.style.borderColor = accent + "60"; e.currentTarget.style.transform = "translateY(-2px)" }}
       onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.transform = "translateY(0)" }}>
 
@@ -74,12 +75,9 @@ function ContentCard({ item, accent }) {
         </div>
 
         {/* Action */}
-        <a href={item.url || "#"} target="_blank" rel="noreferrer"
-          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", padding: "7px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted)", fontSize: "12px", fontWeight: "500", textDecoration: "none", transition: "all 0.15s" }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = accent; e.currentTarget.style.color = accent }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted)" }}>
-          <ExternalLink size={12} /> View on YouTube
-        </a>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", padding: "7px", borderRadius: "8px", border: "1px solid var(--border)", color: "var(--dim)", fontSize: "12px", fontWeight: "500" }}>
+          Click to view full analytics →
+        </div>
       </div>
     </div>
   )
@@ -91,6 +89,7 @@ export default function Content() {
 
   const [search, setSearch] = useState("")
   const [filterType, setFilterType] = useState("All")
+  const [selectedVideo, setSelectedVideo] = useState(null)
 
   const types = [...new Set(MOCK_CONTENT.map(c => c.type))]
 
@@ -162,12 +161,13 @@ export default function Content() {
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "16px" }}>
-              {filtered.map(item => <ContentCard key={item.id} item={item} accent={accent} />)}
+              {filtered.map(item => <ContentCard key={item.id} item={item} accent={accent} onClick={() => setSelectedVideo(item)} />)}
             </div>
           )}
 
         </main>
       </div>
+      <VideoDetailPanel video={selectedVideo} onClose={() => setSelectedVideo(null)} />
     </div>
   )
 }
