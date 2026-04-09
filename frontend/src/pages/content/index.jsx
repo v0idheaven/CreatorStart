@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react"
-import { Search, Youtube, ExternalLink } from "lucide-react"
+import { Search, Youtube, Film, BarChart2 } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { MOCK_CONTENT } from "./mockContent"
 import VideoDetailPanel from "./VideoDetailPanel"
@@ -75,8 +75,8 @@ function ContentCard({ item, accent, onClick }) {
         </div>
 
         {/* Action */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", padding: "7px", borderRadius: "8px", border: "1px solid var(--border)", color: "var(--dim)", fontSize: "12px", fontWeight: "500" }}>
-          Click to view full analytics →
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "7px", borderRadius: "8px", border: "1px solid var(--border)", color: "var(--dim)", fontSize: "12px", fontWeight: "500" }}>
+          <BarChart2 size={12} /> View analytics
         </div>
       </div>
     </div>
@@ -155,7 +155,7 @@ export default function Content() {
           {/* Grid */}
           {filtered.length === 0 ? (
             <div className="card empty-state">
-              <div style={{ fontSize: "32px", marginBottom: "12px" }}>🎬</div>
+              <Film size={32} color="var(--dim)" style={{ marginBottom: "12px" }} />
               <p className="empty-title">No videos found</p>
               <p className="empty-sub">Try a different search or filter.</p>
             </div>
