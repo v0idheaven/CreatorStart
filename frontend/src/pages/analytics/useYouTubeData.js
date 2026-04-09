@@ -64,11 +64,13 @@ export default function useYouTubeData(youtubeStats) {
     }
   }
 
+  // Stable dep — only care if YT is connected (boolean), not the object reference
+  const ytConnected = !!youtubeStats
   useEffect(() => {
-    if (!youtubeStats) return
+    if (!ytConnected) return
     const timer = window.setTimeout(fetchYTVideos, 0)
     return () => window.clearTimeout(timer)
-  }, [youtubeStats])
+  }, [ytConnected]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return { ytStats, ytVideos, ytAnalytics, loadingVideos, refreshingYT, ytError, fetchYTVideos, handleRefreshYT }
 }
