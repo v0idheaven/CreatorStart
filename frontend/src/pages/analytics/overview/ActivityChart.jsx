@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-// Monthly posting activity line chart with hover tooltip
+// Monthly posting activity line chart with hover tooltip inside SVG
 export default function ActivityChart({ monthlyActivity, accent, todayPosted, useRealData }) {
   const [hoveredDay, setHoveredDay] = useState(null)
 
@@ -34,20 +34,6 @@ export default function ActivityChart({ monthlyActivity, accent, todayPosted, us
       </div>
 
       <div className="activity-graph-body">
-        {hoveredDay !== null && (() => {
-          const c = coords.find(c => c.day === hoveredDay)
-          if (!c) return null
-          const date = new Date(new Date().getFullYear(), new Date().getMonth(), c.day)
-          return (
-            <div className="activity-hover-info">
-              <div className="activity-hover-row">
-                <span className="activity-hover-value">{c.v > 0 ? "1" : "0"}</span>
-                <span className="activity-hover-date">{date.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}</span>
-              </div>
-            </div>
-          )
-        })()}
-
         <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="activity-svg"
           onMouseMove={e => {
             const rect = e.currentTarget.getBoundingClientRect()
@@ -62,14 +48,24 @@ export default function ActivityChart({ monthlyActivity, accent, todayPosted, us
           <path d={areaPath} fill={accent} opacity="0.08" />
           <path d={linePath} stroke={accent} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
           {coords.filter(c => c.v > 0).map((c, i) => <circle key={i} cx={c.x} cy={c.y} r="3.5" fill={accent} />)}
+
           {hoveredDay !== null && (() => {
             const c = coords.find(c => c.day === hoveredDay)
             if (!c) return null
+            const date = new Date(new Date().getFullYear(), new Date().getMonth(), c.day)
+            const dateStr = date.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })
+            const label = c.v > 0 ? "Posted" : "No post"
+            const tooltipX = Math.min(c.x + 8, W - 110)
+            const tooltipY = Math.max(c.y - 38, PAD)
             return (
               <g>
                 <line x1={c.x} x2={c.x} y1={PAD} y2={H} stroke="var(--muted)" strokeWidth="1" strokeDasharray="3 3" opacity="0.6" />
                 <circle cx={c.x} cy={c.y} r="5" fill={accent} />
                 <circle cx={c.x} cy={c.y} r="3" fill="var(--card)" />
+                {/* Tooltip inside SVG */}
+                <rect x={tooltipX} y={tooltipY} width="104" height="32" rx="6" fill="var(--card)" stroke="var(--border)" strokeWidth="1" />
+                <text x={tooltipX + 8} y={tooltipY + 13} fontSize="11" fontWeight="700" fill={c.v > 0 ? accent : "var(--dim)"}>{label}</text>
+                <text x={tooltipX + 8} y={tooltipY + 25} fontSize="10" fill="var(--dim)">{dateStr}</text>
               </g>
             )
           })()}
