@@ -1,81 +1,106 @@
 import { useState } from "react"
-import { Sparkles } from "lucide-react"
-import SelectField from "./SelectField"
-import { NICHES } from "./generatorConfig"
+import { Sparkles, ChevronDown } from "lucide-react"
+import { NICHES, OUTPUT_TYPES } from "./generatorConfig"
 
-const OUTPUT_TYPES = [
-  { id: "full_script", label: "Full Script", desc: "Complete word-for-word script" },
-  { id: "bullet_points", label: "Key Points", desc: "Main talking points only" },
-  { id: "hook_only", label: "Hook + CTA", desc: "Opening hook and call to action" },
-  { id: "outline", label: "Outline", desc: "Structured content outline" },
-  { id: "caption", label: "Caption + Hashtags", desc: "Ready-to-post caption" },
-]
+function Dropdown({ label, options, value, onChange, color, placeholder }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div style={{ position: "relative" }}>
+      <label style={{ fontSize: "11px", fontWeight: "600", color: "var(--dim)", display: "block", marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</label>
+      <div onClick={() => setOpen(p => !p)}
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderRadius: "9px", border: `1px solid ${value ? color + "60" : "var(--border2)"}`, background: value ? color + "08" : "var(--card)", cursor: "pointer", userSelect: "none" }}>
+        <span style={{ fontSize: "13px", color: value ? "var(--text)" : "var(--dim)", fontWeight: value ? "500" : "400" }}>{value || placeholder}</span>
+        <ChevronDown size={13} color="var(--dim)" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.15s", flexShrink: 0 }} />
+      </div>
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 40 }} />
+          <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.3)", maxHeight: "200px", overflowY: "auto" }}>
+            {options.map(opt => (
+              <div key={opt} onClick={() => { onChange(opt); setOpen(false) }}
+                style={{ padding: "9px 14px", fontSize: "13px", cursor: "pointer", color: value === opt ? color : "var(--text)", background: value === opt ? color + "12" : "transparent", fontWeight: value === opt ? "600" : "400" }}
+                onMouseEnter={e => { if (value !== opt) e.currentTarget.style.background = "var(--border)" }}
+                onMouseLeave={e => { if (value !== opt) e.currentTarget.style.background = "transparent" }}>
+                {opt}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
 
-// Left panel: all form fields + output type selector + generate button
 export default function GeneratorForm({ formats, goals, tones, color, onGenerate, loading, error }) {
   const [format, setFormat] = useState("")
-  const [customFormat, setCustomFormat] = useState("")
   const [niche, setNiche] = useState("")
-  const [customNiche, setCustomNiche] = useState("")
   const [goal, setGoal] = useState("")
-  const [customGoal, setCustomGoal] = useState("")
   const [tone, setTone] = useState("")
-  const [customTone, setCustomTone] = useState("")
   const [topic, setTopic] = useState("")
   const [outputType, setOutputType] = useState("full_script")
+  const [customValues, setCustomValues] = useState({})
+
+  const setCustom = (key, val) => setCustomValues(p => ({ ...p, [key]: val }))
+
+  const resolve = (val, key) => val === "Other" ? (customValues[key] || "") : val
 
   function handleSubmit() {
     onGenerate({
-      format: format === "Other" ? customFormat.trim() : format,
-      niche: niche === "Other" ? customNiche.trim() : niche,
-      goal: goal === "Other" ? customGoal.trim() : goal,
-      tone: tone === "Other" ? customTone.trim() : tone,
+      format: resolve(format, "format"),
+      niche: resolve(niche, "niche"),
+      goal: resolve(goal, "goal"),
+      tone: resolve(tone, "tone"),
       topic: topic.trim(),
       outputType,
       rawFormat: format, rawNiche: niche, rawGoal: goal, rawTone: tone,
-      customFormat, customNiche, customGoal, customTone,
+      customFormat: customValues.format || "", customNiche: customValues.niche || "",
+      customGoal: customValues.goal || "", customTone: customValues.tone || "",
     })
   }
 
+  const selectedOutput = OUTPUT_TYPES.find(o => o.id === outputType)
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <SelectField label="Format" options={formats} value={format} customValue={customFormat} onCustomChange={setCustomFormat} onChange={v => { setFormat(v); setCustomFormat("") }} accentColor={color} />
-      <SelectField label="Niche" options={NICHES} value={niche} customValue={customNiche} onCustomChange={setCustomNiche} onChange={v => { setNiche(v); setCustomNiche("") }} accentColor={color} />
-      <SelectField label="Goal" options={goals} value={goal} customValue={customGoal} onCustomChange={setCustomGoal} onChange={v => { setGoal(v); setCustomGoal("") }} accentColor={color} />
-      <SelectField label="Tone" options={tones} value={tone} customValue={customTone} onCustomChange={setCustomTone} onChange={v => { setTone(v); setCustomTone("") }} accentColor={color} />
+    <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+
+      <Dropdown label="Format" options={formats} value={format} onChange={setFormat} color={color} placeholder="Select format" />
+      {format === "Other" && <input className="input-sm" placeholder="Enter custom format..." value={customValues.format || ""} onChange={e => setCustom("format", e.target.value)} style={{ borderColor: color, marginTop: "-8px" }} />}
+
+      <Dropdown label="Niche" options={NICHES} value={niche} onChange={setNiche} color={color} placeholder="Select your niche" />
+      {niche === "Other" && <input className="input-sm" placeholder="Enter your niche..." value={customValues.niche || ""} onChange={e => setCustom("niche", e.target.value)} style={{ borderColor: color, marginTop: "-8px" }} />}
+
+      <Dropdown label="Goal" options={goals} value={goal} onChange={setGoal} color={color} placeholder="What's your goal?" />
+      {goal === "Other" && <input className="input-sm" placeholder="Enter your goal..." value={customValues.goal || ""} onChange={e => setCustom("goal", e.target.value)} style={{ borderColor: color, marginTop: "-8px" }} />}
+
+      <Dropdown label="Tone" options={tones} value={tone} onChange={setTone} color={color} placeholder="Choose a tone" />
+      {tone === "Other" && <input className="input-sm" placeholder="Enter tone..." value={customValues.tone || ""} onChange={e => setCustom("tone", e.target.value)} style={{ borderColor: color, marginTop: "-8px" }} />}
 
       {/* Topic */}
       <div>
-        <label style={{ fontSize: "12px", fontWeight: "500", color: "var(--muted)", display: "block", marginBottom: "6px" }}>
-          Topic / Keyword <span style={{ color: "var(--dim)" }}>(optional)</span>
+        <label style={{ fontSize: "11px", fontWeight: "600", color: "var(--dim)", display: "block", marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+          Topic <span style={{ color: "var(--border2)", fontWeight: "400", textTransform: "none", letterSpacing: 0 }}>(optional)</span>
         </label>
-        <input className="input-sm" placeholder="e.g. Morning routine, AI tools..." value={topic} onChange={e => setTopic(e.target.value)} />
+        <input className="input-sm" placeholder="e.g. Morning routine, AI tools, Budget travel..." value={topic} onChange={e => setTopic(e.target.value)} />
       </div>
 
-      {/* Output type */}
+      {/* Output type dropdown */}
       <div>
-        <label style={{ fontSize: "12px", fontWeight: "500", color: "var(--muted)", display: "block", marginBottom: "8px" }}>
+        <label style={{ fontSize: "11px", fontWeight: "600", color: "var(--dim)", display: "block", marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
           What do you want?
         </label>
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          {OUTPUT_TYPES.map(o => (
-            <div key={o.id} onClick={() => setOutputType(o.id)}
-              style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "9px", border: `1.5px solid ${outputType === o.id ? color : "var(--border2)"}`, background: outputType === o.id ? color + "10" : "var(--card)", cursor: "pointer", transition: "all 0.12s" }}>
-              <div style={{ width: "14px", height: "14px", borderRadius: "50%", border: `2px solid ${outputType === o.id ? color : "var(--border2)"}`, background: outputType === o.id ? color : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {outputType === o.id && <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#fff" }} />}
-              </div>
-              <div>
-                <p style={{ fontSize: "13px", fontWeight: "600", color: outputType === o.id ? color : "var(--text)", margin: 0 }}>{o.label}</p>
-                <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{o.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <Dropdown label="" options={OUTPUT_TYPES.map(o => o.label)} value={selectedOutput?.label} onChange={v => setOutputType(OUTPUT_TYPES.find(o => o.label === v)?.id || "full_script")} color={color} placeholder="Select output type" />
+        {selectedOutput && (
+          <p style={{ fontSize: "11px", color: "var(--dim)", margin: "5px 0 0 2px" }}>{selectedOutput.desc}</p>
+        )}
       </div>
 
       {error && <p className="error-box">{error}</p>}
-      <button className="btn-generate" onClick={handleSubmit} disabled={loading} style={{ background: color }}>
-        {loading ? <><div className="spinner spinner-sm" />Generating...</> : <><Sparkles size={15} />Generate Content</>}
+
+      <button className="btn-generate" onClick={handleSubmit} disabled={loading} style={{ background: color, marginTop: "4px" }}>
+        {loading
+          ? <><div className="spinner spinner-sm" /> Generating...</>
+          : <><Sparkles size={14} /> Generate</>
+        }
       </button>
     </div>
   )
