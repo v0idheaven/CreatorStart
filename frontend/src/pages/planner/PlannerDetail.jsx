@@ -1,6 +1,17 @@
-import { Check, Pencil, X, Trash2, Sparkles, Plus } from "lucide-react"
+import { useState } from "react"
+import { Check, Pencil, X, Trash2, Sparkles, Plus, Copy } from "lucide-react"
 import { COLORS, PC } from "../../constants/plannerConstants"
 import { STORAGE_KEYS } from "../../constants/storageKeys"
+
+function CopyBtn({ text, accent }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
+      style={{ display: "flex", alignItems: "center", gap: "4px", padding: "3px 8px", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: copied ? "#4ade80" : "var(--dim)", fontSize: "11px", cursor: "pointer", flexShrink: 0 }}>
+      <Copy size={10} />{copied ? "Copied" : "Copy"}
+    </button>
+  )
+}
 
 export default function PlannerDetail({ activeEntry, entries, planInfo, aiDetail, aiLoading, aiError, activeExtraIdx, setActiveExtraIdx, onClose, onEdit, onToggleDone, onDelete, onAddDay, onGenerateBrief, onGenerateExtraBrief, onRemoveExtraPost }) {
   const platform = localStorage.getItem(STORAGE_KEYS.PLATFORM) || "both"
@@ -80,17 +91,27 @@ export default function PlannerDetail({ activeEntry, entries, planInfo, aiDetail
         )}
         {aiError && <p style={{ fontSize: "12px", color: "#f87171", margin: 0 }}>{aiError}</p>}
         {aiDetail && (
-          <div className="planner-ai-grid">
-            {[{ key: "hook", label: "Hook" }, { key: "cta", label: "Call to Action" }, { key: "whatToSay", label: "What to Say" }, { key: "tip", label: "Pro Tip" }].map(({ key, label }) => aiDetail[key] && (
-              <div key={key} className="planner-ai-card">
-                <p className="planner-ai-card-label" style={{ color: accent }}>{label}</p>
-                <p className="planner-ai-card-text">{aiDetail[key]}</p>
-              </div>
-            ))}
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {/* 2-col grid for short cards */}
+            <div className="planner-ai-grid">
+              {[{ key: "hook", label: "Hook" }, { key: "cta", label: "Call to Action" }, { key: "whatToSay", label: "What to Say" }, { key: "tip", label: "Pro Tip" }].map(({ key, label }) => aiDetail[key] && (
+                <div key={key} className="planner-ai-card">
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                    <p className="planner-ai-card-label" style={{ color: accent, margin: 0 }}>{label}</p>
+                    <CopyBtn text={aiDetail[key]} accent={accent} />
+                  </div>
+                  <p className="planner-ai-card-text">{aiDetail[key]}</p>
+                </div>
+              ))}
+            </div>
+            {/* Full script — full width */}
             {aiDetail.script && (
-              <div className="planner-ai-card" style={{ gridColumn: "1 / -1" }}>
-                <p className="planner-ai-card-label" style={{ color: accent }}>Script Outline</p>
-                <p className="planner-ai-card-text">{aiDetail.script}</p>
+              <div className="planner-ai-card" style={{ background: "var(--bg)", border: `1px solid ${accent}30` }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                  <p className="planner-ai-card-label" style={{ color: accent, margin: 0 }}>Full Script</p>
+                  <CopyBtn text={aiDetail.script} accent={accent} />
+                </div>
+                <p className="planner-ai-card-text" style={{ whiteSpace: "pre-wrap", lineHeight: "1.8", fontSize: "13px" }}>{aiDetail.script}</p>
               </div>
             )}
           </div>

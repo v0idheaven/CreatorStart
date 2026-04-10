@@ -67,12 +67,28 @@ const getStreakData = asyncHandler(async (req, res) => {
 const generatePlannerAiDetail = asyncHandler(async (req, res) => {
     const { content, platformLabel } = req.body
     if (!content || !platformLabel) throw new ApiError(400, "content and platformLabel are required")
-    const prompt = `You are a content strategist. Generate a detailed content brief for a ${platformLabel} creator.
-Topic: "${content}"
+
+    const prompt = `You are an expert content strategist and scriptwriter for ${platformLabel} creators.
+
+Content idea: "${content}"
 Platform: ${platformLabel}
-Return ONLY a raw JSON object with these exact keys:
-{"hook":"compelling opening line","whatToSay":"3-4 key talking points","script":"short script outline","cta":"strong call to action","tip":"one pro tip"}`
-    const text = await callGroq(prompt, 0.7)
+
+Generate a complete, ready-to-use content brief. Return ONLY a raw JSON object with these exact keys:
+{
+  "hook": "A powerful, attention-grabbing opening line (first 5-10 seconds). Make it impossible to skip.",
+  "whatToSay": "3-5 detailed talking points. Each point should be a full sentence with enough detail to speak from directly.",
+  "script": "A complete word-for-word script the creator can read. Include intro, main body with all talking points written out, and a strong outro. Make it natural and conversational for ${platformLabel}.",
+  "cta": "A strong, specific call to action that drives engagement.",
+  "tip": "One actionable pro tip specific to this content type on ${platformLabel}."
+}
+
+Rules:
+- script must be detailed and complete — not just an outline
+- Write as if you are the creator speaking to their audience
+- Keep the tone natural and platform-appropriate
+- No placeholders like [your name] — write it ready to use`
+
+    const text = await callGroq(prompt, 0.75)
     const parsed = parseJson(text)
     if (!parsed) throw new ApiError(422, "Could not parse AI response")
     return res.status(200).json(new ApiResponse(200, parsed, "AI detail generated"))
