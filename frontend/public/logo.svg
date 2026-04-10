@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 56" fill="none">
+  <!-- Icon -->
+  <rect width="56" height="56" rx="12" fill="#0f0f14"/>
+  <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="11.25"
+    stroke="url(#borderGrad)" stroke-width="1.5" fill="none"/>
+  <!-- Play triangle -->
+  <path d="M 16 12 L 16 44 L 44 28 Z" fill="url(#playGrad)" opacity="0.9"/>
+  <!-- Lightning bolt -->
+  <path d="M 30 11 L 23 28 L 28 28 L 26 45 L 37 26 L 31 26 Z"
+    fill="white" opacity="0.95"/>
+
+  <!-- Wordmark -->
+  <text x="70" y="36"
+    font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif"
+    font-size="20" font-weight="700" fill="white" letter-spacing="-0.5">Creator<tspan fill="#818cf8">Start</tspan></text>
+
+  <defs>
+    <linearGradient id="playGrad" x1="16" y1="12" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="borderGrad" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#818cf8" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#818cf8" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+</svg>

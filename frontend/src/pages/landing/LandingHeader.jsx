@@ -6,7 +6,7 @@ export default function LandingHeader({ scrollTo }) {
     <header className="landing-header">
       <div className="landing-header-inner">
         <div className="landing-logo">
-          <div className="landing-logo-icon">CS</div>
+          <img src="/favicon.svg" alt="CreatorStart" style={{ width: "36px", height: "36px", borderRadius: "9px" }} />
           <span className="landing-logo-text">Creator<span className="landing-logo-accent">Start</span></span>
         </div>
         <nav className="landing-nav">
