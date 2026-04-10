@@ -27,7 +27,7 @@ export default function ContentGenerator() {
     if (rawGoal === "Other" && !customGoal) { setError("Please enter a custom goal."); return }
     if (rawTone === "Other" && !customTone) { setError("Please enter a custom tone."); return }
 
-    const payload = { platform, format, niche, goal, tone, topic }
+    const payload = { platform, format, niche, goal, tone, topic, outputType: fields.outputType || "full_script" }
     setLastPayload(payload)
     setError(""); setLoading(true); setResult(null)
 
@@ -104,8 +104,8 @@ export default function ContentGenerator() {
             )}
             {result && (
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                {resultKeys.map(key => result[key] && (
-                  <ResultCard key={key} label={resultLabels[key]} content={result[key]} accentColor={color} />
+                {Object.entries(result).map(([key, value]) => value && (
+                  <ResultCard key={key} label={key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())} content={value} accentColor={color} />
                 ))}
                 <div style={{ display: "flex", gap: "8px" }}>
                   <button className="btn-ghost" onClick={handleRegenerate} style={{ borderColor: color + "50" }}>Regenerate ↻</button>
