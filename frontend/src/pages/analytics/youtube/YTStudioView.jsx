@@ -19,15 +19,19 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   const graphDaily = (() => {
     if (daily.length > 0) return daily
 
-    // No analytics data — build a 28-day grid with video views on publish dates
-    const today = new Date(); today.setHours(0, 0, 0, 0)
+    // No analytics data — build a 28-day grid with video views on publish dates (IST)
+    const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+    const today = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate())
+    today.setHours(0, 0, 0, 0)
     const result = []
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(today); d.setDate(today.getDate() - i)
       const dayStr = d.toISOString().split("T")[0]
       const dayViews = (ytVideos || []).filter(v => {
         if (!v.publishedAt) return false
-        const vd = new Date(v.publishedAt); vd.setHours(0, 0, 0, 0)
+        // Convert to IST before comparing dates
+        const vd = new Date(new Date(v.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+        vd.setHours(0, 0, 0, 0)
         return vd.getTime() === d.getTime()
       }).reduce((s, v) => s + Number(v.views || 0), 0)
       result.push({ day: dayStr, views: dayViews, estimatedMinutesWatched: 0 })
