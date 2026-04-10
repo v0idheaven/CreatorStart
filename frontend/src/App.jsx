@@ -100,7 +100,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={
+          localStorage.getItem("accessToken") && localStorage.getItem("user")
+            ? <Navigate to="/dashboard" replace />
+            : <LandingPage />
+        } />
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/privacy" element={<Privacy />} />
