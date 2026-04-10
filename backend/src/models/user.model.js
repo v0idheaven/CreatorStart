@@ -37,6 +37,15 @@ const userSchema = new Schema(
         bio: { type: String, trim: true, default: "" },
         goal: { type: String, trim: true, default: "" },
         tone: { type: String, trim: true, default: "" },
+        // Creator profile for generator auto-fill
+        creatorProfile: {
+            niche: { type: String, default: "" },
+            format: { type: String, default: "" },
+            goal: { type: String, default: "" },
+            tone: { type: String, default: "" },
+            audience: { type: String, default: "" },
+            topic: { type: String, default: "" },
+        },
         avatar: { type: String, default: "" },
         coverImage: { type: String, default: "" },
         // Google OAuth

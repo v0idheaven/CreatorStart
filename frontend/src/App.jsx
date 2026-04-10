@@ -9,6 +9,7 @@ import Planner from './pages/planner'
 import Settings from './pages/settings'
 import Content from './pages/content'
 import Analytics from './pages/analytics'
+import NotFound from './pages/NotFound'
 import Privacy from './pages/legal/Privacy'
 import Terms from './pages/legal/Terms'
 
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="/content" element={<PrivateRoute><Content /></PrivateRoute>} />
         <Route path="/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
         <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   )

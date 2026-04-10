@@ -1,6 +1,8 @@
-import { useState } from "react"
-import { Sparkles, ChevronDown } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Sparkles, ChevronDown, BookmarkCheck } from "lucide-react"
 import { NICHES, OUTPUT_TYPES } from "./generatorConfig"
+import { apiFetch } from "../../utils/api"
+import { API_ENDPOINTS } from "../../constants/api"
 
 function Dropdown({ label, options, value, onChange, color, placeholder, hint }) {
   const [open, setOpen] = useState(false)
@@ -40,10 +42,52 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
   const [topic, setTopic] = useState("")
   const [outputType, setOutputType] = useState("full_script")
   const [customValues, setCustomValues] = useState({})
+  const [profileSaved, setProfileSaved] = useState(false)
+
+  // Auto-fill from saved creator profile on mount
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}")
+    const p = user.creatorProfile
+    if (!p) return
+    if (p.format && formats.includes(p.format)) setFormat(p.format)
+    if (p.niche && NICHES.includes(p.niche)) setNiche(p.niche)
+    if (p.goal && goals.includes(p.goal)) setGoal(p.goal)
+    if (p.tone && tones.includes(p.tone)) setTone(p.tone)
+    if (p.topic) setTopic(p.topic)
+  }, [])
 
   const setCustom = (key, val) => setCustomValues(p => ({ ...p, [key]: val }))
   const resolve = (val, key) => val === "Other" ? (customValues[key] || "") : val
   const selectedOutput = OUTPUT_TYPES.find(o => o.id === outputType)
+
+  async function saveProfile() {
+    const profile = {
+      format: resolve(format, "format"),
+      niche: resolve(niche, "niche"),
+      goal: resolve(goal, "goal"),
+      tone: resolve(tone, "tone"),
+      topic: topic.trim(),
+    }
+    // Save to backend
+    try {
+      const res = await apiFetch(API_ENDPOINTS.updateCreatorProfile, {
+        method: "PATCH",
+        body: JSON.stringify(profile)
+      })
+      const data = await res.json()
+      if (res.ok && data?.data?.user) {
+        // Update localStorage
+        const user = JSON.parse(localStorage.getItem("user") || "{}")
+        localStorage.setItem("user", JSON.stringify({ ...user, creatorProfile: data.data.user.creatorProfile }))
+      }
+    } catch (e) {
+      // Fallback: save to localStorage only
+      const user = JSON.parse(localStorage.getItem("user") || "{}")
+      localStorage.setItem("user", JSON.stringify({ ...user, creatorProfile: profile }))
+    }
+    setProfileSaved(true)
+    setTimeout(() => setProfileSaved(false), 2000)
+  }
 
   function handleSubmit() {
     onGenerate({
@@ -80,9 +124,18 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
 
       <Dropdown label="What do you want?" options={OUTPUT_TYPES.map(o => o.label)} value={selectedOutput?.label} onChange={v => setOutputType(OUTPUT_TYPES.find(o => o.label === v)?.id || "full_script")} color={color} placeholder="Select output type" hint={selectedOutput?.desc} />
 
+      {/* Save profile button */}
+      {(format || niche || goal || tone) && (
+        <button onClick={saveProfile}
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", padding: "7px", borderRadius: "8px", border: `1px solid ${profileSaved ? "#4ade8060" : "var(--border)"}`, background: profileSaved ? "#4ade8010" : "transparent", color: profileSaved ? "#4ade80" : "var(--dim)", fontSize: "12px", cursor: "pointer", transition: "all 0.2s" }}>
+          <BookmarkCheck size={12} />
+          {profileSaved ? "Saved as default!" : "Save as my default"}
+        </button>
+      )}
+
       {error && <p className="error-box">{error}</p>}
 
-      <button className="btn-generate" onClick={handleSubmit} disabled={loading} style={{ background: color, marginTop: "4px" }}>
+      <button className="btn-generate" onClick={handleSubmit} disabled={loading} style={{ background: color }}>
         {loading ? <><div className="spinner spinner-sm" /> Generating...</> : <><Sparkles size={14} /> Generate</>}
       </button>
     </div>

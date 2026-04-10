@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
+import rateLimit from 'express-rate-limit'
 import authRouter from './routes/auth.routes.js'
 import plannerRouter from './routes/planner.routes.js'
 
@@ -29,12 +30,27 @@ app.use(express.json({ limit: '16kb' }))
 app.use(express.urlencoded({ extended: true, limit: '16kb' }))
 app.use(cookieParser())
 
+// Rate limiting
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 min
+    max: 20,
+    message: { success: false, message: "Too many requests, please try again later." },
+    standardHeaders: true, legacyHeaders: false,
+})
+
+const aiLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 min
+    max: 10,
+    message: { success: false, message: "Too many AI requests, please slow down." },
+    standardHeaders: true, legacyHeaders: false,
+})
+
 app.get('/api/v1/health', (_req, res) => {
     res.status(200).json({ ok: true })
 })
 
-app.use('/api/v1/auth', authRouter)
-app.use('/api/v1/planner', plannerRouter)
+app.use('/api/v1/auth', authLimiter, authRouter)
+app.use('/api/v1/planner', aiLimiter, plannerRouter)
 
 app.use((err, _req, res, _next) => {
     const statusCode = err?.statusCode || 500
