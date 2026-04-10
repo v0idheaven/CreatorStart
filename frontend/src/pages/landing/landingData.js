@@ -24,7 +24,7 @@ export const PLATFORM_DATA = {
   youtube: {
     color: "#ff4444", bg: "#ff444415", label: "YouTube Studio",
     stats: [["2.4K","Subscribers"],["48.2K","Total Views"],["18","Videos"],["1.2K hrs","Watch Time"]],
-    statColors: ["#ff4444","#60a5fa","#818cf8","#4ade80"],
+    statColors: ["#ff4444","#60a5fa","#2d8fa3","#4ade80"],
     recent: [
       { title: "How to grow on YouTube in 2025", type: "Video", views: "12.4K" },
       { title: "Morning routine vlog", type: "Short", views: "31K" },
@@ -34,7 +34,7 @@ export const PLATFORM_DATA = {
   instagram: {
     color: "#c13584", bg: "#c1358415", label: "Instagram Analytics",
     stats: [["5.8K","Followers"],["124K","Total Reach"],["34","Posts"],["1.2K","Avg. Likes"]],
-    statColors: ["#c13584","#60a5fa","#818cf8","#f472b6"],
+    statColors: ["#c13584","#60a5fa","#2d8fa3","#f472b6"],
     recent: [
       { title: "Behind the scenes reel", type: "Reel", views: "31K" },
       { title: "Top 10 finance tips", type: "Carousel", views: "8.2K" },
@@ -42,9 +42,9 @@ export const PLATFORM_DATA = {
     ]
   },
   both: {
-    color: "#818cf8", bg: "#818cf815", label: "Both Platforms",
+    color: "#2d8fa3", bg: "#2d8fa315", label: "Both Platforms",
     stats: [["24","Total Posts"],["8","Planned"],["12","Completed"],["4","Drafts"]],
-    statColors: ["#818cf8","#60a5fa","#4ade80","#f472b6"],
+    statColors: ["#2d8fa3","#60a5fa","#4ade80","#f472b6"],
     recent: [
       { title: "How to grow on YouTube in 2025", type: "YT · Video", views: "12.4K" },
       { title: "Behind the scenes reel", type: "IG · Reel", views: "31K" },

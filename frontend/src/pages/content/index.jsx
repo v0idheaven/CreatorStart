@@ -7,11 +7,11 @@ import { API_ENDPOINTS } from "../../constants/api"
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://creator-start-backend.onrender.com"
 
-const COLORS = { youtube: "#ff4444", instagram: "#c13584", both: "#818cf8" }
-const TYPE_COLORS = { Video: "#818cf8", Short: "#06b6d4", Reel: "#c13584", Carousel: "#f59e0b", Post: "#4ade80", Story: "#f97316", Live: "#ff4444" }
+const COLORS = { youtube: "#ff4444", instagram: "#c13584", both: "#2d8fa3" }
+const TYPE_COLORS = { Video: "#2d8fa3", Short: "#06b6d4", Reel: "#c13584", Carousel: "#f59e0b", Post: "#4ade80", Story: "#f97316", Live: "#ff4444" }
 
 const PLATFORM_TABS = [
-  { id: "all", label: "Overall", icon: Layers, color: "#818cf8" },
+  { id: "all", label: "Overall", icon: Layers, color: "#2d8fa3" },
   { id: "youtube", label: "YouTube", icon: Youtube, color: "#ff4444" },
   { id: "instagram", label: "Instagram", icon: Instagram, color: "#c13584" },
 ]

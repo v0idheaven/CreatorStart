@@ -21,13 +21,13 @@
   <!-- Main headline -->
   <text x="80" y="290" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="72" font-weight="800" fill="white" letter-spacing="-3">Plan.</text>
   <text x="80" y="375" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="72" font-weight="800" fill="white" letter-spacing="-3">Create.</text>
-  <text x="80" y="460" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="72" font-weight="800" fill="#818cf8" letter-spacing="-3">Grow.</text>
+  <text x="80" y="460" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="72" font-weight="800" fill="#2d8fa3" letter-spacing="-3">Grow.</text>
 
   <!-- Subtitle -->
   <text x="80" y="540" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="24" fill="#52525a">AI-powered content planning for YouTube &amp; Instagram creators</text>
 
   <!-- URL -->
-  <text x="80" y="590" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" fill="#818cf8" font-weight="600">creatorstart.in</text>
+  <text x="80" y="590" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" fill="#2d8fa3" font-weight="600">creatorstart.in</text>
 
   <!-- Right side decorative stats -->
   <rect x="780" y="200" width="340" height="100" rx="16" fill="#161618" stroke="#242428" stroke-width="1"/>

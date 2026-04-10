@@ -26,7 +26,7 @@ export default function AuthCallback() {
 
   return (
     <div className="callback-page">
-      <div className="spinner spinner-md" style={{ borderTopColor: "#818cf8" }} />
+      <div className="spinner spinner-md" style={{ borderTopColor: "#2d8fa3" }} />
       <p className="callback-text">Signing you in...</p>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>

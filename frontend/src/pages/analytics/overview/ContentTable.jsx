@@ -1,5 +1,5 @@
 // Content library table (from Content page data)
-const STATUS_COLORS = { Idea: "#818cf8", Scripting: "#f59e0b", Filming: "#f97316", Editing: "#06b6d4", Published: "#4ade80" }
+const STATUS_COLORS = { Idea: "#2d8fa3", Scripting: "#f59e0b", Filming: "#f97316", Editing: "#06b6d4", Published: "#4ade80" }
 
 export default function ContentTable({ contentItems, contentTotal, accent }) {
   if (!contentTotal) return null
