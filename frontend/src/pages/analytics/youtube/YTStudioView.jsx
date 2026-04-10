@@ -36,7 +36,8 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   })()
 
   const W = 800, H = 140, PADX = 40, PADY = 16
-  const graphMetric = ytTab === "audience" ? "estimatedMinutesWatched" : "views"
+  // For audience tab with no analytics data, fall back to views (watch time not available)
+  const graphMetric = (ytTab === "audience" && daily.length > 0) ? "estimatedMinutesWatched" : "views"
   const maxV = Math.max(...graphDaily.map(d => Number(d[graphMetric] || d.views || 0)), 1)
   const coords = graphDaily.map((p, i) => {
     const v = Number(p[graphMetric] || p.views || 0)
@@ -55,8 +56,8 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
     { label: "CTR", value: `${((ov.impressionClickThroughRate || 0) * 100).toFixed(1)}%` },
     { label: "Avg view duration", value: (() => { const s = ov.averageViewDuration || 0; return `${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,"0")}` })() },
   ] : [
-    { label: "Unique viewers", value: fmt(ov.views || 0), color: "var(--text)" },
-    { label: "Subs gained", value: fmt(ov.subscribersGained || 0), color: "#4ade80" },
+    { label: "Unique viewers", value: fmt(displayViews), color: "var(--text)" },
+    { label: "Subs gained", value: fmt(ov.subscribersGained > 0 ? ov.subscribersGained : ytStats.subscribers), color: "#4ade80" },
     { label: "Subs lost", value: fmt(ov.subscribersLost || 0), color: "#f87171" },
   ]
 
