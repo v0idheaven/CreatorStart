@@ -2,25 +2,51 @@ import { useState } from "react"
 import { Youtube, RefreshCw } from "lucide-react"
 
 // YouTube Studio tab — channel header + metrics + 28-day graph
-export default function YTStudioView({ ytStats, ytAnalytics, refreshingYT, ytError, onRefresh, days, onChangeDays, fmt }) {
+export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshingYT, ytError, onRefresh, days, onChangeDays, fmt }) {
   const [ytTab, setYtTab] = useState("overview")
   const [hoveredIdx, setHoveredIdx] = useState(null)
 
   const daily = ytAnalytics?.daily || []
   const ov = ytAnalytics?.overview || {}
+
+  // If analytics API returns 0 views but we have real video data, use video-level totals
+  const videoTotalViews = (ytVideos || []).reduce((s, v) => s + Number(v.views || 0), 0)
+  const displayViews = (ov.views && Number(ov.views) > 0) ? ov.views : videoTotalViews
+  // Build graph data — use analytics daily if available, else build from video publish dates
+  const graphDaily = (() => {
+    if (daily.length > 0) return daily
+    if (!ytVideos || ytVideos.length === 0) return []
+    // Build last `days` days from video publish dates
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    return Array.from({ length: days }, (_, i) => {
+      const d = new Date(today); d.setDate(today.getDate() - (days - 1 - i))
+      const dayViews = ytVideos.filter(v => {
+        if (!v.publishedAt) return false
+        const vd = new Date(v.publishedAt); vd.setHours(0, 0, 0, 0)
+        return vd.getTime() === d.getTime()
+      }).reduce((s, v) => s + Number(v.views || 0), 0)
+      return { day: d.toISOString().split("T")[0], views: dayViews, estimatedMinutesWatched: 0 }
+    }).filter(d => d.views > 0 || ytVideos.some(v => {
+      if (!v.publishedAt) return false
+      const vd = new Date(v.publishedAt); vd.setHours(0, 0, 0, 0)
+      const dd = new Date(d.day); dd.setHours(0, 0, 0, 0)
+      return vd.getTime() === dd.getTime()
+    }))
+  })()
+
   const W = 800, H = 140, PADX = 40, PADY = 16
   const graphMetric = ytTab === "audience" ? "estimatedMinutesWatched" : "views"
-  const maxV = Math.max(...daily.map(d => Number(d[graphMetric] || d.views || 0)), 1)
-  const coords = daily.map((p, i) => {
+  const maxV = Math.max(...graphDaily.map(d => Number(d[graphMetric] || d.views || 0)), 1)
+  const coords = graphDaily.map((p, i) => {
     const v = Number(p[graphMetric] || p.views || 0)
-    return { x: PADX + i * ((W - PADX * 2) / (daily.length - 1 || 1)), y: PADY + (1 - v / maxV) * (H - PADY * 2), v, day: p.day }
+    return { x: PADX + i * ((W - PADX * 2) / (graphDaily.length - 1 || 1)), y: PADY + (1 - v / maxV) * (H - PADY * 2), v, day: p.day }
   })
   const linePath = coords.length > 1 ? coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x} ${c.y}`).join(" ") : ""
   const areaPath = linePath ? `${linePath} L ${coords[coords.length-1]?.x} ${H} L ${PADX} ${H} Z` : ""
   const yLabels = [maxV, Math.round(maxV * 0.5), 0]
 
   const metricTiles = ytTab === "overview" ? [
-    { label: "Views", value: fmt(ov.views || 0) },
+    { label: "Views", value: fmt(displayViews) },
     { label: "Watch time (hrs)", value: fmt(Math.round((ov.estimatedMinutesWatched || 0) / 60)) },
     { label: "Subscribers", value: fmt(ytStats.subscribers) },
   ] : ytTab === "content" ? [
@@ -81,8 +107,12 @@ export default function YTStudioView({ ytStats, ytAnalytics, refreshingYT, ytErr
         </div>
 
         <div className="yt-graph-wrap">
-          {daily.length === 0 ? (
-            <div className="yt-graph-empty"><p className="yt-graph-empty-text">No data for this period</p></div>
+          {graphDaily.length === 0 ? (
+            <div className="yt-graph-empty">
+              <p className="yt-graph-empty-text">
+                {ytError ? "Analytics unavailable" : "No upload activity in this period"}
+              </p>
+            </div>
           ) : (
             <div className="yt-graph-inner">
               <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="yt-svg"

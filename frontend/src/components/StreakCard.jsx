@@ -1,19 +1,21 @@
 import { Flame } from "lucide-react"
 
 function getStreakData(platform, ytVideos = []) {
-  const today = new Date()
+  const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+  const today = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate())
   today.setHours(0, 0, 0, 0)
+
+  const useReal = !!(JSON.parse(localStorage.getItem("user") || "{}").youtubeStats)
 
   const realPostDates = new Set()
   ytVideos.forEach(v => {
     if (v.publishedAt) {
-      const d = new Date(v.publishedAt)
+      // Convert to IST
+      const d = new Date(new Date(v.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
       d.setHours(0, 0, 0, 0)
       realPostDates.add(d.getTime())
     }
   })
-
-  const useReal = !!(JSON.parse(localStorage.getItem("user") || "{}").youtubeStats)
 
   const postedDates = useReal ? realPostDates : (() => {
     const accumulated = JSON.parse(localStorage.getItem(`streak_data_${platform}`) || "[]")
@@ -28,8 +30,10 @@ function getStreakData(platform, ytVideos = []) {
     ? ytVideos.length
     : JSON.parse(localStorage.getItem(`streak_data_${platform}`) || "[]").length
 
+  // Calculate current streak (consecutive days ending today or yesterday)
   let streak = 0
   const check = new Date(today)
+  // Allow streak if posted today OR yesterday (grace period)
   while (true) {
     if (postedDates.has(check.getTime())) {
       streak++
@@ -78,7 +82,9 @@ export default function StreakCard({ accent, platform, ytVideos = [] }) {
           <div key={i} className="streak-day-label">{d}</div>
         ))}
         {(() => {
-          const today = new Date(); today.setHours(0, 0, 0, 0)
+          const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+          const today = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate())
+          today.setHours(0, 0, 0, 0)
           const year = today.getFullYear(), month = today.getMonth()
           const firstDay = new Date(year, month, 1)
           const totalDays = new Date(year, month + 1, 0).getDate()
