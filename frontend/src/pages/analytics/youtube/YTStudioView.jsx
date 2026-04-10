@@ -14,27 +14,9 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   // Priority: analytics API > video-level sum > ytStats channel views
   const channelViews = Number(ytStats?.views || 0)
   const displayViews = Number(ov.views) > 0 ? ov.views : videoTotalViews > 0 ? videoTotalViews : channelViews
-  // Build graph data — use analytics daily if available, else build from video publish dates
-  const graphDaily = (() => {
-    if (daily.length > 0) return daily
-    if (!ytVideos || ytVideos.length === 0) return []
-    // Build last `days` days from video publish dates
-    const today = new Date(); today.setHours(0, 0, 0, 0)
-    return Array.from({ length: days }, (_, i) => {
-      const d = new Date(today); d.setDate(today.getDate() - (days - 1 - i))
-      const dayViews = ytVideos.filter(v => {
-        if (!v.publishedAt) return false
-        const vd = new Date(v.publishedAt); vd.setHours(0, 0, 0, 0)
-        return vd.getTime() === d.getTime()
-      }).reduce((s, v) => s + Number(v.views || 0), 0)
-      return { day: d.toISOString().split("T")[0], views: dayViews, estimatedMinutesWatched: 0 }
-    }).filter(d => d.views > 0 || ytVideos.some(v => {
-      if (!v.publishedAt) return false
-      const vd = new Date(v.publishedAt); vd.setHours(0, 0, 0, 0)
-      const dd = new Date(d.day); dd.setHours(0, 0, 0, 0)
-      return vd.getTime() === dd.getTime()
-    }))
-  })()
+  // Build graph data — ONLY use analytics daily data (accurate per-day)
+  // Video publish date fallback is misleading — views come over time, not just on publish day
+  const graphDaily = daily.length > 0 ? daily : []
 
   const W = 800, H = 140, PADX = 40, PADY = 16
   const graphMetric = ytTab === "audience" ? "estimatedMinutesWatched" : "views"
@@ -112,7 +94,7 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
           {graphDaily.length === 0 ? (
             <div className="yt-graph-empty">
               <p className="yt-graph-empty-text">
-                {ytError ? "Analytics unavailable" : "No upload activity in this period"}
+                {ytError ? "Analytics unavailable — quota exceeded" : "Daily breakdown requires YouTube Analytics API"}
               </p>
             </div>
           ) : (
