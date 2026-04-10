@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Sparkles, CalendarDays, RotateCcw, Download } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { API_ENDPOINTS } from "../../constants/api"
+import { apiFetch } from "../../utils/api"
 import { CONFIG, SIDEBAR_W, PAGE_PAD, HEADER_H } from "./generatorConfig"
 import GeneratorForm from "./GeneratorForm"
 import ResultCard from "./ResultCard"
@@ -27,9 +28,8 @@ export default function ContentGenerator() {
   const [lastFields, setLastFields] = useState(null)
 
   async function callAPI(payload) {
-    const res = await fetch(API_ENDPOINTS.contentGenerator, {
+    const res = await apiFetch(API_ENDPOINTS.contentGenerator, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     })
     const data = await res.json()
