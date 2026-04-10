@@ -81,12 +81,18 @@ export default function PlannerDetail({ activeEntry, entries, planInfo, aiDetail
         {aiError && <p style={{ fontSize: "12px", color: "#f87171", margin: 0 }}>{aiError}</p>}
         {aiDetail && (
           <div className="planner-ai-grid">
-            {[{ key: "hook", label: "Hook" }, { key: "cta", label: "Call to Action" }, { key: "whatToSay", label: "What to Say" }, { key: "tip", label: "Pro Tip" }, { key: "script", label: "Script Outline" }].map(({ key, label }) => aiDetail[key] && (
+            {[{ key: "hook", label: "Hook" }, { key: "cta", label: "Call to Action" }, { key: "whatToSay", label: "What to Say" }, { key: "tip", label: "Pro Tip" }].map(({ key, label }) => aiDetail[key] && (
               <div key={key} className="planner-ai-card">
                 <p className="planner-ai-card-label" style={{ color: accent }}>{label}</p>
                 <p className="planner-ai-card-text">{aiDetail[key]}</p>
               </div>
             ))}
+            {aiDetail.script && (
+              <div className="planner-ai-card" style={{ gridColumn: "1 / -1" }}>
+                <p className="planner-ai-card-label" style={{ color: accent }}>Script Outline</p>
+                <p className="planner-ai-card-text">{aiDetail.script}</p>
+              </div>
+            )}
           </div>
         )}
         {!aiLoading && !aiDetail && !aiError && (
