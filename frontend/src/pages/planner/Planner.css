@@ -937,3 +937,33 @@
   font-weight: 500;
   color: var(--dim);
 }
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 768px) {
+  .planner-root { flex-direction: column; }
+  .planner-content-wrapper { margin-left: 0 !important; padding-bottom: 70px; }
+  .planner-main { padding: 16px !important; }
+  .planner-header { flex-direction: column; gap: 10px; }
+  .planner-header-title { font-size: 20px; }
+  .planner-calendar { gap: 4px !important; }
+  .planner-day-card { min-height: 60px; }
+  .planner-day-content { font-size: 10px; -webkit-line-clamp: 2; }
+  .planner-detail-wrap {
+    position: fixed !important;
+    bottom: 60px !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-height: 65vh !important;
+    overflow-y: auto !important;
+    z-index: 150 !important;
+    border-radius: 16px 16px 0 0 !important;
+    border-top: 2px solid var(--accent) !important;
+  }
+  .planner-detail-head { flex-direction: column; gap: 10px; padding: 14px 16px; }
+  .planner-detail-head-right { flex-wrap: wrap; gap: 6px; }
+  .planner-detail-body { padding: 12px 16px; }
+  .planner-ai-grid { grid-template-columns: 1fr !important; }
+  .planner-filter-row { flex-direction: column; gap: 10px; }
+  .planner-progress-row { width: 100%; }
+  .planner-modal { width: 100% !important; max-width: 100% !important; bottom: 0 !important; top: auto !important; left: 0 !important; right: 0 !important; transform: none !important; border-radius: 16px 16px 0 0 !important; max-height: 90vh !important; overflow-y: auto !important; }
+}

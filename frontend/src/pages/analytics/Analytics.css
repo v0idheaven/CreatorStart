@@ -628,3 +628,21 @@
 .spin {
   animation: spin 0.8s linear infinite;
 }
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 768px) {
+  .analytics-page-content { margin-left: 0 !important; }
+  .analytics-tabs { padding: 16px 16px 0; }
+  .analytics-body { padding: 16px 16px 80px; }
+  .analytics-tabs-title { font-size: 18px; }
+  .metrics-row { flex-direction: column; gap: 12px; padding-bottom: 16px; margin-bottom: 16px; }
+  .metric-item { border-right: none !important; padding-right: 0 !important; margin-right: 0 !important; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+  .metric-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .metric-value { font-size: 28px; }
+  .two-col { grid-template-columns: 1fr; }
+  .yt-metrics-grid { grid-template-columns: 1fr !important; }
+  .yt-metric-cell--border { border-right: none !important; border-bottom: 1px solid var(--border); }
+  .yt-channel-header { flex-wrap: wrap; gap: 10px; }
+  .yt-videos-loading { padding: 16px; }
+  .chart-card { padding: 14px; }
+}
