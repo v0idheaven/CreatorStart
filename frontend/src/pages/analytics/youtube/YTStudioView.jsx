@@ -52,7 +52,7 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
         }
         <div className="yt-channel-info">
           <p className="yt-channel-name">{ytStats.title}</p>
-          <p className="yt-channel-meta">{fmt(ytStats.subscribers)} subscribers · {fmt(ytStats.videos)} videos · {fmt(channelViews)} views</p>
+          <p className="yt-channel-meta">{fmt(ytStats.subscribers)} subscribers · {fmt(ytStats.videos)} videos</p>
         </div>
         <button onClick={onRefresh} disabled={refreshingYT} className="yt-refresh-btn">
           <RefreshCw size={11} className={refreshingYT ? "spin" : ""} /> Refresh
