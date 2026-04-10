@@ -33,14 +33,26 @@ app.use(cookieParser())
 // Rate limiting
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 min
-    max: 20,
+    max: 100, // generous for normal usage (login, profile updates, etc)
     message: { success: false, message: "Too many requests, please try again later." },
+    standardHeaders: true, legacyHeaders: false,
+    skip: (req) => {
+        // Don't rate limit profile/settings updates — only login/register
+        const sensitiveRoutes = ["/login", "/register"]
+        return !sensitiveRoutes.some(r => req.path.includes(r))
+    }
+})
+
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10, // strict only for login/register
+    message: { success: false, message: "Too many login attempts, please try again later." },
     standardHeaders: true, legacyHeaders: false,
 })
 
 const aiLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 min
-    max: 10,
+    max: 15, // slightly more generous
     message: { success: false, message: "Too many AI requests, please slow down." },
     standardHeaders: true, legacyHeaders: false,
 })
@@ -50,6 +62,8 @@ app.get('/api/v1/health', (_req, res) => {
 })
 
 app.use('/api/v1/auth', authLimiter, authRouter)
+app.use('/api/v1/auth/login', loginLimiter)
+app.use('/api/v1/auth/register', loginLimiter)
 app.use('/api/v1/planner', aiLimiter, plannerRouter)
 
 app.use((err, _req, res, _next) => {
