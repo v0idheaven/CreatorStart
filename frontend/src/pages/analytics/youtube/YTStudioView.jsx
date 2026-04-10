@@ -15,36 +15,8 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   // Use analytics total if available (most accurate), else video sum, else channel stats
   const analyticsTotal = daily.length > 0 ? daily.reduce((s, d) => s + Number(d.views || 0), 0) : 0
   const displayViews = analyticsTotal > 0 ? analyticsTotal : videoTotalViews > 0 ? videoTotalViews : channelViews
-  // Build graph — analytics API if available, else construct from video data
-  const graphDaily = (() => {
-    if (daily.length > 0) return daily
-
-    // No analytics data — build a 28-day grid with video views on publish dates (IST)
-    const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
-    const today = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate())
-    const result = []
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i)
-      // Format date as YYYY-MM-DD in IST (not UTC)
-      const y = d.getFullYear()
-      const m = String(d.getMonth() + 1).padStart(2, "0")
-      const day = String(d.getDate()).padStart(2, "0")
-      const dayStr = `${y}-${m}-${day}`
-
-      const dayViews = (ytVideos || []).filter(v => {
-        if (!v.publishedAt) return false
-        // Convert publishedAt to IST date string
-        const vIST = new Date(new Date(v.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
-        const vy = vIST.getFullYear()
-        const vm = String(vIST.getMonth() + 1).padStart(2, "0")
-        const vd = String(vIST.getDate()).padStart(2, "0")
-        return `${vy}-${vm}-${vd}` === dayStr
-      }).reduce((s, v) => s + Number(v.views || 0), 0)
-
-      result.push({ day: dayStr, views: dayViews, estimatedMinutesWatched: 0 })
-    }
-    return result
-  })()
+  // Graph only from Analytics API — video-level fallback is misleading (assigns all views to publish date)
+  const graphDaily = daily
 
   const W = 800, H = 140, PADX = 40, PADY = 16
   // For audience tab with no analytics data, fall back to views (watch time not available)
@@ -122,7 +94,7 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
         <div className="yt-graph-wrap">
           {graphDaily.length === 0 ? (
             <div className="yt-graph-empty">
-              <p className="yt-graph-empty-text">No data for this period</p>
+              <p className="yt-graph-empty-text">Daily breakdown available after YouTube Analytics quota resets (midnight PT)</p>
             </div>          ) : (
             <div className="yt-graph-inner">
               <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="yt-svg"
