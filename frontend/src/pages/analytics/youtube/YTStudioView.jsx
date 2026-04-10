@@ -22,18 +22,25 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
     // No analytics data — build a 28-day grid with video views on publish dates (IST)
     const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
     const today = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate())
-    today.setHours(0, 0, 0, 0)
     const result = []
     for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(today); d.setDate(today.getDate() - i)
-      const dayStr = d.toISOString().split("T")[0]
+      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i)
+      // Format date as YYYY-MM-DD in IST (not UTC)
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, "0")
+      const day = String(d.getDate()).padStart(2, "0")
+      const dayStr = `${y}-${m}-${day}`
+
       const dayViews = (ytVideos || []).filter(v => {
         if (!v.publishedAt) return false
-        // Convert to IST before comparing dates
-        const vd = new Date(new Date(v.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
-        vd.setHours(0, 0, 0, 0)
-        return vd.getTime() === d.getTime()
+        // Convert publishedAt to IST date string
+        const vIST = new Date(new Date(v.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+        const vy = vIST.getFullYear()
+        const vm = String(vIST.getMonth() + 1).padStart(2, "0")
+        const vd = String(vIST.getDate()).padStart(2, "0")
+        return `${vy}-${vm}-${vd}` === dayStr
       }).reduce((s, v) => s + Number(v.views || 0), 0)
+
       result.push({ day: dayStr, views: dayViews, estimatedMinutesWatched: 0 })
     }
     return result
