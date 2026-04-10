@@ -354,7 +354,7 @@
 
 .planner-ai-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 
@@ -363,6 +363,7 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px 14px;
+  min-width: 0;
 }
 
 .planner-ai-card-label {
@@ -378,6 +379,8 @@
   color: var(--muted);
   margin: 0;
   line-height: 1.6;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 /* Overlays & modals */
