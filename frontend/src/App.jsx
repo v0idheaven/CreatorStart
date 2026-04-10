@@ -16,22 +16,25 @@ import Terms from './pages/legal/Terms'
 import { API_ENDPOINTS } from './constants/api'
 
 // On app load — silently try to refresh token using httpOnly cookie
-// This keeps users logged in across sessions (up to 7 days)
 async function tryRestoreSession() {
   try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 8000) // 8s max wait
     const res = await fetch(API_ENDPOINTS.refresh, {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
     })
+    clearTimeout(timeout)
     if (!res.ok) return false
     const data = await res.json()
     if (data?.data?.accessToken) {
       localStorage.setItem("accessToken", data.data.accessToken)
-      // Also refresh user data
       if (data?.data?.user) {
         const existing = JSON.parse(localStorage.getItem("user") || "{}")
         localStorage.setItem("user", JSON.stringify({ ...existing, ...data.data.user }))
+        if (data.data.user.platform) localStorage.setItem("platform", data.data.user.platform)
       }
       return true
     }
@@ -42,7 +45,13 @@ async function tryRestoreSession() {
 }
 
 function PrivateRoute({ children, sessionChecked, sessionValid }) {
-  // Wait for session check to complete before deciding
+  const token = localStorage.getItem("accessToken")
+  const user = localStorage.getItem("user")
+
+  // If we already have token + user in localStorage — render immediately, no wait
+  if (token && user) return children
+
+  // No local data — wait for session check
   if (!sessionChecked) {
     return (
       <div style={{ minHeight: "100vh", background: "#0a0a0a", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -51,8 +60,9 @@ function PrivateRoute({ children, sessionChecked, sessionValid }) {
       </div>
     )
   }
-  const token = localStorage.getItem("accessToken")
-  if (!token && !sessionValid) return <Navigate to="/auth" replace />
+
+  // Session check done — if valid render, else redirect
+  if (!sessionValid) return <Navigate to="/auth" replace />
   return children
 }
 
@@ -62,12 +72,22 @@ export default function App() {
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken")
-    if (token) {
-      // Already have a token — no need to refresh on startup
+    const user = localStorage.getItem("user")
+
+    if (token && user) {
+      // Both token and user exist — immediately valid, refresh silently in background
       setSessionValid(true)
       setSessionChecked(true)
+      // Background refresh to keep token fresh (don't block UI)
+      tryRestoreSession().catch(() => {})
+    } else if (token && !user) {
+      // Token exists but no user — fetch user data
+      tryRestoreSession().then(ok => {
+        setSessionValid(ok || !!localStorage.getItem("accessToken"))
+        setSessionChecked(true)
+      })
     } else {
-      // No token — try to restore session via refresh token cookie
+      // No token — try cookie-based restore (may take time on cold start)
       tryRestoreSession().then(ok => {
         setSessionValid(ok)
         setSessionChecked(true)
