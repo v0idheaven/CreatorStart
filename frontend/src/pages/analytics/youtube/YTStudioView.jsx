@@ -14,22 +14,8 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   // Priority: analytics API > video-level sum > ytStats channel views
   const channelViews = Number(ytStats?.views || 0)
   const displayViews = Number(ov.views) > 0 ? ov.views : videoTotalViews > 0 ? videoTotalViews : channelViews
-  // Build graph — per-video bar chart when analytics not available
-  // Each bar = one video, x = publish date, y = total views
-  const graphDaily = (() => {
-    if (daily.length > 0) return daily
-    if (!ytVideos || ytVideos.length === 0) return []
-    // Group videos by publish date, sum views
-    const byDate = {}
-    ytVideos.forEach(v => {
-      if (!v.publishedAt) return
-      const d = new Date(v.publishedAt).toISOString().split("T")[0]
-      byDate[d] = (byDate[d] || 0) + Number(v.views || 0)
-    })
-    return Object.entries(byDate)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([day, views]) => ({ day, views, estimatedMinutesWatched: 0 }))
-  })()
+  // Use analytics daily data only — accurate per-day breakdown
+  const graphDaily = daily
 
   const W = 800, H = 140, PADX = 40, PADY = 16
   const graphMetric = ytTab === "audience" ? "estimatedMinutesWatched" : "views"
@@ -106,7 +92,7 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
         <div className="yt-graph-wrap">
           {graphDaily.length === 0 ? (
             <div className="yt-graph-empty">
-              <p className="yt-graph-empty-text">No video data available</p>
+              <p className="yt-graph-empty-text">No data for this period</p>
             </div>
           ) : (
             <div className="yt-graph-inner">
@@ -166,12 +152,7 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
                   </span>
                 ))}
               </div>
-              {daily.length === 0 && graphDaily.length > 0 && (
-                <p style={{ fontSize: "10px", color: "var(--dim)", margin: "6px 0 0", textAlign: "right" }}>
-                  Showing total views per video · Daily breakdown available after quota reset
-                </p>
-              )}
-            </div>
+              {daily.length === 0 && graphDaily.length > 0 && null}            </div>
           )}
         </div>
       </div>
