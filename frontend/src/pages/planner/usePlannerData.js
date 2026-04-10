@@ -70,8 +70,8 @@ export default function usePlannerData(platform) {
     updateEntries(entries.map(e => e.id === id ? { ...e, isCompleted: !e.isCompleted } : e))
   }
 
-  function saveEdit(entryId, { content, note, platform: p }) {
-    updateEntries(entries.map(e => e.id === entryId ? { ...e, content, note, platform: p } : e))
+  function saveEdit(entryId, { content, note, platform: p, contentType }) {
+    updateEntries(entries.map(e => e.id === entryId ? { ...e, content, note, platform: p, contentType: contentType || e.contentType } : e))
   }
 
   function deleteEntry(entry) {

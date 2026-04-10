@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Check, Pencil, X, Trash2, Sparkles, Plus, Copy } from "lucide-react"
-import { COLORS, PC } from "../../constants/plannerConstants"
+import { COLORS, PC, getContentType } from "../../constants/plannerConstants"
 import { STORAGE_KEYS } from "../../constants/storageKeys"
 
 function CopyBtn({ text, accent }) {
@@ -32,6 +32,10 @@ export default function PlannerDetail({ activeEntry, entries, planInfo, aiDetail
           <span className="planner-detail-date">{activeEntry.dayName}, {activeEntry.dateLabel}</span>
           {activeEntry.isToday && <span className="planner-detail-today-tag">Today</span>}
           <span className="planner-detail-tag" style={{ color: PC[activeEntry.platform].color, background: PC[activeEntry.platform].bg }}>{PC[activeEntry.platform].label}</span>
+          {activeEntry.contentType && (() => {
+            const ct = getContentType(activeEntry.platform, activeEntry.contentType)
+            return <span className="planner-detail-tag" style={{ color: ct.color, background: ct.bg }}>{ct.label}</span>
+          })()}
           {activeEntry.isCompleted && <span className="planner-detail-done-tag">✓ Done</span>}
         </div>
         <div className="planner-detail-head-right">

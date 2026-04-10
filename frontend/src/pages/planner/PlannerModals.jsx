@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Check, X, StickyNote } from "lucide-react"
-import { COLORS, PC } from "../../constants/plannerConstants"
+import { COLORS, PC, CONTENT_TYPES } from "../../constants/plannerConstants"
 import { STORAGE_KEYS } from "../../constants/storageKeys"
 
 export function EditModal({ entry, onClose, onSave }) {
@@ -9,7 +9,10 @@ export function EditModal({ entry, onClose, onSave }) {
   const [editContent, setEditContent] = useState(entry.content)
   const [editNote, setEditNote] = useState(entry.note || "")
   const [editPlatform, setEditPlatform] = useState(entry.platform)
+  const [editContentType, setEditContentType] = useState(entry.contentType || "")
   const [showNote, setShowNote] = useState(!!entry.note)
+
+  const availableTypes = CONTENT_TYPES[editPlatform] || CONTENT_TYPES.both
 
   return (
     <>
@@ -24,6 +27,20 @@ export function EditModal({ entry, onClose, onSave }) {
             <label className="planner-field-label">Content idea</label>
             <textarea className="input-sm planner-textarea" rows={3} value={editContent} onChange={e => setEditContent(e.target.value)} />
           </div>
+
+          {/* Content type selector */}
+          <div>
+            <label className="planner-field-label" style={{ marginBottom: "8px" }}>Content Type</label>
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+              {availableTypes.map(ct => (
+                <button key={ct.id} onClick={() => setEditContentType(ct.id)}
+                  style={{ padding: "5px 12px", borderRadius: "7px", border: `1.5px solid ${editContentType === ct.id ? ct.color : "var(--border2)"}`, background: editContentType === ct.id ? ct.bg : "transparent", color: editContentType === ct.id ? ct.color : "var(--muted)", fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>
+                  {ct.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div>
             <button onClick={() => setShowNote(!showNote)} className="planner-note-toggle" style={{ color: showNote ? "#f59e0b" : "var(--dim)" }}>
               <StickyNote size={13} />{showNote ? "Remove note" : "Add a note"}
@@ -37,7 +54,7 @@ export function EditModal({ entry, onClose, onSave }) {
               <label className="planner-field-label" style={{ marginBottom: "8px" }}>Platform</label>
               <div className="planner-platform-row">
                 {["youtube", "instagram", "both"].map(p => (
-                  <button key={p} onClick={() => setEditPlatform(p)}
+                  <button key={p} onClick={() => { setEditPlatform(p); setEditContentType("") }}
                     style={{ flex: 1, padding: "8px", borderRadius: "8px", border: `1.5px solid ${editPlatform === p ? PC[p].color : "var(--border2)"}`, background: editPlatform === p ? PC[p].bg : "transparent", color: editPlatform === p ? PC[p].color : "var(--muted)", fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>
                     {PC[p].label}
                   </button>
@@ -48,7 +65,7 @@ export function EditModal({ entry, onClose, onSave }) {
         </div>
         <div className="planner-modal-actions planner-modal-actions-top">
           <button onClick={onClose} className="planner-btn-secondary">Cancel</button>
-          <button onClick={() => onSave({ content: editContent, note: editNote, platform: editPlatform })} className="planner-btn-fill" style={{ background: accent }}>
+          <button onClick={() => onSave({ content: editContent, note: editNote, platform: editPlatform, contentType: editContentType })} className="planner-btn-fill" style={{ background: accent }}>
             <Check size={13} />Save
           </button>
         </div>
