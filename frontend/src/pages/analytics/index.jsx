@@ -20,7 +20,12 @@ export default function Analytics() {
   const accent = COLORS[platform] || COLORS.both
   // Parse once — stable reference via useMemo equivalent (read once, don't re-parse on every render)
   const [storedUser] = useState(() => JSON.parse(localStorage.getItem("user") || "{}"))
-  const [tab, setTab] = useState("overview")
+  const [tab, setTab] = useState(() => sessionStorage.getItem("analytics_tab") || "overview")
+
+  function handleTabChange(t) {
+    setTab(t)
+    sessionStorage.setItem("analytics_tab", t)
+  }
 
   const { ytStats, ytVideos, ytAnalytics, loadingVideos, refreshingYT, ytError, days, changeDays, fetchYTVideos, handleRefreshYT } = useYouTubeData(storedUser.youtubeStats)
   const ov = useOverviewData(platform, ytVideos, storedUser.youtubeStats)
@@ -37,7 +42,7 @@ export default function Analytics() {
           <h1 className="analytics-tabs-title">Analytics</h1>
           <div className="analytics-tab-row">
             {tabs.map(t => (
-              <button key={t} onClick={() => setTab(t)}
+              <button key={t} onClick={() => handleTabChange(t)}
                 className={`analytics-tab${tab === t ? " active" : ""}`}
                 style={{ borderBottomColor: tab === t ? accent : "transparent" }}>
                 {t === "youtube" ? "YouTube" : "Overview"}
