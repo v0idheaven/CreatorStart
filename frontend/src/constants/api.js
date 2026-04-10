@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
     refresh: `${BASE}/api/v1/auth/refresh`,
     me: `${BASE}/api/v1/auth/me`,
     updateProfile: `${BASE}/api/v1/auth/profile`,
+    updateCreatorProfile: `${BASE}/api/v1/auth/creator-profile`,
     updatePassword: `${BASE}/api/v1/auth/password`,
     updateAvatar: `${BASE}/api/v1/auth/avatar`,
     deleteAccount: `${BASE}/api/v1/auth/account`,

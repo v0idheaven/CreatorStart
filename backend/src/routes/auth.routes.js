@@ -1,7 +1,7 @@
 import { Router } from "express"
 import {
     registerUser, loginUser, logoutUser, refreshAccessToken,
-    getCurrentUser, updateProfile, updatePassword, updateAvatar, deleteAccount
+    getCurrentUser, updateProfile, updatePassword, updateAvatar, deleteAccount, saveCreatorProfile
 } from "../controllers/auth.controller.js"
 import { googleAuthRedirect, googleAuthCallback, refreshYoutubeStats, getYoutubeVideos, getYoutubeAnalytics } from "../controllers/google.controller.js"
 import { verifyJWT } from "../middleware/auth.middleware.js"
@@ -22,6 +22,7 @@ router.use(verifyJWT)
 router.post("/logout", logoutUser)
 router.get("/me", getCurrentUser)
 router.patch("/profile", updateProfile)
+router.patch("/creator-profile", saveCreatorProfile)
 router.patch("/password", updatePassword)
 router.patch("/avatar", upload.single("avatar"), updateAvatar)
 router.delete("/account", deleteAccount)

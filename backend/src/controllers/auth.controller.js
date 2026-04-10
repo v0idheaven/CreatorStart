@@ -160,7 +160,26 @@ const deleteAccount = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, {}, "Account deleted"))
 })
 
+const saveCreatorProfile = asyncHandler(async (req, res) => {
+    const { niche, format, goal, tone, audience, topic } = req.body
+    const profile = {}
+    if (niche !== undefined) profile["creatorProfile.niche"] = niche
+    if (format !== undefined) profile["creatorProfile.format"] = format
+    if (goal !== undefined) profile["creatorProfile.goal"] = goal
+    if (tone !== undefined) profile["creatorProfile.tone"] = tone
+    if (audience !== undefined) profile["creatorProfile.audience"] = audience
+    if (topic !== undefined) profile["creatorProfile.topic"] = topic
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: profile },
+        { new: true }
+    ).select("-password -refreshToken")
+
+    return res.status(200).json(new ApiResponse(200, { user }, "Creator profile saved"))
+})
+
 export {
     registerUser, loginUser, logoutUser, refreshAccessToken,
-    getCurrentUser, updateProfile, updatePassword, updateAvatar, deleteAccount
+    getCurrentUser, updateProfile, updatePassword, updateAvatar, deleteAccount, saveCreatorProfile
 }

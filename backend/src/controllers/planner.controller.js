@@ -82,6 +82,16 @@ const generateContentIdea = asyncHandler(async (req, res) => {
     const { platform, format, niche, goal, tone, topic, outputType, audience, length, keyMessage, angle, style, draftContent } = req.body
     if (!platform || !format || !niche || !goal || !tone) throw new ApiError(400, "platform, format, niche, goal and tone are required")
 
+    // Input length limits to prevent prompt injection
+    const MAX = 500
+    if (topic?.length > MAX) throw new ApiError(400, "Topic too long")
+    if (keyMessage?.length > MAX) throw new ApiError(400, "Key message too long")
+    if (angle?.length > MAX) throw new ApiError(400, "Angle too long")
+    if (draftContent?.length > 5000) throw new ApiError(400, "Draft content too long")
+
+    // Validate platform
+    if (!["youtube", "instagram", "both"].includes(platform)) throw new ApiError(400, "Invalid platform")
+
     const outputInstructions = {
         full_script: "Write a complete, detailed, word-for-word script the creator can read directly. Include intro, main body with all talking points fully written out, and outro. Make it natural and conversational.",
         bullet_points: "Provide 6-8 detailed bullet points covering the main talking points. Each bullet should be 1-2 sentences with enough detail to speak from.",
