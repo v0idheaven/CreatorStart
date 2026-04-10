@@ -173,11 +173,9 @@ const getYoutubeVideos = asyncHandler(async (req, res) => {
     const uploadsPlaylistId = channelRes.data.items?.[0]?.contentDetails?.relatedPlaylists?.uploads
     if (!uploadsPlaylistId) throw new ApiError(404, "No uploads playlist found")
 
-    // Fetch all videos with pagination (max 50 per page, up to 200 total)
+    // Fetch ALL videos with pagination — no limit
     let allVideoIds = []
     let pageToken = undefined
-    let pageCount = 0
-    const MAX_PAGES = 4 // max 200 videos
 
     try {
         do {
@@ -190,8 +188,7 @@ const getYoutubeVideos = asyncHandler(async (req, res) => {
             const ids = playlistRes.data.items?.map(i => i.contentDetails?.videoId).filter(Boolean) || []
             allVideoIds = [...allVideoIds, ...ids]
             pageToken = playlistRes.data.nextPageToken
-            pageCount++
-        } while (pageToken && pageCount < MAX_PAGES)
+        } while (pageToken)
     } catch (e) {
         const msg = String(e?.message || "").replace(/<[^>]*>/g, "").trim()
         if (msg.toLowerCase().includes("quota")) throw new ApiError(429, "YouTube API quota exceeded for today. Try again after midnight Pacific Time.")
