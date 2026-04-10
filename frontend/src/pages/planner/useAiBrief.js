@@ -12,10 +12,14 @@ export default function useAiBrief() {
     if (!entry.content) return
     setAiDetail(null); setAiError(""); setAiLoading(true)
     const plat = entry.platform === "youtube" ? "YouTube" : entry.platform === "instagram" ? "Instagram" : "YouTube/Instagram"
+    // Include content type for more specific brief (e.g. "YouTube Short" vs "YouTube Video")
+    const typeMap = { video: "Video", short: "Short", live: "Live", reel: "Reel", post: "Post", carousel: "Carousel", story: "Story" }
+    const typeLabel = entry.contentType ? typeMap[entry.contentType] : ""
+    const platformLabel = typeLabel ? `${plat} ${typeLabel}` : plat
     try {
       const res = await apiFetch(API_ENDPOINTS.plannerAiDetail, {
         method: "POST",
-        body: JSON.stringify({ content: entry.content, platformLabel: plat })
+        body: JSON.stringify({ content: entry.content, platformLabel })
       })
       const data = await res.json()
       if (!res.ok) { setAiError(data.message || "API error"); setAiLoading(false); return }

@@ -6,6 +6,33 @@ export const PC = {
   both: { color: "#818cf8", bg: "#818cf818", label: "Both" },
 }
 
+// Content types per platform with colors
+export const CONTENT_TYPES = {
+  youtube: [
+    { id: "video", label: "Video", color: "#ff4444", bg: "#ff444418" },
+    { id: "short", label: "Short", color: "#06b6d4", bg: "#06b6d418" },
+    { id: "live", label: "Live", color: "#f59e0b", bg: "#f59e0b18" },
+  ],
+  instagram: [
+    { id: "reel", label: "Reel", color: "#c13584", bg: "#c1358418" },
+    { id: "post", label: "Post", color: "#818cf8", bg: "#818cf818" },
+    { id: "carousel", label: "Carousel", color: "#4ade80", bg: "#4ade8018" },
+    { id: "story", label: "Story", color: "#f97316", bg: "#f9731618" },
+  ],
+  both: [
+    { id: "video", label: "Video", color: "#ff4444", bg: "#ff444418" },
+    { id: "short", label: "Short", color: "#06b6d4", bg: "#06b6d418" },
+    { id: "reel", label: "Reel", color: "#c13584", bg: "#c1358418" },
+    { id: "post", label: "Post", color: "#818cf8", bg: "#818cf818" },
+    { id: "carousel", label: "Carousel", color: "#4ade80", bg: "#4ade8018" },
+  ],
+}
+
+export function getContentType(platform, typeId) {
+  const types = CONTENT_TYPES[platform] || CONTENT_TYPES.both
+  return types.find(t => t.id === typeId) || types[0]
+}
+
 export const GOALS = [
   { id: "followers", label: "Grow followers fast", desc: "Content designed to attract new people" },
   { id: "engagement", label: "Boost engagement", desc: "Get more likes, comments & shares" },

@@ -1,5 +1,5 @@
 import { Check, Plus } from "lucide-react"
-import { COLORS, PC } from "../../constants/plannerConstants"
+import { COLORS, PC, getContentType } from "../../constants/plannerConstants"
 import { STORAGE_KEYS } from "../../constants/storageKeys"
 
 export default function PlannerCalendar({ entries, filter, activeDay, onDayClick, onAddDay, planInfo }) {
@@ -45,7 +45,15 @@ export default function PlannerCalendar({ entries, filter, activeDay, onDayClick
             <span className="planner-day-date" style={{ color: isTodayNow ? accent : entry.isCompleted ? "#4ade80" : "var(--text)" }}>{dateLabel}</span>
             {isTodayNow && <div className="planner-day-today-dot" style={{ background: accent }} />}
           </div>
-          {!isEmpty && <span className="planner-day-platform-badge" style={{ color: pc.color, background: pc.bg }}>{pc.label}</span>}
+          {!isEmpty && (
+            <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+              <span className="planner-day-platform-badge" style={{ color: pc.color, background: pc.bg }}>{pc.label}</span>
+              {entry.contentType && (() => {
+                const ct = getContentType(entry.platform, entry.contentType)
+                return <span className="planner-day-platform-badge" style={{ color: ct.color, background: ct.bg }}>{ct.label}</span>
+              })()}
+            </div>
+          )}
         </div>
         {!isEmpty && entry.content && (
           <p className="planner-day-content" style={{ color: entry.isCompleted ? "var(--dim)" : "var(--muted)", textDecoration: entry.isCompleted ? "line-through" : "none" }}>

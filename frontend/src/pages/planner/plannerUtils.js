@@ -1,4 +1,4 @@
-import { GOALS, TOPICS, FREQUENCIES } from "../../constants/plannerConstants"
+import { GOALS, TOPICS, FREQUENCIES, CONTENT_TYPES } from "../../constants/plannerConstants"
 
 export function buildFallbackContent(goalLabel, topicLabel, platformLabel, dayNum, seed) {
   const angles = [
@@ -6,10 +6,13 @@ export function buildFallbackContent(goalLabel, topicLabel, platformLabel, dayNu
     "behind-the-scenes", "beginner checklist", "pro strategy", "case study",
     "trending topic", "audience Q&A", "personal story", "tool review",
   ]
-  const formats = ["Short video", "Carousel", "Story", "Post", "Live topic", "Reel", "Tutorial", "Vlog"]
   const idx = (dayNum + seed) % angles.length
-  const fidx = (dayNum * 3 + seed) % formats.length
-  return `${formats[fidx]}: ${goalLabel} for ${topicLabel} on ${platformLabel} - ${angles[idx]}.`
+  return `${goalLabel} for ${topicLabel} on ${platformLabel} - ${angles[idx]}.`
+}
+
+function pickContentType(platform, dayNum, seed) {
+  const types = CONTENT_TYPES[platform] || CONTENT_TYPES.both
+  return types[(dayNum + seed) % types.length].id
 }
 
 export function generatePlan(goal, topic, freq, focus, platform, seed = 0) {
@@ -57,6 +60,7 @@ export function generatePlan(goal, topic, freq, focus, platform, seed = 0) {
       isToday,
       content: isActive ? buildFallbackContent(goalLabel, topicLabel, p === "both" ? "YouTube + Instagram" : p === "youtube" ? "YouTube" : "Instagram", dayNum, seed) : "",
       platform: p,
+      contentType: isActive ? pickContentType(p === "both" ? "both" : p, dayNum, seed) : "",
       isCompleted: false,
       note: "",
       active: isActive,
