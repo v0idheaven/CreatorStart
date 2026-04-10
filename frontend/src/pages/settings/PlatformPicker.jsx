@@ -3,7 +3,7 @@ import { Check, Youtube, Instagram, Layers } from "lucide-react"
 const PLATFORMS = [
   { id: "youtube", label: "YouTube", desc: "Videos, Shorts & channel growth", color: "#ff4444", Icon: Youtube },
   { id: "instagram", label: "Instagram", desc: "Reels, posts & profile growth", color: "#c13584", Icon: Instagram },
-  { id: "both", label: "Both Platforms", desc: "One dashboard for everything", color: "#818cf8", Icon: Layers },
+  { id: "both", label: "Both Platforms", desc: "One dashboard for everything", color: "#2d8fa3", Icon: Layers },
 ]
 
 // Platform selection cards (YouTube / Instagram / Both)

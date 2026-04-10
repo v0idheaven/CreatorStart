@@ -39,7 +39,7 @@ export default function AuthAside({ isLogin }) {
       </div>
 
       <div className="auth-platform-row">
-        {[{ color: "#ff4444", label: "YT" }, { color: "#c13584", label: "IG" }, { color: "#818cf8", label: "Both" }].map(({ color, label }) => (
+        {[{ color: "#ff4444", label: "YT" }, { color: "#c13584", label: "IG" }, { color: "#2d8fa3", label: "Both" }].map(({ color, label }) => (
           <div key={label} className="auth-platform-chip">
             <div className="auth-platform-dot" style={{ background: color }} />
             <p className="auth-platform-label">{label}</p>

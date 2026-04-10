@@ -6,7 +6,7 @@ import useYouTubeData from "./useYouTubeData"
 import useOverviewData from "./useOverviewData"
 import "./Analytics.css"
 
-const COLORS = { youtube: "#ff4444", instagram: "#c13584", both: "#818cf8" }
+const COLORS = { youtube: "#ff4444", instagram: "#c13584", both: "#2d8fa3" }
 
 export function fmt(n) {
   const num = Number(n || 0)

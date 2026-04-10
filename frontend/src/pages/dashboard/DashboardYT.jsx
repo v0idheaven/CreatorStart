@@ -35,12 +35,12 @@ export default function DashboardYT() {
   const stats = ytConnected && realStats ? [
     { label: "Subscribers", value: fmt(realStats.subscribers), icon: Users, color: YT },
     { label: "Total Views", value: fmt(realStats.views), icon: Eye, color: "#60a5fa" },
-    { label: "Videos", value: realStats.videos, icon: PlaySquare, color: "#818cf8" },
+    { label: "Videos", value: realStats.videos, icon: PlaySquare, color: "#2d8fa3" },
     { label: "Watch Time", value: "—", icon: Timer, color: "#4ade80" },
   ] : [
     { label: "Subscribers", value: "—", icon: Users, color: YT },
     { label: "Total Views", value: "—", icon: Eye, color: "#60a5fa" },
-    { label: "Videos", value: "—", icon: PlaySquare, color: "#818cf8" },
+    { label: "Videos", value: "—", icon: PlaySquare, color: "#2d8fa3" },
     { label: "Watch Time", value: "—", icon: Timer, color: "#4ade80" },
   ]
 

@@ -12,7 +12,7 @@ export const CONFIG = {
     tones: ["Casual", "Aesthetic", "Motivational", "Humorous", "Educational", "Storytelling", "Other"],
   },
   both: {
-    color: "#818cf8", label: "All Platforms",
+    color: "#2d8fa3", label: "All Platforms",
     formats: ["Video", "Short", "Reel", "Carousel", "Post", "Blog Post", "Other"],
     goals: ["Grow Audience", "Increase Engagement", "Drive Sales", "Build Authority", "Entertain", "Educate", "Other"],
     tones: ["Casual", "Professional", "Humorous", "Inspirational", "Educational", "Storytelling", "Other"],

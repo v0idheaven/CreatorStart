@@ -11,7 +11,7 @@ import "./Dashboard.css"
 const API_BASE = import.meta.env.VITE_API_URL || "https://creator-start-backend.onrender.com"
 
 const SWITCHER = [
-  { id: "overall", label: "Overall", color: "#818cf8" },
+  { id: "overall", label: "Overall", color: "#2d8fa3" },
   { id: "youtube", label: "YouTube", color: "#ff4444" },
   { id: "instagram", label: "Instagram", color: "#c13584" },
 ]
@@ -80,7 +80,7 @@ export default function DashboardBoth() {
   }).length
 
   const overallStats = [
-    { label: "Planned", value: plannerData.total, icon: AlignLeft, color: "#818cf8" },
+    { label: "Planned", value: plannerData.total, icon: AlignLeft, color: "#2d8fa3" },
     { label: "Completed", value: plannerData.done, icon: CheckCheck, color: "#4ade80" },
     { label: "Streak", value: streak > 0 ? `${streak}d` : "0d", icon: Clock, color: "#f59e0b" },
     ytConnected
@@ -91,12 +91,12 @@ export default function DashboardBoth() {
   const ytStats_display = ytConnected && realStats ? [
     { label: "Subscribers", value: fmt(realStats.subscribers), icon: Users, color: "#ff4444" },
     { label: "Total Views", value: fmt(realStats.views), icon: Eye, color: "#60a5fa" },
-    { label: "Videos", value: realStats.videos, icon: PlaySquare, color: "#818cf8" },
+    { label: "Videos", value: realStats.videos, icon: PlaySquare, color: "#2d8fa3" },
     { label: "Watch Time", value: "—", icon: Timer, color: "#4ade80" },
   ] : [
     { label: "Subscribers", value: "—", icon: Users, color: "#ff4444" },
     { label: "Total Views", value: "—", icon: Eye, color: "#60a5fa" },
-    { label: "Videos", value: "—", icon: PlaySquare, color: "#818cf8" },
+    { label: "Videos", value: "—", icon: PlaySquare, color: "#2d8fa3" },
     { label: "Watch Time", value: "—", icon: Timer, color: "#4ade80" },
   ]
 
@@ -114,7 +114,7 @@ export default function DashboardBoth() {
           <div className="dash-header-row">
             <div>
               <p className="page-kicker">Dashboard</p>
-              <h1 className="dash-greeting">{getGreeting()}, <span style={{ color: "#818cf8" }}>{firstName}</span> 👋</h1>
+              <h1 className="dash-greeting">{getGreeting()}, <span style={{ color: "#2d8fa3" }}>{firstName}</span> 👋</h1>
               <p className="dash-sub">Here's how your content is performing today.</p>
             </div>
             <div className="platform-switcher">

@@ -42,7 +42,7 @@
   width: 36px;
   height: 36px;
   border-radius: 9px;
-  background: linear-gradient(135deg, #818cf8, #6366f1);
+  background: linear-gradient(135deg, #2d8fa3, #1e6e80);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -58,7 +58,7 @@
 }
 
 .auth-logo-accent {
-  color: #818cf8;
+  color: #2d8fa3;
 }
 
 .auth-badge {
@@ -71,7 +71,7 @@
   padding: 5px 12px;
   font-size: 12px;
   font-weight: 500;
-  color: #818cf8;
+  color: #2d8fa3;
   margin-bottom: 24px;
 }
 
@@ -116,7 +116,7 @@
 }
 
 .auth-point-dot span {
-  color: #818cf8;
+  color: #2d8fa3;
   font-size: 12px;
   font-weight: 700;
 }
@@ -251,7 +251,7 @@
 }
 
 .auth-input:focus {
-  border-color: #818cf8;
+  border-color: #2d8fa3;
 }
 
 .auth-pw-wrap {
@@ -293,7 +293,7 @@
 .auth-btn-primary {
   padding: 12px 24px;
   border-radius: 20px;
-  background: #818cf8;
+  background: #2d8fa3;
   border: none;
   color: #fff;
   font-size: 14px;

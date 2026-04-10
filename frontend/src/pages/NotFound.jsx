@@ -12,7 +12,7 @@ export default function NotFound() {
         <button onClick={() => navigate(-1)} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "9px 18px", borderRadius: "9px", border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: "13px", cursor: "pointer" }}>
           <ArrowLeft size={14} /> Go back
         </button>
-        <button onClick={() => navigate("/")} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "9px 18px", borderRadius: "9px", border: "none", background: "#818cf8", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: "pointer" }}>
+        <button onClick={() => navigate("/")} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "9px 18px", borderRadius: "9px", border: "none", background: "#2d8fa3", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: "pointer" }}>
           <Home size={14} /> Home
         </button>
       </div>

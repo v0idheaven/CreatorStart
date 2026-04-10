@@ -55,7 +55,7 @@ function PrivateRoute({ children, sessionChecked, sessionValid }) {
   if (!sessionChecked) {
     return (
       <div style={{ minHeight: "100vh", background: "#0a0a0a", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: "32px", height: "32px", borderRadius: "50%", border: "3px solid #818cf820", borderTop: "3px solid #818cf8", animation: "spin 0.8s linear infinite" }} />
+        <div style={{ width: "32px", height: "32px", borderRadius: "50%", border: "3px solid #2d8fa320", borderTop: "3px solid #2d8fa3", animation: "spin 0.8s linear infinite" }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       </div>
     )
