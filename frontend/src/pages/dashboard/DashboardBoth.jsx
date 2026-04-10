@@ -71,12 +71,21 @@ export default function DashboardBoth() {
     })
   })()
 
-  // Stats per tab
+  // Overall stats — streak from YT videos, replace "Upcoming" with total views
+  const ytTotalViews = ytVideos.reduce((s, v) => s + Number(v.views || 0), 0)
+  const ytThisMonth = ytVideos.filter(v => {
+    if (!v.publishedAt) return false
+    const d = new Date(v.publishedAt)
+    return d.getFullYear() === new Date().getFullYear() && d.getMonth() === new Date().getMonth()
+  }).length
+
   const overallStats = [
     { label: "Planned", value: plannerData.total, icon: AlignLeft, color: "#818cf8" },
     { label: "Completed", value: plannerData.done, icon: CheckCheck, color: "#4ade80" },
     { label: "Streak", value: streak > 0 ? `${streak}d` : "0d", icon: Clock, color: "#f59e0b" },
-    { label: "Upcoming", value: plannerData.upcoming.length, icon: FileText, color: "#60a5fa" },
+    ytConnected
+      ? { label: "Views", value: fmt(ytTotalViews), icon: Eye, color: "#60a5fa" }
+      : { label: "This month", value: ytThisMonth, icon: FileText, color: "#60a5fa" },
   ]
 
   const ytStats_display = ytConnected && realStats ? [
