@@ -120,11 +120,9 @@ export default function DashboardBoth() {
 
           {/* Instagram connect prompt */}
           {view === "instagram" ? (
-            <div className="card" style={{ padding: "40px", textAlign: "center", marginBottom: "20px" }}>
-              <Instagram size={32} color="#c13584" style={{ marginBottom: "12px" }} />
-              <p style={{ fontSize: "15px", fontWeight: "600", color: "var(--text)", margin: "0 0 6px" }}>Instagram not connected</p>
-              <p style={{ fontSize: "13px", color: "var(--dim)", margin: "0 0 16px" }}>Instagram API requires a Business account linked to Facebook.</p>
-              <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>Coming soon — use the Planner to track your Instagram content.</p>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 0", gap: "10px", textAlign: "center" }}>
+              <p style={{ fontSize: "18px", fontWeight: "700", color: "var(--text)", margin: 0 }}>Coming Soon</p>
+              <p style={{ fontSize: "13px", color: "var(--dim)", margin: 0 }}>Instagram analytics are on the way.</p>
             </div>
           ) : (
             <>
