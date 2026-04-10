@@ -125,6 +125,7 @@ const generateContentIdea = asyncHandler(async (req, res) => {
         angle && `Unique angle: ${angle}`,
         style && style !== "My own style" && `Creator style inspiration: ${style}`,
         draftContent && `Creator's draft/notes to improve:\n${draftContent}`,
+        req.body.refinement && `User refinement request: ${req.body.refinement}`,
     ].filter(Boolean).join("\n")
 
     const prompt = `You are an expert content strategist and scriptwriter for social media creators.
@@ -148,6 +149,7 @@ Rules:
 - ${keyMessage ? `Drive home this message: "${keyMessage}"` : ""}
 - ${angle ? `Use this unique angle: "${angle}"` : ""}
 - ${draftContent ? "Polish and improve the creator's draft — keep their voice, enhance the quality" : ""}
+- ${req.body.refinement ? `IMPORTANT: Apply this specific refinement to the content: ${req.body.refinement}` : ""}
 - Make it immediately usable — no placeholders
 
 Return ONLY a valid raw JSON object:

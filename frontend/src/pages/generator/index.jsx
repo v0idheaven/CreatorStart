@@ -8,15 +8,28 @@ import ResultCard from "./ResultCard"
 import ScoreCard from "./ScoreCard"
 import HookVariations from "./HookVariations"
 import ToneTester from "./ToneTester"
+import RefinementChips from "./RefinementChips"
 import AddToPlannerModal from "./AddToPlannerModal"
 
 const LABEL_MAP = {
   title: "Video Title", hook: "Hook", script: "Full Script", outline: "Outline",
   description: "Description", tags: "Tags", caption: "Caption", hashtags: "Hashtags",
-  cta: "Call to Action", points: "Key Points", tip: "Pro Tip", angle: "Angle", reelIdea: "Reel Concept",
+  cta: "Call to Action", points: "Key Points", tip: "Pro Tip", angle: "Angle",
+  reelIdea: "Reel Concept", thumbnailIdeas: "Thumbnail Ideas",
 }
 
 const MAX_VERSIONS = 3
+
+const REFINEMENT_MAP = {
+  hook_stronger: "Make the hook much more powerful, attention-grabbing and impossible to skip",
+  add_ending: "Add a strong memorable ending with a clear call to action",
+  make_shorter: "Make this significantly shorter and more concise while keeping all key points",
+  make_longer: "Expand this with more detail, examples, and depth",
+  more_engaging: "Make this much more engaging, energetic and entertaining",
+  add_cta: "Add a stronger more compelling call to action",
+  thumbnail_ideas: "Add 3 specific thumbnail concept ideas as a thumbnailIdeas field",
+  add_story: "Add a relatable personal story or anecdote to make it more human and authentic",
+}
 
 export default function ContentGenerator() {
   const platform = localStorage.getItem("platform") || "both"
@@ -24,21 +37,16 @@ export default function ContentGenerator() {
   const { color, label, formats, goals, tones } = cfg
 
   const [loading, setLoading] = useState(false)
+  const [refining, setRefining] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState("")
   const [showPlannerModal, setShowPlannerModal] = useState(false)
   const [lastPayload, setLastPayload] = useState(null)
   const [lastFields, setLastFields] = useState(null)
-
-  // Versioning — keep last 3 generations
-  const [versions, setVersions] = useState([]) // [{label, result}]
+  const [versions, setVersions] = useState([])
   const [activeVersion, setActiveVersion] = useState(0)
-
-  // Script editor
-  const [editedScript, setEditedScript] = useState(null) // null = not editing, string = editing
   const [editKey, setEditKey] = useState(null)
-
-  // Mode: "generate" | "improve"
+  const [editedScript, setEditedScript] = useState("")
   const [mode, setMode] = useState("generate")
 
   async function callAPI(payload) {
@@ -51,6 +59,14 @@ export default function ContentGenerator() {
     if (!res.ok) throw new Error(data?.message || "Failed to generate")
     if (!data?.data || typeof data.data !== "object") throw new Error("Invalid AI response")
     return data.data
+  }
+
+  function saveVersion(newResult, vLabel) {
+    setVersions(prev => {
+      const next = [...prev.slice(-(MAX_VERSIONS - 1)), { label: vLabel, result: newResult }]
+      setActiveVersion(next.length - 1)
+      return next
+    })
   }
 
   async function handleGenerate(fields) {
@@ -69,36 +85,41 @@ export default function ContentGenerator() {
       draftContent: mode === "improve" ? fields.draftContent : undefined,
     }
     setLastPayload(payload); setLastFields(fields)
-    setError(""); setLoading(true); setResult(null); setEditedScript(null); setEditKey(null)
-
+    setError(""); setLoading(true); setResult(null); setEditKey(null)
     try {
-      const newResult = await callAPI(payload)
-      setResult(newResult)
-      // Save version
-      const vLabel = `V${versions.length + 1} — ${format} · ${niche}`
-      setVersions(prev => [...prev.slice(-(MAX_VERSIONS - 1)), { label: vLabel, result: newResult }])
-      setActiveVersion(Math.min(versions.length, MAX_VERSIONS - 1))
+      const r = await callAPI(payload)
+      setResult(r)
+      saveVersion(r, `V${versions.length + 1} — ${format} · ${niche}`)
     } catch (e) { setError(e.message) }
     setLoading(false)
   }
 
   async function handleRegenerate() {
     if (!lastPayload) return
-    setError(""); setLoading(true); setResult(null); setEditedScript(null); setEditKey(null)
+    setError(""); setLoading(true); setResult(null); setEditKey(null)
     try {
-      const newResult = await callAPI(lastPayload)
-      setResult(newResult)
-      const vLabel = `V${versions.length + 1} — Regenerated`
-      setVersions(prev => [...prev.slice(-(MAX_VERSIONS - 1)), { label: vLabel, result: newResult }])
-      setActiveVersion(Math.min(versions.length, MAX_VERSIONS - 1))
+      const r = await callAPI(lastPayload)
+      setResult(r)
+      saveVersion(r, `V${versions.length + 1} — Regenerated`)
     } catch (e) { setError(e.message) }
     setLoading(false)
+  }
+
+  async function handleRefine(chipId, chipLabel) {
+    if (!lastPayload) return
+    setRefining(true); setEditKey(null)
+    try {
+      const r = await callAPI({ ...lastPayload, refinement: REFINEMENT_MAP[chipId] || chipLabel })
+      setResult(r)
+      saveVersion(r, `V${versions.length + 1} — ${chipLabel}`)
+    } catch (e) { setError(e.message) }
+    setRefining(false)
   }
 
   function loadVersion(idx) {
     setActiveVersion(idx)
     setResult(versions[idx]?.result || null)
-    setEditedScript(null); setEditKey(null)
+    setEditKey(null)
   }
 
   function handleDownload() {
@@ -111,6 +132,7 @@ export default function ContentGenerator() {
 
   const resultEntries = result ? Object.entries(result).filter(([, v]) => v) : []
   const mainContent = result ? (result.script || result.caption || result.hook || result.points || result.outline || "") : ""
+  const isWorking = loading || refining
 
   return (
     <div style={{ display: "flex", background: "var(--bg)", minHeight: "100vh" }}>
@@ -129,9 +151,8 @@ export default function ContentGenerator() {
 
           {result && (
             <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-              {/* Version tabs */}
               {versions.length > 1 && (
-                <div style={{ display: "flex", gap: "4px", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px", padding: "3px" }}>
+                <div style={{ display: "flex", gap: "3px", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px", padding: "3px" }}>
                   {versions.map((v, i) => (
                     <button key={i} onClick={() => loadVersion(i)}
                       style={{ padding: "4px 10px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "11px", fontWeight: activeVersion === i ? "700" : "400", background: activeVersion === i ? color + "20" : "transparent", color: activeVersion === i ? color : "var(--dim)" }}>
@@ -140,8 +161,8 @@ export default function ContentGenerator() {
                   ))}
                 </div>
               )}
-              <button onClick={handleRegenerate} disabled={loading}
-                style={{ display: "flex", alignItems: "center", gap: "5px", padding: "7px 12px", borderRadius: "8px", border: `1px solid ${color}40`, background: "transparent", color, fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>
+              <button onClick={handleRegenerate} disabled={isWorking}
+                style={{ display: "flex", alignItems: "center", gap: "5px", padding: "7px 12px", borderRadius: "8px", border: `1px solid ${color}40`, background: "transparent", color, fontSize: "12px", fontWeight: "600", cursor: "pointer", opacity: isWorking ? 0.5 : 1 }}>
                 <RotateCcw size={12} /> Regenerate
               </button>
               <button onClick={handleDownload}
@@ -159,27 +180,29 @@ export default function ContentGenerator() {
 
       <main style={{ marginLeft: `${SIDEBAR_W}px`, flex: 1, paddingTop: `${HEADER_H + 20}px`, paddingBottom: "48px", paddingLeft: `${PAGE_PAD}px`, paddingRight: `${PAGE_PAD}px`, boxSizing: "border-box", display: "flex", gap: "24px", alignItems: "flex-start" }}>
 
-        {/* Left form */}
+        {/* Left form panel */}
         <div style={{ width: "300px", flexShrink: 0, position: "sticky", top: `${HEADER_H + 20}px`, maxHeight: `calc(100vh - ${HEADER_H + 40}px)`, overflowY: "auto" }}>
           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "14px", overflow: "hidden" }}>
             {/* Mode toggle */}
             <div style={{ display: "flex", borderBottom: "1px solid var(--border)" }}>
               {[{ id: "generate", icon: Sparkles, label: "Generate" }, { id: "improve", icon: Edit3, label: "Improve Draft" }].map(m => (
                 <button key={m.id} onClick={() => setMode(m.id)}
-                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", padding: "10px", border: "none", cursor: "pointer", fontSize: "12px", fontWeight: mode === m.id ? "700" : "400", background: mode === m.id ? color + "12" : "transparent", color: mode === m.id ? color : "var(--muted)", borderBottom: mode === m.id ? `2px solid ${color}` : "2px solid transparent" }}>
+                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", padding: "11px", border: "none", cursor: "pointer", fontSize: "12px", fontWeight: mode === m.id ? "700" : "400", background: mode === m.id ? color + "12" : "transparent", color: mode === m.id ? color : "var(--muted)", borderBottom: mode === m.id ? `2px solid ${color}` : "2px solid transparent" }}>
                   <m.icon size={12} /> {m.label}
                 </button>
               ))}
             </div>
             <div style={{ padding: "16px" }}>
-              <GeneratorForm formats={formats} goals={goals} tones={tones} color={color} onGenerate={handleGenerate} loading={loading} error={error} mode={mode} />
+              <GeneratorForm formats={formats} goals={goals} tones={tones} color={color} onGenerate={handleGenerate} loading={isWorking} error={error} mode={mode} />
             </div>
           </div>
         </div>
 
-        {/* Right results */}
+        {/* Right results panel */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          {!result && !loading && (
+
+          {/* Empty state */}
+          {!result && !isWorking && (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 0", gap: "12px", textAlign: "center" }}>
               <div style={{ width: "60px", height: "60px", borderRadius: "18px", background: color + "12", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Sparkles size={26} color={color} />
@@ -200,7 +223,7 @@ export default function ContentGenerator() {
                       onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}>
                       <FileText size={13} color={color} />
                       <span style={{ fontSize: "12px", color: "var(--text)", flex: 1 }}>{v.label}</span>
-                      <span style={{ fontSize: "11px", color: color }}>Load →</span>
+                      <span style={{ fontSize: "11px", color }}>Load →</span>
                     </div>
                   ))}
                 </div>
@@ -208,16 +231,21 @@ export default function ContentGenerator() {
             </div>
           )}
 
-          {loading && (
+          {/* Loading */}
+          {isWorking && (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 0", gap: "16px" }}>
               <div style={{ width: "44px", height: "44px", borderRadius: "50%", border: `3px solid ${color}25`, borderTop: `3px solid ${color}`, animation: "spin 0.8s linear infinite" }} />
-              <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>AI is writing your content...</p>
+              <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
+                {refining ? "Refining your content..." : "AI is writing your content..."}
+              </p>
             </div>
           )}
 
-          {result && (
+          {/* Results */}
+          {result && !isWorking && (
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {/* Tags */}
+
+              {/* Context tags */}
               {lastFields && (
                 <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "2px" }}>
                   {[lastFields.format, lastFields.niche, lastFields.goal, lastFields.tone, lastFields.audience].filter(Boolean).map(tag => (
@@ -255,12 +283,16 @@ export default function ContentGenerator() {
                 </div>
               ))}
 
-              {/* Action tools */}
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", padding: "4px 0" }}>
+              {/* Refinement chips */}
+              <RefinementChips onRefine={handleRefine} loading={refining} color={color} />
+
+              {/* Power tools */}
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                 <ScoreCard content={mainContent} platform={platform} accentColor={color} />
                 <HookVariations topic={lastFields?.topic || lastFields?.niche} platform={platform} tone={lastFields?.tone} niche={lastFields?.niche} accentColor={color} />
                 <ToneTester content={mainContent} platform={platform} accentColor={color} />
               </div>
+
             </div>
           )}
         </div>
