@@ -1,68 +1,28 @@
-// Overall creator stats — planner + YouTube combined
+// 4 top stat cards — videos, views, posted today, etc.
 export default function MetricTiles({ ov, ytVideos, accent }) {
-  const platform = localStorage.getItem("platform") || "both"
-  const user = JSON.parse(localStorage.getItem("user") || "{}")
-  const ytConnected = !!user.youtubeStats
+  const thisMonthVideos = ytVideos.filter(v => {
+    if (!v.publishedAt) return false
+    const d = new Date(v.publishedAt)
+    return d.getFullYear() === new Date().getFullYear() && d.getMonth() === new Date().getMonth()
+  })
 
-  // Planner stats
-  const plannerDone = ov.done || 0
-  const plannerActive = ov.active || 0
-  const completionRate = plannerActive > 0 ? Math.round((plannerDone / plannerActive) * 100) : 0
-
-  // YouTube stats
-  const totalYTViews = ytVideos.reduce((s, v) => s + Number(v.views || 0), 0)
-  const totalYTVideos = ytConnected ? Number(user.youtubeStats?.videos || 0) : ytVideos.length
-  const subscribers = ytConnected ? Number(user.youtubeStats?.subscribers || 0) : 0
-
-  // Streak from cached videos
-  const streak = (() => {
-    try {
-      const cached = JSON.parse(localStorage.getItem("yt_videos_cache") || "[]")
-      if (!ytConnected || cached.length === 0) return 0
-      const todayIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
-      todayIST.setHours(0, 0, 0, 0)
-      const dates = new Set(cached.filter(v => v.publishedAt).map(v => {
-        const d = new Date(new Date(v.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
-        d.setHours(0, 0, 0, 0); return d.getTime()
-      }))
-      let count = 0, check = new Date(todayIST)
-      while (dates.has(check.getTime())) { count++; check.setDate(check.getDate() - 1) }
-      return count
-    } catch { return 0 }
-  })()
-
-  const items = [
-    {
-      n: plannerDone,
-      label: "posts completed",
-      sub: plannerActive > 0 ? `${completionRate}% of ${plannerActive} planned` : "from your planner",
-      color: "#4ade80"
-    },
-    {
-      n: streak > 0 ? `${streak}d` : "0d",
-      label: "current streak",
-      sub: streak > 0 ? "consecutive days posted" : "post today to start",
-      color: streak > 0 ? "#f59e0b" : "var(--dim)"
-    },
-    {
-      n: ytConnected ? totalYTVideos : plannerActive,
-      label: ytConnected ? "total videos" : "total planned",
-      sub: ytConnected ? "on YouTube" : "in your planner",
-      color: accent
-    },
-    {
-      n: ytConnected ? (subscribers > 0 ? subscribers.toLocaleString() : "—") : `${completionRate}%`,
-      label: ytConnected ? "subscribers" : "completion rate",
-      sub: ytConnected ? "YouTube subscribers" : "past days",
-      color: ytConnected ? "#818cf8" : accent
-    },
+  const items = ov.useRealData ? [
+    { n: thisMonthVideos.length, label: "videos this month", sub: "published on YouTube" },
+    { n: ytVideos.length, label: "total videos", sub: "on your channel" },
+    { n: ov.todayPosted ? "Yes" : "No", label: "posted today", sub: "on YouTube", green: ov.todayPosted },
+    { n: ytVideos.reduce((s, v) => s + Number(v.views || 0), 0).toLocaleString(), label: "total views", sub: "across all videos" },
+  ] : [
+    { n: ov.done, label: "posts done", sub: `of ${ov.active} planned` },
+    { n: `${ov.rate}%`, label: "completion rate", sub: "past days" },
+    { n: ov.missed, label: "missed", sub: "past days", red: ov.missed > 0 },
+    { n: ov.total, label: "all-time posts", sub: "across plans" },
   ]
 
   return (
     <div className="metrics-row">
       {items.map(s => (
         <div key={s.label} className="metric-item">
-          <p className="metric-value" style={{ color: s.color }}>{s.n}</p>
+          <p className="metric-value" style={{ color: s.green ? "#4ade80" : s.red ? "#f87171" : "var(--text)" }}>{s.n}</p>
           <p className="metric-label">{s.label}</p>
           <p className="metric-sub">{s.sub}</p>
         </div>

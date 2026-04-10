@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { apiFetch } from "../../utils/api"
 import { API_ENDPOINTS } from "../../constants/api"
 
 // Handles AI content brief generation for a planner entry
@@ -12,9 +13,8 @@ export default function useAiBrief() {
     setAiDetail(null); setAiError(""); setAiLoading(true)
     const plat = entry.platform === "youtube" ? "YouTube" : entry.platform === "instagram" ? "Instagram" : "YouTube/Instagram"
     try {
-      const res = await fetch(API_ENDPOINTS.plannerAiDetail, {
+      const res = await apiFetch(API_ENDPOINTS.plannerAiDetail, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: entry.content, platformLabel: plat })
       })
       const data = await res.json()
