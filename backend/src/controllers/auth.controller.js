@@ -27,6 +27,15 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All fields are required")
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+        throw new ApiError(400, "Invalid email format")
+    }
+
+    if (password.length < 6) {
+        throw new ApiError(400, "Password must be at least 6 characters")
+    }
+
     const existed = await User.findOne({ $or: [{ email }, { username }] })
     if (existed) throw new ApiError(400, "User already exists with this email or username")
 

@@ -5,6 +5,8 @@ import VideoDetailPanel from "./VideoDetailPanel"
 import { apiFetch } from "../../utils/api"
 import { API_ENDPOINTS } from "../../constants/api"
 
+const API_BASE = import.meta.env.VITE_API_URL || "https://creator-start-backend.onrender.com"
+
 const COLORS = { youtube: "#ff4444", instagram: "#c13584", both: "#818cf8" }
 const TYPE_COLORS = { Video: "#818cf8", Short: "#06b6d4", Reel: "#c13584", Carousel: "#f59e0b", Post: "#4ade80", Story: "#f97316", Live: "#ff4444" }
 
@@ -142,8 +144,6 @@ export default function Content() {
   const totalViews = tabContent.reduce((s, c) => s + Number(c.views || 0), 0)
   const totalLikes = tabContent.reduce((s, c) => s + Number(c.likes || 0), 0)
   const totalCount = tabContent.length
-
-  const API_BASE = import.meta.env.VITE_API_URL || "https://creator-start-backend.onrender.com"
 
   return (
     <div className="page-root">

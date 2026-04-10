@@ -15,8 +15,8 @@ export default function PlatformSelect() {
     localStorage.setItem("user", JSON.stringify({ ...user, platform: selected }))
     try {
       await apiFetch(API_ENDPOINTS.updateProfile, { method: "PATCH", body: JSON.stringify({ platform: selected }) })
-    } catch (error) {
-      console.warn("Failed to sync selected platform", error)
+    } catch {
+      // silent — local state already updated
     }
     navigate("/dashboard")
   }
