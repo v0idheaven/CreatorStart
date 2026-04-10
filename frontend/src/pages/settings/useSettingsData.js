@@ -22,15 +22,37 @@ export default function useSettingsData() {
   const [profileError, setProfileError] = useState("")
 
   const statItems = useMemo(() => {
-    const streakData = JSON.parse(localStorage.getItem(`streak_data_${platform}`) || "[]")
     const user = JSON.parse(localStorage.getItem("user") || "{}")
     const ytConnected = !!(user.youtubeStats)
-    const totalPosted = ytConnected ? Number(user.youtubeStats?.videos || 0) : streakData.length
+    const totalPosted = ytConnected ? Number(user.youtubeStats?.videos || 0) : 0
     const subscribers = ytConnected ? Number(user.youtubeStats?.subscribers || 0) : 0
+
+    // Calculate streak from ytVideos in localStorage (set by dashboard/analytics fetch)
+    let streak = 0
+    try {
+      const cachedVideos = JSON.parse(localStorage.getItem("yt_videos_cache") || "[]")
+      if (ytConnected && cachedVideos.length > 0) {
+        const todayIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+        todayIST.setHours(0, 0, 0, 0)
+        const publishDates = new Set(
+          cachedVideos.filter(v => v.publishedAt).map(v => {
+            const d = new Date(new Date(v.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+            d.setHours(0, 0, 0, 0)
+            return d.getTime()
+          })
+        )
+        let check = new Date(todayIST)
+        while (publishDates.has(check.getTime())) {
+          streak++
+          check.setDate(check.getDate() - 1)
+        }
+      }
+    } catch { /* silent */ }
+
     return [
-      { label: "Total videos", value: totalPosted, sub: ytConnected ? "on YouTube" : "across all plans" },
-      { label: "Current streak", value: "0d", sub: "consecutive days" },
-      { label: "Audience", value: subscribers.toLocaleString(), sub: ytConnected ? "subscribers" : "connect accounts to see" },
+      { label: "Total videos", value: totalPosted, sub: ytConnected ? "on YouTube" : "connect YouTube to see" },
+      { label: "Current streak", value: streak > 0 ? `${streak}d` : "0d", sub: streak > 0 ? "consecutive days posted" : "post today to start streak" },
+      { label: "Audience", value: subscribers.toLocaleString(), sub: ytConnected ? "subscribers" : "connect YouTube to see" },
     ]
   }, [platform])
 

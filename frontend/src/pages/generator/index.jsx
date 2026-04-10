@@ -6,6 +6,7 @@ import { CONFIG, SIDEBAR_W, PAGE_PAD, HEADER_H } from "./generatorConfig"
 import GeneratorForm from "./GeneratorForm"
 import ResultCard from "./ResultCard"
 import AddToPlannerModal from "./AddToPlannerModal"
+import GenerationHistory, { saveToHistory } from "./GenerationHistory"
 
 const LABEL_MAP = {
   title: "Video Title", hook: "Hook", script: "Full Script", outline: "Outline",
@@ -48,7 +49,11 @@ export default function ContentGenerator() {
     const payload = { platform, format, niche, goal, tone, topic: fields.topic, outputType: fields.outputType || "full_script" }
     setLastPayload(payload); setLastFields(fields)
     setError(""); setLoading(true); setResult(null)
-    try { setResult(await callAPI(payload)) } catch (e) { setError(e.message) }
+    try {
+      const r = await callAPI(payload)
+      setResult(r)
+      saveToHistory(fields, r)
+    } catch (e) { setError(e.message) }
     setLoading(false)
   }
 
@@ -109,6 +114,7 @@ export default function ContentGenerator() {
           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "16px" }}>
             <GeneratorForm formats={formats} goals={goals} tones={tones} color={color} onGenerate={handleGenerate} loading={loading} error={error} />
           </div>
+          <GenerationHistory accentColor={color} onLoad={item => { setResult(item.result); setLastFields(item.fields) }} />
         </div>
 
         {/* Right results */}

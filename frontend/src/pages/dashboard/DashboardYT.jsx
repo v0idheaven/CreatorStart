@@ -1,48 +1,48 @@
-import { useState, useEffect } from "react"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
-import { Users, Eye, PlaySquare, Timer, FileText } from "lucide-react"
+import { Users, Eye, PlaySquare, Timer } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import StreakCard from "../../components/StreakCard"
 import StatGrid from "./StatGrid"
 import QuickActions from "./QuickActions"
 import { fmt } from "./dashUtils"
-import { apiFetch } from "../../utils/api"
-import { API_ENDPOINTS } from "../../constants/api"
+import useDashboardData from "./useDashboardData"
 import "./Dashboard.css"
 
 const YT = "#ff4444"
 const YTbg = "#ff444415"
 
-const viewData = [
-  { day: "Mon", views: 1200 }, { day: "Tue", views: 980 }, { day: "Wed", views: 2100 },
-  { day: "Thu", views: 1800 }, { day: "Fri", views: 2400 }, { day: "Sat", views: 3100 }, { day: "Sun", views: 2700 },
-]
-
-const videos = [
-  { id: 1, title: "How to grow on YouTube in 2025", type: "Video", views: 12400, likes: 843, comments: 91, duration: "14:32", status: "done" },
-  { id: 2, title: "Morning routine vlog", type: "Short", views: 31000, likes: 2100, comments: 187, duration: "0:58", status: "done" },
-  { id: 3, title: "My editing workflow 2025", type: "Video", views: 0, likes: 0, comments: 0, duration: "22:10", status: "draft" },
-  { id: 4, title: "5 mistakes new creators make", type: "Short", views: 0, likes: 0, comments: 0, duration: "0:55", status: "planned" },
-]
-
-const stats = [
-  { label: "Subscribers", value: "2.4K", icon: Users, color: YT },
-  { label: "Total Views", value: "48.2K", icon: Eye, color: "#60a5fa" },
-  { label: "Videos", value: 18, icon: PlaySquare, color: "#818cf8" },
-  { label: "Watch Time", value: "1.2K hrs", icon: Timer, color: "#4ade80" },
-]
-
 export default function DashboardYT() {
-  const [ytVideos, setYtVideos] = useState([])
+  const { ytVideos, ytStats, ytConnected, loading, realStats } = useDashboardData()
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}")
-    if (user.youtubeStats) {
-      apiFetch(API_ENDPOINTS.youtubeVideos).then(r => r.json()).then(d => {
-        if (Array.isArray(d?.data)) setYtVideos(d.data)
-      }).catch(() => {})
-    }
-  }, [])
+  // Build last 7 days chart from real video publish dates
+  const viewData = (() => {
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    if (!ytConnected || ytVideos.length === 0) return days.map(day => ({ day, views: 0 }))
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today); d.setDate(today.getDate() - (6 - i))
+      const dayViews = ytVideos
+        .filter(v => {
+          if (!v.publishedAt) return false
+          const vd = new Date(v.publishedAt); vd.setHours(0, 0, 0, 0)
+          return vd.getTime() === d.getTime()
+        })
+        .reduce((s, v) => s + Number(v.views || 0), 0)
+      return { day: days[d.getDay() === 0 ? 6 : d.getDay() - 1], views: dayViews }
+    })
+  })()
+
+  const stats = ytConnected && realStats ? [
+    { label: "Subscribers", value: fmt(realStats.subscribers), icon: Users, color: YT },
+    { label: "Total Views", value: fmt(realStats.views), icon: Eye, color: "#60a5fa" },
+    { label: "Videos", value: realStats.videos, icon: PlaySquare, color: "#818cf8" },
+    { label: "Watch Time", value: "—", icon: Timer, color: "#4ade80" },
+  ] : [
+    { label: "Subscribers", value: "—", icon: Users, color: YT },
+    { label: "Total Views", value: "—", icon: Eye, color: "#60a5fa" },
+    { label: "Videos", value: "—", icon: PlaySquare, color: "#818cf8" },
+    { label: "Watch Time", value: "—", icon: Timer, color: "#4ade80" },
+  ]
 
   return (
     <div className="dash-root">
@@ -55,17 +55,17 @@ export default function DashboardYT() {
               <p className="dash-kicker-label" style={{ color: YT }}>YouTube Studio</p>
             </div>
             <h1 className="dash-title">Channel Overview</h1>
-            <p className="dash-sub">Last 28 days performance</p>
+            <p className="dash-sub">{ytStats?.title || "Your channel"}</p>
           </div>
 
-          <StatGrid stats={stats} trendLabel="vs last month" />
+          <StatGrid stats={stats} trendLabel="all time" />
 
           <div className="dash-chart-row">
             <div className="card dash-chart-card">
               <div className="chart-header">
                 <div>
-                  <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", margin: "0 0 3px" }}>Views this week</p>
-                  <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Daily view count</p>
+                  <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", margin: "0 0 3px" }}>Upload activity</p>
+                  <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Views per upload day (last 7 days)</p>
                 </div>
                 <span className="chart-badge" style={{ color: YT, borderColor: "#ff444430", background: YTbg }}>YouTube</span>
               </div>
@@ -86,25 +86,36 @@ export default function DashboardYT() {
           <div className="card" style={{ overflow: "hidden" }}>
             <div className="dash-table-header">
               <span className="dash-table-title">Recent Videos</span>
+              {loading && <span style={{ fontSize: "11px", color: "var(--dim)" }}>Loading...</span>}
             </div>
-            <div className="dash-table-cols">
-              {["Title", "Type", "Views", "Likes", "Comments", "Status"].map(h => (
-                <span key={h} className="dash-table-col-label">{h}</span>
-              ))}
-            </div>
-            {videos.map(v => (
-              <div key={v.id} className="dash-table-row">
-                <div>
-                  <p className="dash-row-title">{v.title}</p>
-                  <span className="dash-row-meta">{v.duration}</span>
+            {ytVideos.length === 0 && !loading ? (
+              <p style={{ padding: "16px 20px", fontSize: "13px", color: "var(--dim)", margin: 0 }}>
+                {ytConnected ? "No videos found. Refresh to load." : "Connect YouTube to see your videos."}
+              </p>
+            ) : (
+              <>
+                <div className="dash-table-cols">
+                  {["Title", "Type", "Views", "Likes", "Comments", "Published"].map(h => (
+                    <span key={h} className="dash-table-col-label">{h}</span>
+                  ))}
                 </div>
-                <span className="dash-type-badge" style={{ background: YTbg, color: YT }}>{v.type}</span>
-                <span className="dash-row-stat" style={{ color: v.views > 0 ? "var(--text)" : "var(--dim)" }}>{v.views > 0 ? fmt(v.views) : "—"}</span>
-                <span className="dash-row-stat" style={{ color: v.likes > 0 ? "var(--text)" : "var(--dim)" }}>{v.likes > 0 ? fmt(v.likes) : "—"}</span>
-                <span className="dash-row-stat" style={{ color: v.comments > 0 ? "var(--text)" : "var(--dim)" }}>{v.comments > 0 ? fmt(v.comments) : "—"}</span>
-                <span className={`post-badge ${v.status}`}>{v.status}</span>
-              </div>
-            ))}
+                {ytVideos.slice(0, 5).map(v => (
+                  <div key={v.id} className="dash-table-row">
+                    <div>
+                      <p className="dash-row-title">{v.title}</p>
+                      <span className="dash-row-meta">{v.publishedAt ? new Date(v.publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}</span>
+                    </div>
+                    <span className="dash-type-badge" style={{ background: YTbg, color: YT }}>{v.type || "Video"}</span>
+                    <span className="dash-row-stat">{fmt(v.views)}</span>
+                    <span className="dash-row-stat">{fmt(v.likes)}</span>
+                    <span className="dash-row-stat">{fmt(v.comments)}</span>
+                    <span className="dash-row-stat" style={{ fontSize: "11px", color: "var(--dim)" }}>
+                      {v.publishedAt ? new Date(v.publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                    </span>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         </main>
       </div>

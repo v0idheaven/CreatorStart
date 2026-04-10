@@ -68,20 +68,21 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
       tone: resolve(tone, "tone"),
       topic: topic.trim(),
     }
-    // Save to backend
     try {
       const res = await apiFetch(API_ENDPOINTS.updateCreatorProfile, {
         method: "PATCH",
         body: JSON.stringify(profile)
       })
       const data = await res.json()
-      if (res.ok && data?.data?.user) {
-        // Update localStorage
-        const user = JSON.parse(localStorage.getItem("user") || "{}")
+      const user = JSON.parse(localStorage.getItem("user") || "{}")
+      if (res.ok && data?.data?.user?.creatorProfile) {
         localStorage.setItem("user", JSON.stringify({ ...user, creatorProfile: data.data.user.creatorProfile }))
+      } else {
+        // Fallback: save locally even if backend fails
+        localStorage.setItem("user", JSON.stringify({ ...user, creatorProfile: profile }))
       }
-    } catch (e) {
-      // Fallback: save to localStorage only
+    } catch {
+      // Offline fallback
       const user = JSON.parse(localStorage.getItem("user") || "{}")
       localStorage.setItem("user", JSON.stringify({ ...user, creatorProfile: profile }))
     }

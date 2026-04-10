@@ -1,12 +1,11 @@
-import { createElement, useState, useEffect } from "react"
+import { createElement, useState } from "react"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
 import { Zap, CalendarDays, FileText, AlignLeft, Clock, CheckCheck, Users, Eye, PlaySquare, Timer, Heart, Image } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import StreakCard from "../../components/StreakCard"
 import StatGrid from "./StatGrid"
 import { fmt, getGreeting } from "./dashUtils"
-import { apiFetch } from "../../utils/api"
-import { API_ENDPOINTS } from "../../constants/api"
+import useDashboardData from "./useDashboardData"
 import "./Dashboard.css"
 
 const SWITCHER = [
@@ -72,20 +71,23 @@ const DATA = {
 
 export default function DashboardBoth() {
   const [view, setView] = useState("overall")
-  const [ytVideos, setYtVideos] = useState([])
+  const { ytVideos, ytStats, ytConnected, realStats, storedUser } = useDashboardData()
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}")
-    if (user.youtubeStats) {
-      apiFetch(API_ENDPOINTS.youtubeVideos).then(r => r.json()).then(d => {
-        if (Array.isArray(d?.data)) setYtVideos(d.data)
-      }).catch(() => {})
-    }
-  }, [])
-
-  const storedUser = JSON.parse(localStorage.getItem("user") || "{}")
   const firstName = storedUser.fullName?.split(" ")[0] || "Creator"
-  const d = DATA[view]
+
+  // Build real YouTube stats for the youtube tab
+  const ytTabStats = ytConnected && realStats ? [
+    { label: "Subscribers", value: fmt(realStats.subscribers), icon: Users, color: "#ff4444" },
+    { label: "Total Views", value: fmt(realStats.views), icon: Eye, color: "#60a5fa" },
+    { label: "Videos", value: realStats.videos, icon: PlaySquare, color: "#818cf8" },
+    { label: "Watch Time", value: "—", icon: Timer, color: "#4ade80" },
+  ] : DATA.youtube.stats
+
+  const DATA_WITH_REAL = {
+    ...DATA,
+    youtube: { ...DATA.youtube, stats: ytTabStats },
+  }
+  const d = DATA_WITH_REAL[view]
   const accent = SWITCHER.find(s => s.id === view).color
 
   return (
