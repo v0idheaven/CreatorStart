@@ -90,7 +90,19 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
     setTimeout(() => setProfileSaved(false), 2000)
   }
 
-  function handleSubmit() {
+  async function clearProfile() {
+    const user = JSON.parse(localStorage.getItem("user") || "{}")
+    delete user.creatorProfile
+    localStorage.setItem("user", JSON.stringify(user))
+    // Also clear from backend
+    try {
+      await apiFetch(API_ENDPOINTS.updateCreatorProfile, {
+        method: "PATCH",
+        body: JSON.stringify({ format: "", niche: "", goal: "", tone: "", topic: "" })
+      })
+    } catch { /* silent */ }
+    setFormat(""); setNiche(""); setGoal(""); setTone(""); setTopic("")
+  }
     onGenerate({
       format: resolve(format, "format"), niche: resolve(niche, "niche"),
       goal: resolve(goal, "goal"), tone: resolve(tone, "tone"),
@@ -125,13 +137,23 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
 
       <Dropdown label="What do you want?" options={OUTPUT_TYPES.map(o => o.label)} value={selectedOutput?.label} onChange={v => setOutputType(OUTPUT_TYPES.find(o => o.label === v)?.id || "full_script")} color={color} placeholder="Select output type" hint={selectedOutput?.desc} />
 
-      {/* Save profile button */}
+      {/* Save / Clear profile buttons */}
       {(format || niche || goal || tone) && (
-        <button onClick={saveProfile}
-          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", padding: "7px", borderRadius: "8px", border: `1px solid ${profileSaved ? "#4ade8060" : "var(--border)"}`, background: profileSaved ? "#4ade8010" : "transparent", color: profileSaved ? "#4ade80" : "var(--dim)", fontSize: "12px", cursor: "pointer", transition: "all 0.2s" }}>
-          <BookmarkCheck size={12} />
-          {profileSaved ? "Saved as default!" : "Save as my default"}
-        </button>
+        <div style={{ display: "flex", gap: "6px" }}>
+          <button onClick={saveProfile} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", padding: "7px", borderRadius: "8px", border: `1px solid ${profileSaved ? "#4ade8060" : "var(--border)"}`, background: profileSaved ? "#4ade8010" : "transparent", color: profileSaved ? "#4ade80" : "var(--dim)", fontSize: "12px", cursor: "pointer", transition: "all 0.2s" }}>
+            <BookmarkCheck size={12} />
+            {profileSaved ? "Saved!" : "Save as default"}
+          </button>
+          {(() => {
+            const user = JSON.parse(localStorage.getItem("user") || "{}")
+            return user.creatorProfile ? (
+              <button onClick={clearProfile} style={{ padding: "7px 10px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--dim)", fontSize: "12px", cursor: "pointer" }}
+                title="Clear saved default">
+                ✕
+              </button>
+            ) : null
+          })()}
+        </div>
       )}
 
       {error && <p className="error-box">{error}</p>}
