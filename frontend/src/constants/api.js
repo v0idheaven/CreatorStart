@@ -20,4 +20,7 @@ export const API_ENDPOINTS = {
     getStreak: (platform) => `${BASE}/api/v1/planner/streak/${platform}`,
     plannerAiDetail: `${BASE}/api/v1/planner/ai/detail`,
     contentGenerator: `${BASE}/api/v1/planner/ai/content`,
+    contentScore: `${BASE}/api/v1/planner/ai/score`,
+    contentHooks: `${BASE}/api/v1/planner/ai/hooks`,
+    contentTones: `${BASE}/api/v1/planner/ai/tones`,
 }

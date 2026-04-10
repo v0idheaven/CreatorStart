@@ -50,7 +50,7 @@ function StepIndicator({ step, color }) {
   )
 }
 
-export default function GeneratorForm({ formats, goals, tones, color, onGenerate, loading, error }) {
+export default function GeneratorForm({ formats, goals, tones, color, onGenerate, loading, error, mode }) {
   const [step, setStep] = useState(1)
 
   // Step 1
@@ -61,6 +61,7 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
   const [topic, setTopic] = useState("")
   const [outputType, setOutputType] = useState("full_script")
   const [customValues, setCustomValues] = useState({})
+  const [draftContent, setDraftContent] = useState("")
 
   // Step 2
   const [audience, setAudience] = useState("")
@@ -84,6 +85,7 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
       tone: resolve(tone, "tone"),
       topic: topic.trim(),
       outputType,
+      draftContent: mode === "improve" ? draftContent : "",
       audience: audience === "Other" ? customAudience : audience,
       length,
       keyMessage: keyMessage.trim(),
@@ -125,6 +127,16 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
           <div>
             <Dropdown label="What do you want?" options={OUTPUT_TYPES.map(o => o.label)} value={selectedOutput?.label} onChange={v => setOutputType(OUTPUT_TYPES.find(o => o.label === v)?.id || "full_script")} color={color} placeholder="Select output type" hint={selectedOutput?.desc} />
           </div>
+
+          {mode === "improve" && (
+            <div>
+              <label style={{ fontSize: "11px", fontWeight: "600", color: "var(--dim)", display: "block", marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                Your Draft / Notes
+              </label>
+              <textarea className="input-sm" rows={5} placeholder="Paste your rough script, bullet points, or notes here. AI will polish and improve it..." value={draftContent} onChange={e => setDraftContent(e.target.value)}
+                style={{ width: "100%", resize: "vertical", fontFamily: "inherit", lineHeight: "1.6", boxSizing: "border-box" }} />
+            </div>
+          )}
 
           <button onClick={() => setStep(2)} disabled={!step1Valid}
             style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "10px", borderRadius: "9px", border: "none", background: step1Valid ? color : "var(--border)", color: step1Valid ? "#fff" : "var(--dim)", fontSize: "13px", fontWeight: "600", cursor: step1Valid ? "pointer" : "not-allowed", marginTop: "4px" }}>
