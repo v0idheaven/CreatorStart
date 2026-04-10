@@ -73,8 +73,8 @@ export default function Sidebar() {
       onMouseLeave={() => setIsOpen(false)}>
 
       <div className="sidebar-logo">
-        <div className="sidebar-logo-icon" style={{ background: color }}>
-          {platform === "youtube" ? "YT" : platform === "instagram" ? "IG" : "CS"}
+        <div className="sidebar-logo-icon" style={{ background: color, overflow: "hidden", padding: 0 }}>
+          <img src="/favicon.svg" alt="CS" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
         <span className="sidebar-logo-text" style={{ opacity: isOpen ? 1 : 0 }}>
           {platform === "both"

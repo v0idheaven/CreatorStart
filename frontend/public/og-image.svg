@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0a0a0a"/>
+  <!-- Subtle grid -->
+  <rect width="1200" height="630" fill="url(#grid)" opacity="0.03"/>
+  <!-- Gradient glow -->
+  <ellipse cx="600" cy="315" rx="500" ry="300" fill="url(#glow)" opacity="0.15"/>
+  <!-- Border -->
+  <rect x="1" y="1" width="1198" height="628" rx="0" stroke="#818cf8" stroke-width="2" stroke-opacity="0.2" fill="none"/>
+
+  <!-- Logo icon -->
+  <rect x="80" y="80" width="72" height="72" rx="16" fill="url(#logoGrad)"/>
+  <text x="116" y="131" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="30" font-weight="800" fill="white">CS</text>
+
+  <!-- Brand name -->
+  <text x="172" y="124" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="28" font-weight="700" fill="white">Creator<tspan fill="#818cf8">Start</tspan></text>
+
+  <!-- Main headline -->
+  <text x="80" y="290" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="72" font-weight="800" fill="white" letter-spacing="-3">Plan.</text>
+  <text x="80" y="375" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="72" font-weight="800" fill="white" letter-spacing="-3">Create.</text>
+  <text x="80" y="460" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="72" font-weight="800" fill="#818cf8" letter-spacing="-3">Grow.</text>
+
+  <!-- Subtitle -->
+  <text x="80" y="540" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="24" fill="#52525a">AI-powered content planning for YouTube &amp; Instagram creators</text>
+
+  <!-- URL -->
+  <text x="80" y="590" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" fill="#818cf8" font-weight="600">creatorstart.in</text>
+
+  <!-- Right side decorative stats -->
+  <rect x="780" y="200" width="340" height="100" rx="16" fill="#161618" stroke="#242428" stroke-width="1"/>
+  <text x="800" y="245" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#52525a" font-weight="600" letter-spacing="1">30-DAY PLANNER</text>
+  <text x="800" y="278" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22" fill="white" font-weight="700">AI content calendar</text>
+
+  <rect x="780" y="320" width="340" height="100" rx="16" fill="#161618" stroke="#242428" stroke-width="1"/>
+  <text x="800" y="365" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#52525a" font-weight="600" letter-spacing="1">CONTENT GENERATOR</text>
+  <text x="800" y="398" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22" fill="white" font-weight="700">Scripts, hooks &amp; captions</text>
+
+  <rect x="780" y="440" width="340" height="100" rx="16" fill="#161618" stroke="#242428" stroke-width="1"/>
+  <text x="800" y="485" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#52525a" font-weight="600" letter-spacing="1">ANALYTICS</text>
+  <text x="800" y="518" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22" fill="white" font-weight="700">YouTube &amp; Instagram</text>
+
+  <defs>
+    <linearGradient id="logoGrad" x1="0" y1="0" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#818cf8" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="1"/>
+    </pattern>
+  </defs>
+</svg>
