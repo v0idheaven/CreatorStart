@@ -12,7 +12,7 @@ export default function MockDashboard() {
         <span className="mock-dot" style={{ background: "#ff7a66" }} />
         <span className="mock-dot" style={{ background: "#f4c04d" }} />
         <span className="mock-dot" style={{ background: "#72d56a" }} />
-        <div className="mock-url">creatorstart.app/dashboard</div>
+        <div className="mock-url">creatorstart.in/dashboard</div>
       </div>
 
       <div className="mock-tabs">
