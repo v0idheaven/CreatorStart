@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { apiFetch } from "../../utils/api"
 import { API_ENDPOINTS } from "../../constants/api"
 import { STORAGE_KEYS } from "../../constants/storageKeys"
@@ -92,12 +92,12 @@ export default function usePlannerData(platform) {
 
   async function clearPlan() {
     localStorage.removeItem(STORAGE_KEYS.getPlannerData())
-    try { await apiFetch(API_ENDPOINTS.savePlan, { method: "POST", body: JSON.stringify({ platform, planData: null }) }) } catch (e) { console.warn(e) }
+    try { await apiFetch(API_ENDPOINTS.savePlan, { method: "POST", body: JSON.stringify({ platform, planData: null }) }) } catch { /* silent */ }
     setEntries([]); setPlanInfo(null); setScreen("setup")
   }
 
   // Load from backend on mount
-  useState(() => {
+  useEffect(() => {
     async function load() {
       try {
         const [planRes, streakRes] = await Promise.all([
@@ -119,10 +119,10 @@ export default function usePlannerData(platform) {
           const d = await streakRes.json()
           if (Array.isArray(d?.data)) localStorage.setItem(STORAGE_KEYS.getStreakData(), JSON.stringify(d.data))
         }
-      } catch (e) { console.warn("Failed to load planner/streak data", e) }
+      } catch { /* silent fail — backend may be unavailable */ }
     }
     load()
-  })
+  }, [])
 
   return { screen, setScreen, generating, entries, planInfo, handleGenerate, toggleDone, saveEdit, deleteEntry, addToDay, removeExtraPost, clearPlan }
 }

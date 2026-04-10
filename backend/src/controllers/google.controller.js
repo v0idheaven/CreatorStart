@@ -95,7 +95,8 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
             await user.save({ validateBeforeSave: false })
         }
     } catch (e) {
-        console.error("YouTube stats fetch failed:", e.message)
+        // YouTube stats fetch failed silently — non-critical, user can still log in
+        void e
     }
 
     const accessToken = user.generateAccessToken()

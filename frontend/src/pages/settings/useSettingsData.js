@@ -57,7 +57,7 @@ export default function useSettingsData() {
         setBio(u.bio || "")
         setAvatar(u.avatar || "")
         if (u.platform) setSelectedPlatform(u.platform)
-      } catch (e) { console.warn("Failed to fetch user", e) }
+      } catch { /* silent — expected failure on first load */ }
     }
     fetchUser()
   }, [])
@@ -80,17 +80,17 @@ export default function useSettingsData() {
     setSelectedPlatform(p)
     localStorage.setItem("platform", p)
     syncLocal({ platform: p })
-    try { await apiFetch(API_ENDPOINTS.updateProfile, { method: "PATCH", body: JSON.stringify({ platform: p }) }) } catch (e) { console.warn(e) }
+    try { await apiFetch(API_ENDPOINTS.updateProfile, { method: "PATCH", body: JSON.stringify({ platform: p }) }) } catch { /* silent */ }
     window.location.reload()
   }
 
   async function logout() {
-    try { await apiFetch(API_ENDPOINTS.logout, { method: "POST" }) } catch (e) { console.warn(e) }
+    try { await apiFetch(API_ENDPOINTS.logout, { method: "POST" }) } catch { /* silent */ }
     localStorage.removeItem("accessToken"); localStorage.removeItem("user"); navigate("/auth")
   }
 
   async function deleteAccount() {
-    try { await apiFetch(API_ENDPOINTS.deleteAccount, { method: "DELETE" }) } catch (e) { console.warn(e) }
+    try { await apiFetch(API_ENDPOINTS.deleteAccount, { method: "DELETE" }) } catch { /* silent */ }
     localStorage.clear(); navigate("/auth")
   }
 
