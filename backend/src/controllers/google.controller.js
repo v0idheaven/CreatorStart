@@ -173,26 +173,46 @@ const getYoutubeVideos = asyncHandler(async (req, res) => {
     const uploadsPlaylistId = channelRes.data.items?.[0]?.contentDetails?.relatedPlaylists?.uploads
     if (!uploadsPlaylistId) throw new ApiError(404, "No uploads playlist found")
 
+    // Fetch all videos with pagination (max 50 per page, up to 200 total)
+    let allVideoIds = []
+    let pageToken = undefined
+    let pageCount = 0
+    const MAX_PAGES = 4 // max 200 videos
+
     try {
-        playlistRes = await youtube.playlistItems.list({
-            part: ["snippet", "contentDetails"],
-            playlistId: uploadsPlaylistId,
-            maxResults: 10
-        })
+        do {
+            playlistRes = await youtube.playlistItems.list({
+                part: ["snippet", "contentDetails"],
+                playlistId: uploadsPlaylistId,
+                maxResults: 50,
+                ...(pageToken ? { pageToken } : {})
+            })
+            const ids = playlistRes.data.items?.map(i => i.contentDetails?.videoId).filter(Boolean) || []
+            allVideoIds = [...allVideoIds, ...ids]
+            pageToken = playlistRes.data.nextPageToken
+            pageCount++
+        } while (pageToken && pageCount < MAX_PAGES)
     } catch (e) {
         const msg = String(e?.message || "").replace(/<[^>]*>/g, "").trim()
         if (msg.toLowerCase().includes("quota")) throw new ApiError(429, "YouTube API quota exceeded for today. Try again after midnight Pacific Time.")
         throw new ApiError(502, msg || "Failed to fetch playlist")
     }
 
-    const videoIds = playlistRes.data.items?.map(i => i.contentDetails?.videoId).filter(Boolean)
+    const videoIds = allVideoIds
     if (!videoIds?.length) return res.status(200).json(new ApiResponse(200, [], "No videos found"))
 
+    // YouTube videos.list accepts max 50 IDs — batch if needed
+    let allVideoItems = []
     try {
-        statsRes = await youtube.videos.list({
-            part: ["snippet", "statistics", "contentDetails"],
-            id: videoIds.join(",")
-        })
+        for (let i = 0; i < videoIds.length; i += 50) {
+            const batch = videoIds.slice(i, i + 50)
+            const batchRes = await youtube.videos.list({
+                part: ["snippet", "statistics", "contentDetails"],
+                id: batch.join(",")
+            })
+            allVideoItems = [...allVideoItems, ...(batchRes.data.items || [])]
+        }
+        statsRes = { data: { items: allVideoItems } }
     } catch (e) {
         const msg = String(e?.message || "").replace(/<[^>]*>/g, "").trim()
         if (msg.toLowerCase().includes("quota")) throw new ApiError(429, "YouTube API quota exceeded for today. Try again after midnight Pacific Time.")
