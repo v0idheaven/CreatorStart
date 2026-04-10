@@ -94,8 +94,85 @@ Example: {"hook":"...","whatToSay":"...","script":"...","cta":"...","tip":"..."}
 })
 
 const generateContentIdea = asyncHandler(async (req, res) => {
-    const { platform, format, niche, goal, tone, topic, outputType } = req.body
+    const { platform, format, niche, goal, tone, topic, outputType, audience, length, keyMessage, angle, style } = req.body
     if (!platform || !format || !niche || !goal || !tone) throw new ApiError(400, "platform, format, niche, goal and tone are required")
+
+    const outputInstructions = {
+        full_script: `Write a complete, detailed, word-for-word script the creator can read directly. Include intro, main body with all talking points fully written out, and outro. Make it natural and conversational.`,
+        bullet_points: `Provide 6-8 detailed bullet points covering the main talking points. Each bullet should be 1-2 sentences with enough detail to speak from.`,
+        hook_only: `Write 3 different strong opening hooks (first 15 seconds) and 3 different call-to-action options. Make them punchy and platform-optimized.`,
+        outline: `Create a detailed structured outline with sections, sub-points, timing suggestions, and transition notes.`,
+        caption: `Write a complete ready-to-post caption with emojis, line breaks for readability, and a full set of relevant hashtags (20-30).`,
+    }
+
+    const schemas = {
+        youtube: {
+            full_script: `{"title":"catchy video title","hook":"opening hook line","script":"full word-for-word script","description":"YouTube description with timestamps","tags":"comma separated tags"}`,
+            bullet_points: `{"title":"catchy video title","hook":"opening hook","points":"all talking points in detail","description":"YouTube description","tags":"comma separated tags"}`,
+            hook_only: `{"title":"catchy video title","hook":"3 hook options numbered","cta":"3 CTA options numbered","tip":"pro tip for this format"}`,
+            outline: `{"title":"catchy video title","hook":"opening hook","outline":"full structured outline with sections and timing","description":"YouTube description","tags":"comma separated tags"}`,
+            caption: `{"title":"catchy video title","hook":"opening hook","script":"full script","description":"YouTube description with timestamps","tags":"comma separated tags"}`,
+        },
+        instagram: {
+            full_script: `{"hook":"opening hook","script":"full word-for-word reel script","caption":"full caption with emojis","hashtags":"30 relevant hashtags","cta":"call to action"}`,
+            bullet_points: `{"hook":"opening hook","points":"6-8 detailed talking points","caption":"full caption with emojis","hashtags":"30 relevant hashtags","cta":"call to action"}`,
+            hook_only: `{"hook":"3 hook options numbered","cta":"3 CTA options numbered","caption":"short caption","hashtags":"20 relevant hashtags"}`,
+            outline: `{"hook":"opening hook","outline":"structured reel outline with timing","caption":"full caption with emojis","hashtags":"30 relevant hashtags","cta":"call to action"}`,
+            caption: `{"hook":"opening hook","caption":"full detailed caption with emojis and line breaks","hashtags":"30 relevant hashtags","cta":"call to action","reelIdea":"visual concept description"}`,
+        },
+        both: {
+            full_script: `{"hook":"opening hook","script":"full word-for-word script","caption":"Instagram caption with emojis","outline":"YouTube outline","hashtags":"relevant hashtags","tip":"platform-specific tip"}`,
+            bullet_points: `{"hook":"opening hook","points":"6-8 detailed talking points","caption":"Instagram caption","hashtags":"relevant hashtags","tip":"pro tip"}`,
+            hook_only: `{"hook":"3 hook options numbered","cta":"3 CTA options numbered","caption":"short caption","tip":"pro tip"}`,
+            outline: `{"hook":"opening hook","outline":"detailed structured outline","caption":"Instagram caption","hashtags":"relevant hashtags","tip":"pro tip"}`,
+            caption: `{"hook":"opening hook","caption":"full caption with emojis","hashtags":"30 relevant hashtags","cta":"call to action","tip":"pro tip"}`,
+        }
+    }
+
+    const outputKey = outputType || "full_script"
+    const schema = schemas[platform]?.[outputKey] || schemas.both.full_script
+    const instruction = outputInstructions[outputKey] || outputInstructions.full_script
+
+    const extraContext = [
+        audience && `Target audience: ${audience}`,
+        length && `Content length: ${length}`,
+        keyMessage && `Key message/takeaway: ${keyMessage}`,
+        angle && `Unique angle: ${angle}`,
+        style && style !== "My own style" && `Creator style inspiration: ${style}`,
+    ].filter(Boolean).join("\n")
+
+    const prompt = `You are an expert content strategist and scriptwriter for social media creators.
+
+Creator details:
+- Platform: ${platform}
+- Format: ${format}
+- Niche: ${niche}
+- Goal: ${goal}
+- Tone: ${tone}
+- Topic: ${topic || "(creator's choice — pick something trending in this niche)"}
+${extraContext ? `\nAdditional context:\n${extraContext}` : ""}
+
+Task: ${instruction}
+
+Important rules:
+- Be specific, detailed and practical — not generic
+- Write as if you are the creator speaking directly to their audience
+- Match the ${tone} tone throughout
+- Optimize for ${platform} best practices
+- ${audience ? `Tailor everything for: ${audience}` : "Write for a general audience"}
+- ${keyMessage ? `The entire content must drive home this message: "${keyMessage}"` : ""}
+- ${angle ? `Use this unique angle: "${angle}"` : ""}
+- Make it immediately usable — no placeholders like [your name] or [topic]
+
+Return ONLY a valid raw JSON object using this exact schema:
+${schema}`
+
+    const text = await callGroq(prompt, 0.75)
+    const parsed = parseJson(text)
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new ApiError(422, "Could not parse AI response")
+
+    return res.status(200).json(new ApiResponse(200, parsed, "Content generated"))
+})
 
     const outputInstructions = {
         full_script: `Write a complete, detailed, word-for-word script the creator can read directly. Include intro, main body with all talking points fully written out, and outro. Make it natural and conversational.`,

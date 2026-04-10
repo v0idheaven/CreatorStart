@@ -45,7 +45,7 @@ export default function ContentGenerator() {
     if (rawGoal === "Other" && !customGoal) { setError("Enter a custom goal."); return }
     if (rawTone === "Other" && !customTone) { setError("Enter a custom tone."); return }
 
-    const payload = { platform, format, niche, goal, tone, topic: fields.topic, outputType: fields.outputType || "full_script" }
+    const payload = { platform, format, niche, goal, tone, topic: fields.topic, outputType: fields.outputType || "full_script", audience: fields.audience, length: fields.length, keyMessage: fields.keyMessage, angle: fields.angle, style: fields.style }
     setLastPayload(payload); setLastFields(fields)
     setError(""); setLoading(true); setResult(null)
     try { setResult(await callAPI(payload)) } catch (e) { setError(e.message) }
