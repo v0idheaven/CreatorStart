@@ -9,9 +9,11 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   const daily = ytAnalytics?.daily || []
   const ov = ytAnalytics?.overview || {}
 
-  // If analytics API returns 0 views but we have real video data, use video-level totals
+  // Use video-level total views when analytics API returns 0
   const videoTotalViews = (ytVideos || []).reduce((s, v) => s + Number(v.views || 0), 0)
-  const displayViews = (ov.views && Number(ov.views) > 0) ? ov.views : videoTotalViews
+  // Priority: analytics API > video-level sum > ytStats channel views
+  const channelViews = Number(ytStats?.views || 0)
+  const displayViews = Number(ov.views) > 0 ? ov.views : videoTotalViews > 0 ? videoTotalViews : channelViews
   // Build graph data — use analytics daily if available, else build from video publish dates
   const graphDaily = (() => {
     if (daily.length > 0) return daily
@@ -68,7 +70,7 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
         }
         <div className="yt-channel-info">
           <p className="yt-channel-name">{ytStats.title}</p>
-          <p className="yt-channel-meta">{fmt(ytStats.subscribers)} subscribers · {fmt(ytStats.videos)} videos</p>
+          <p className="yt-channel-meta">{fmt(ytStats.subscribers)} subscribers · {fmt(ytStats.videos)} videos · {fmt(channelViews)} views</p>
         </div>
         <button onClick={onRefresh} disabled={refreshingYT} className="yt-refresh-btn">
           <RefreshCw size={11} className={refreshingYT ? "spin" : ""} /> Refresh
