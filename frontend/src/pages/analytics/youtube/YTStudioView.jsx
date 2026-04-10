@@ -15,8 +15,25 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   // Use analytics total if available (most accurate), else video sum, else channel stats
   const analyticsTotal = daily.length > 0 ? daily.reduce((s, d) => s + Number(d.views || 0), 0) : 0
   const displayViews = analyticsTotal > 0 ? analyticsTotal : videoTotalViews > 0 ? videoTotalViews : channelViews
-  // Use analytics daily data only — accurate per-day breakdown
-  const graphDaily = daily
+  // Build graph — analytics API if available, else construct from video data
+  const graphDaily = (() => {
+    if (daily.length > 0) return daily
+
+    // No analytics data — build a 28-day grid with video views on publish dates
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const result = []
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(today); d.setDate(today.getDate() - i)
+      const dayStr = d.toISOString().split("T")[0]
+      const dayViews = (ytVideos || []).filter(v => {
+        if (!v.publishedAt) return false
+        const vd = new Date(v.publishedAt); vd.setHours(0, 0, 0, 0)
+        return vd.getTime() === d.getTime()
+      }).reduce((s, v) => s + Number(v.views || 0), 0)
+      result.push({ day: dayStr, views: dayViews, estimatedMinutesWatched: 0 })
+    }
+    return result
+  })()
 
   const W = 800, H = 140, PADX = 40, PADY = 16
   const graphMetric = ytTab === "audience" ? "estimatedMinutesWatched" : "views"
@@ -94,8 +111,7 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
           {graphDaily.length === 0 ? (
             <div className="yt-graph-empty">
               <p className="yt-graph-empty-text">No data for this period</p>
-            </div>
-          ) : (
+            </div>          ) : (
             <div className="yt-graph-inner">
               <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="yt-svg"
                 onMouseMove={e => {
