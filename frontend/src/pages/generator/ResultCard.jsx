@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Copy, Check, ChevronDown, ChevronUp } from "lucide-react"
+import { Copy, Check, ChevronDown, ChevronUp, Edit } from "lucide-react"
 
 const LABEL_ICONS = {
   title: "🎯", hook: "⚡", script: "📝", outline: "📋",
@@ -17,7 +17,7 @@ function CopyBtn({ text }) {
   )
 }
 
-export default function ResultCard({ label, content, accentColor }) {
+export default function ResultCard({ label, content, accentColor, onEdit }) {
   const [collapsed, setCollapsed] = useState(false)
   const isLong = content.length > 300
   const icon = LABEL_ICONS[label.toLowerCase().replace(/ /g, "")] || "✦"
@@ -31,11 +31,14 @@ export default function ResultCard({ label, content, accentColor }) {
           <span style={{ fontSize: "11px", fontWeight: "700", color: accentColor, textTransform: "uppercase", letterSpacing: "0.6px" }}>{label}</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <CopyBtn text={content} />
-          {isLong && (collapsed
-            ? <ChevronDown size={13} color="var(--dim)" />
-            : <ChevronUp size={13} color="var(--dim)" />
+          {onEdit && (
+            <button onClick={e => { e.stopPropagation(); onEdit() }}
+              style={{ display: "flex", alignItems: "center", gap: "4px", padding: "3px 8px", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--dim)", fontSize: "11px", cursor: "pointer" }}>
+              <Edit size={10} /> Edit
+            </button>
           )}
+          <CopyBtn text={content} />
+          {isLong && (collapsed ? <ChevronDown size={13} color="var(--dim)" /> : <ChevronUp size={13} color="var(--dim)" />)}
         </div>
       </div>
       {!collapsed && (
