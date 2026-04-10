@@ -11,9 +11,10 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
 
   // Use video-level total views when analytics API returns 0
   const videoTotalViews = (ytVideos || []).reduce((s, v) => s + Number(v.views || 0), 0)
-  // Priority: analytics API > video-level sum > ytStats channel views
   const channelViews = Number(ytStats?.views || 0)
-  const displayViews = Number(ov.views) > 0 ? ov.views : videoTotalViews > 0 ? videoTotalViews : channelViews
+  // Use analytics total if available (most accurate), else video sum, else channel stats
+  const analyticsTotal = daily.length > 0 ? daily.reduce((s, d) => s + Number(d.views || 0), 0) : 0
+  const displayViews = analyticsTotal > 0 ? analyticsTotal : videoTotalViews > 0 ? videoTotalViews : channelViews
   // Use analytics daily data only — accurate per-day breakdown
   const graphDaily = daily
 
