@@ -1,126 +1,156 @@
 import { useState } from "react"
-import { Sparkles, CalendarDays } from "lucide-react"
+import { Sparkles, CalendarDays, RotateCcw, Download } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { API_ENDPOINTS } from "../../constants/api"
-import { CONFIG, SIDEBAR_W, PAGE_PAD, LEFT_W, GAP, HEADER_H } from "./generatorConfig"
+import { CONFIG, SIDEBAR_W, PAGE_PAD, HEADER_H } from "./generatorConfig"
 import GeneratorForm from "./GeneratorForm"
 import ResultCard from "./ResultCard"
 import AddToPlannerModal from "./AddToPlannerModal"
 
+const LABEL_MAP = {
+  title: "Video Title", hook: "Hook", script: "Full Script", outline: "Outline",
+  description: "Description", tags: "Tags", caption: "Caption", hashtags: "Hashtags",
+  cta: "Call to Action", points: "Key Points", tip: "Pro Tip", angle: "Angle", reelIdea: "Reel Concept",
+}
+
 export default function ContentGenerator() {
   const platform = localStorage.getItem("platform") || "both"
   const cfg = CONFIG[platform] || CONFIG.both
-  const { color, label, formats, goals, tones, resultKeys, resultLabels } = cfg
+  const { color, label, formats, goals, tones } = cfg
 
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState("")
   const [showPlannerModal, setShowPlannerModal] = useState(false)
   const [lastPayload, setLastPayload] = useState(null)
+  const [lastFields, setLastFields] = useState(null)
+
+  async function callAPI(payload) {
+    const res = await fetch(API_ENDPOINTS.contentGenerator, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data?.message || "Failed to generate")
+    if (!data?.data || typeof data.data !== "object") throw new Error("Invalid AI response")
+    return data.data
+  }
 
   async function handleGenerate(fields) {
-    const { format, niche, goal, tone, topic, rawFormat, rawNiche, rawGoal, rawTone, customFormat, customNiche, customGoal, customTone } = fields
+    const { format, niche, goal, tone, rawFormat, rawNiche, rawGoal, rawTone, customFormat, customNiche, customGoal, customTone } = fields
+    if (!rawFormat || !rawNiche || !rawGoal || !rawTone) { setError("Please fill all fields."); return }
+    if (rawFormat === "Other" && !customFormat) { setError("Enter a custom format."); return }
+    if (rawNiche === "Other" && !customNiche) { setError("Enter a custom niche."); return }
+    if (rawGoal === "Other" && !customGoal) { setError("Enter a custom goal."); return }
+    if (rawTone === "Other" && !customTone) { setError("Enter a custom tone."); return }
 
-    if (!rawFormat || !rawNiche || !rawGoal || !rawTone) { setError("Please fill all fields before generating."); return }
-    if (rawFormat === "Other" && !customFormat) { setError("Please enter a custom format."); return }
-    if (rawNiche === "Other" && !customNiche) { setError("Please enter a custom niche."); return }
-    if (rawGoal === "Other" && !customGoal) { setError("Please enter a custom goal."); return }
-    if (rawTone === "Other" && !customTone) { setError("Please enter a custom tone."); return }
-
-    const payload = { platform, format, niche, goal, tone, topic, outputType: fields.outputType || "full_script" }
-    setLastPayload(payload)
+    const payload = { platform, format, niche, goal, tone, topic: fields.topic, outputType: fields.outputType || "full_script" }
+    setLastPayload(payload); setLastFields(fields)
     setError(""); setLoading(true); setResult(null)
-
-    try {
-      const res = await fetch(API_ENDPOINTS.contentGenerator, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data?.message || "Failed to generate content")
-      if (!data?.data || typeof data.data !== "object") throw new Error("Invalid response from AI")
-      setResult(data.data)
-    } catch (err) {
-      setError(err.message || "Failed to generate content")
-    }
+    try { setResult(await callAPI(payload)) } catch (e) { setError(e.message) }
     setLoading(false)
   }
 
   async function handleRegenerate() {
     if (!lastPayload) return
     setError(""); setLoading(true); setResult(null)
-    try {
-      const res = await fetch(API_ENDPOINTS.contentGenerator, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(lastPayload)
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data?.message || "Failed")
-      setResult(data.data)
-    } catch (err) { setError(err.message) }
+    try { setResult(await callAPI(lastPayload)) } catch (e) { setError(e.message) }
     setLoading(false)
   }
+
+  function handleDownload() {
+    if (!result) return
+    const text = Object.entries(result).map(([k, v]) => `=== ${LABEL_MAP[k] || k.toUpperCase()} ===\n${v}`).join("\n\n")
+    const blob = new Blob([text], { type: "text/plain" })
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob)
+    a.download = `content-${Date.now()}.txt`; a.click()
+  }
+
+  const resultEntries = result ? Object.entries(result).filter(([, v]) => v) : []
 
   return (
     <div style={{ display: "flex", background: "var(--bg)", minHeight: "100vh" }}>
       <Sidebar />
 
-      <div className="generator-header" style={{ left: `${SIDEBAR_W}px`, height: `${HEADER_H}px`, padding: `24px ${PAGE_PAD}px 0` }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-          <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: color }} />
-          <p style={{ fontSize: "11px", color, textTransform: "uppercase", letterSpacing: "2px", margin: 0, fontWeight: "600" }}>{label}</p>
+      {/* Sticky header */}
+      <div className="generator-header" style={{ left: `${SIDEBAR_W}px`, height: `${HEADER_H}px`, padding: `20px ${PAGE_PAD}px 0` }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "4px" }}>
+              <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: color }} />
+              <p style={{ fontSize: "11px", color, textTransform: "uppercase", letterSpacing: "2px", margin: 0, fontWeight: "600" }}>{label}</p>
+            </div>
+            <h1 style={{ fontSize: "22px", fontWeight: "700", color: "var(--text)", margin: 0, letterSpacing: "-0.5px" }}>Content Generator</h1>
+          </div>
+          {result && (
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button onClick={handleRegenerate} disabled={loading}
+                style={{ display: "flex", alignItems: "center", gap: "5px", padding: "7px 14px", borderRadius: "8px", border: `1px solid ${color}40`, background: "transparent", color, fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>
+                <RotateCcw size={12} /> Regenerate
+              </button>
+              <button onClick={handleDownload}
+                style={{ display: "flex", alignItems: "center", gap: "5px", padding: "7px 14px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted)", fontSize: "12px", cursor: "pointer" }}>
+                <Download size={12} /> Save
+              </button>
+              <button onClick={() => setShowPlannerModal(true)}
+                style={{ display: "flex", alignItems: "center", gap: "5px", padding: "7px 14px", borderRadius: "8px", border: "none", background: color, color: "#fff", fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>
+                <CalendarDays size={12} /> Add to Planner
+              </button>
+            </div>
+          )}
         </div>
-        <h1 style={{ fontSize: "24px", fontWeight: "700", color: "var(--text)", margin: "0 0 6px", letterSpacing: "-0.5px" }}>Content Generator</h1>
-        <p style={{ fontSize: "13px", color: "var(--dim)", margin: 0 }}>
-          {platform === "youtube" && "Generate titles, hooks, scripts & descriptions for your videos."}
-          {platform === "instagram" && "Generate captions, hooks, hashtags & reel concepts."}
-          {platform === "both" && "Generate hooks, outlines & captions for your content."}
-        </p>
       </div>
 
-      <main style={{ marginLeft: `${SIDEBAR_W}px`, flex: 1, paddingTop: `${HEADER_H + 32}px`, paddingBottom: "48px", paddingLeft: `${PAGE_PAD}px`, paddingRight: `${PAGE_PAD}px`, boxSizing: "border-box" }}>
-        <div style={{ display: "flex", gap: `${GAP}px`, alignItems: "flex-start" }}>
-          <div style={{ width: `${LEFT_W}px`, flexShrink: 0 }} />
+      <main style={{ marginLeft: `${SIDEBAR_W}px`, flex: 1, paddingTop: `${HEADER_H + 24}px`, paddingBottom: "48px", paddingLeft: `${PAGE_PAD}px`, paddingRight: `${PAGE_PAD}px`, boxSizing: "border-box", display: "flex", gap: "28px", alignItems: "flex-start" }}>
 
-          <div className="generator-left-panel" style={{ top: `${HEADER_H + 32}px`, left: `${SIDEBAR_W + PAGE_PAD}px`, width: `${LEFT_W}px`, maxHeight: `calc(100vh - ${HEADER_H + 56}px)` }}>
+        {/* Left form panel */}
+        <div style={{ width: "300px", flexShrink: 0, position: "sticky", top: `${HEADER_H + 24}px`, maxHeight: `calc(100vh - ${HEADER_H + 48}px)`, overflowY: "auto", paddingRight: "4px" }}>
+          <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px" }}>
             <GeneratorForm formats={formats} goals={goals} tones={tones} color={color} onGenerate={handleGenerate} loading={loading} error={error} />
           </div>
+        </div>
 
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {!result && !loading && (
-              <div className="generator-empty">
-                <Sparkles size={32} color="var(--dim)" style={{ marginBottom: "16px" }} />
-                <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", margin: "0 0 6px" }}>Ready to generate</p>
-                <p style={{ fontSize: "13px", color: "var(--dim)", margin: 0 }}>Fill in the details and click Generate.</p>
+        {/* Right results panel */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {!result && !loading && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 0", gap: "12px", textAlign: "center" }}>
+              <div style={{ width: "56px", height: "56px", borderRadius: "16px", background: color + "15", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "4px" }}>
+                <Sparkles size={24} color={color} />
               </div>
-            )}
-            {loading && (
-              <div className="generator-empty">
-                <div className="spinner spinner-md" />
-                <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>Generating your content ideas...</p>
-              </div>
-            )}
-            {result && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                {Object.entries(result).map(([key, value]) => value && (
-                  <ResultCard key={key} label={key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())} content={value} accentColor={color} />
-                ))}
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button className="btn-ghost" onClick={handleRegenerate} style={{ borderColor: color + "50" }}>Regenerate ↻</button>
-                  <button onClick={() => setShowPlannerModal(true)}
-                    style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 16px", borderRadius: "9px", border: `1px solid ${color}50`, background: color + "12", color, fontSize: "13px", fontWeight: "600", cursor: "pointer" }}>
-                    <CalendarDays size={14} /> Add to Planner
-                  </button>
+              <p style={{ fontSize: "16px", fontWeight: "700", color: "var(--text)", margin: 0 }}>Ready to generate</p>
+              <p style={{ fontSize: "13px", color: "var(--dim)", margin: 0, maxWidth: "280px" }}>Fill in the form and choose what you want — script, hooks, caption or outline.</p>
+            </div>
+          )}
+
+          {loading && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 0", gap: "16px" }}>
+              <div style={{ width: "40px", height: "40px", borderRadius: "50%", border: `3px solid ${color}30`, borderTop: `3px solid ${color}`, animation: "spin 0.8s linear infinite" }} />
+              <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>AI is writing your content...</p>
+            </div>
+          )}
+
+          {result && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {/* Summary bar */}
+              {lastFields && (
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "4px" }}>
+                  {[lastFields.format, lastFields.niche, lastFields.goal, lastFields.tone].filter(Boolean).map(tag => (
+                    <span key={tag} style={{ padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "500", background: color + "15", color, border: `1px solid ${color}30` }}>{tag}</span>
+                  ))}
+                  {lastFields.topic && <span style={{ padding: "3px 10px", borderRadius: "20px", fontSize: "11px", background: "var(--border)", color: "var(--muted)" }}>"{lastFields.topic}"</span>}
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+              {resultEntries.map(([key, value]) => (
+                <ResultCard key={key} label={LABEL_MAP[key] || key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())} content={value} accentColor={color} />
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
       {showPlannerModal && <AddToPlannerModal result={result} color={color} onClose={() => setShowPlannerModal(false)} />}
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
 }
