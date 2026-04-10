@@ -490,3 +490,19 @@
   padding: 0 18px 14px;
   margin: 0;
 }
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 768px) {
+  .settings-content { margin-left: 0 !important; }
+  .settings-main { padding: 20px 16px 80px; max-width: 100%; }
+  .settings-stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .settings-platform-grid { grid-template-columns: 1fr; }
+  .settings-profile-row { flex-direction: column !important; gap: 16px; }
+  .settings-edit-grid { grid-template-columns: 1fr !important; }
+  .settings-pw-form { padding: 12px 0; }
+}
+
+@media (max-width: 480px) {
+  .settings-stats-grid { grid-template-columns: 1fr 1fr; }
+  .settings-stat-value { font-size: 18px; }
+}
