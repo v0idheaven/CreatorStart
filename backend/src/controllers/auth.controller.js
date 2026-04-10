@@ -88,15 +88,19 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     if (!incoming) throw new ApiError(401, "Unauthorized")
 
     const decoded = jwt.verify(incoming, process.env.REFRESH_TOKEN_SECRET)
-    const user = await User.findById(decoded._id)
-    if (!user || incoming !== user.refreshToken) throw new ApiError(401, "Refresh token expired or used")
+    const user = await User.findById(decoded._id).select("-password -refreshToken -googleAccessToken -googleRefreshToken")
+    if (!user) throw new ApiError(401, "User not found")
+
+    // Verify token matches
+    const dbUser = await User.findById(decoded._id)
+    if (incoming !== dbUser.refreshToken) throw new ApiError(401, "Refresh token expired or used")
 
     const { accessToken, refreshToken } = await generateTokens(user._id)
     return res
         .status(200)
         .cookie("accessToken", accessToken, cookieOptions)
         .cookie("refreshToken", refreshToken, cookieOptions)
-        .json(new ApiResponse(200, { accessToken, refreshToken }, "Token refreshed"))
+        .json(new ApiResponse(200, { accessToken, refreshToken, user }, "Token refreshed"))
 })
 
 const getCurrentUser = asyncHandler(async (req, res) => {
