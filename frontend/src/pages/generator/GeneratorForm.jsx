@@ -94,7 +94,6 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
     const user = JSON.parse(localStorage.getItem("user") || "{}")
     delete user.creatorProfile
     localStorage.setItem("user", JSON.stringify(user))
-    // Also clear from backend
     try {
       await apiFetch(API_ENDPOINTS.updateCreatorProfile, {
         method: "PATCH",
@@ -103,6 +102,8 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
     } catch { /* silent */ }
     setFormat(""); setNiche(""); setGoal(""); setTone(""); setTopic("")
   }
+
+  function handleSubmit() {
     onGenerate({
       format: resolve(format, "format"), niche: resolve(niche, "niche"),
       goal: resolve(goal, "goal"), tone: resolve(tone, "tone"),
