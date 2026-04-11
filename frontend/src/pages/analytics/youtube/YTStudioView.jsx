@@ -8,34 +8,91 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   const daily = ytAnalytics?.daily || []
   const ov = ytAnalytics?.overview || {}
 
+  const toISTDayKey = (dateInput) => {
+    const d = new Date(dateInput)
+    if (Number.isNaN(d.getTime())) return ""
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(d)
+  }
+
+  const addOneDayKey = (dayKey) => {
+    const d = new Date(`${dayKey}T00:00:00Z`)
+    if (Number.isNaN(d.getTime())) return ""
+    d.setUTCDate(d.getUTCDate() + 1)
+    return d.toISOString().slice(0, 10)
+  }
+
   // Views: include recent unprocessed video views so total matches Studio summary better.
   const analyticsViews = Number(ov.views || 0)
   const now = new Date()
   const recentCutoff = new Date(now)
   recentCutoff.setDate(recentCutoff.getDate() - 3)
+  const recentCutoffKey = toISTDayKey(recentCutoff)
+
+  const recentVideos = (ytVideos || []).filter(v => {
+    if (!v?.publishedAt) return false
+    const dayKey = toISTDayKey(v.publishedAt)
+    return dayKey && dayKey >= recentCutoffKey
+  })
+
   const recentVideoViews = (ytVideos || []).reduce((sum, v) => {
     if (!v?.publishedAt) return sum
-    const published = new Date(v.publishedAt)
-    if (Number.isNaN(published.getTime()) || published < recentCutoff) return sum
+    const dayKey = toISTDayKey(v.publishedAt)
+    if (!dayKey || dayKey < recentCutoffKey) return sum
     return sum + Number(v.views || 0)
   }, 0)
   const recentDailyViews = daily.reduce((sum, d) => {
-    if (!d?.day) return sum
-    const dayDate = new Date(`${d.day}T00:00:00`)
-    if (Number.isNaN(dayDate.getTime()) || dayDate < recentCutoff) return sum
+    if (!d?.day || d.day < recentCutoffKey) return sum
     return sum + Number(d.views || 0)
   }, 0)
   const pendingRecentViews = Math.max(0, recentVideoViews - recentDailyViews)
   const displayViews = analyticsViews + pendingRecentViews
 
+  // Build estimated pending distribution: publish day gets a small part, next day gets the rest.
+  const pendingByDay = {}
+  let totalWeight = 0
+  recentVideos.forEach(v => {
+    const views = Math.max(0, Number(v.views || 0))
+    if (!views) return
+    const day1 = toISTDayKey(v.publishedAt)
+    const day2 = addOneDayKey(day1)
+    const w1 = Math.min(1, views)
+    const w2 = Math.max(0, views - w1)
+    if (day1) {
+      pendingByDay[day1] = (pendingByDay[day1] || 0) + w1
+      totalWeight += w1
+    }
+    if (day2 && w2 > 0) {
+      pendingByDay[day2] = (pendingByDay[day2] || 0) + w2
+      totalWeight += w2
+    }
+  })
+
+  const pendingAlloc = {}
+  if (pendingRecentViews > 0 && totalWeight > 0) {
+    let used = 0
+    const keys = Object.keys(pendingByDay)
+    keys.forEach((k, idx) => {
+      const raw = (pendingRecentViews * pendingByDay[k]) / totalWeight
+      const val = idx === keys.length - 1 ? (pendingRecentViews - used) : Math.floor(raw)
+      pendingAlloc[k] = Math.max(0, val)
+      used += Math.max(0, val)
+    })
+  }
+
+  const graphDaily = daily.map(d => ({
+    ...d,
+    views: Number(d.views || 0) + Number(pendingAlloc[d.day] || 0),
+  }))
+
   const W = 800, H = 140, PADX = 40, PADY = 16
   const graphMetric = ytTab === "audience" ? "estimatedMinutesWatched" : "views"
-  const maxV = Math.max(...daily.map(d => Number(d[graphMetric] || 0)), 1)
+  const plottedDaily = ytTab === "overview" ? graphDaily : daily
+  const maxV = Math.max(...plottedDaily.map(d => Number(d[graphMetric] || 0)), 1)
 
-  const coords = daily.map((p, i) => {
+  const coords = plottedDaily.map((p, i) => {
     const v = Number(p[graphMetric] || 0)
     return {
-      x: PADX + i * ((W - PADX * 2) / Math.max(daily.length - 1, 1)),
+      x: PADX + i * ((W - PADX * 2) / Math.max(plottedDaily.length - 1, 1)),
       y: PADY + (1 - v / maxV) * (H - PADY * 2),
       v,
       day: p.day
@@ -111,13 +168,13 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
         </div>
 
         <div className="yt-graph-wrap">
-          {daily.length === 0 ? (
+          {plottedDaily.length === 0 ? (
             <div className="yt-graph-empty">
               <p className="yt-graph-empty-text">No daily data for this period yet.</p>
             </div>
           ) : (
             <div className="yt-graph-inner">
-              {daily.filter(d => Number(d.views || 0) > 0).length === 0 && (
+              {plottedDaily.filter(d => Number(d.views || 0) > 0).length === 0 && (
                 <div style={{ fontSize: "11px", color: "var(--dim)", padding: "8px 0", textAlign: "center" }}>
                   📊 Daily data lags 2-3 days (YouTube updates with a delay)
                 </div>
