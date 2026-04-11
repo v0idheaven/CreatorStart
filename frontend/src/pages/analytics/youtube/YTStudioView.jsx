@@ -99,6 +99,11 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
             </div>
           ) : (
             <div className="yt-graph-inner">
+              {daily.filter(d => d.views > 0).length === 0 && (
+                <div style={{ fontSize: "11px", color: "var(--dim)", padding: "8px 0", textAlign: "center" }}>
+                  📊 Daily data lags 2-3 days (YouTube updates with a delay)
+                </div>
+              )}
               <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="yt-svg"
                 onMouseMove={e => {
                   const rect = e.currentTarget.getBoundingClientRect()

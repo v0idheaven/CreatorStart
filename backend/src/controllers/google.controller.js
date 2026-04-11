@@ -256,8 +256,14 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
 
     const youtubeAnalytics = google.youtubeAnalytics({ version: "v2", auth: oauth2Client })
     const days = parseInt(req.query.days) || 28
-    const endDate = new Date().toISOString().split("T")[0]
-    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+    
+    // Use IST for date calculations to match server timezone
+    const istNow = new Date(new Date().getTime() + 5.5 * 60 * 60 * 1000)
+    const todayIST = istNow.toISOString().split("T")[0]
+    const startDateObj = new Date(istNow)
+    startDateObj.setDate(startDateObj.getDate() - days)
+    const startDate = startDateObj.toISOString().split("T")[0]
+    const endDate = todayIST
 
     try {
         const [overviewRes, dailyRes] = await Promise.all([
@@ -265,7 +271,7 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
                 ids: "channel==MINE",
                 startDate,
                 endDate,
-                metrics: "views,estimatedMinutesWatched,averageViewDuration,subscribersGained,subscribersLost,likes,comments,shares",
+                metrics: "views,estimatedMinutesWatched,averageViewDuration,subscribersGained,subscribersLost,likes,comments,shares,impressions,ctr",
             }),
             youtubeAnalytics.reports.query({
                 ids: "channel==MINE",
@@ -290,20 +296,20 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
         })
 
         // Fill all days from startDate to today (IST) with 0 if API didn't return data for that day
-        // This ensures graph always extends to today even though YT Analytics lags 2-3 days
-        const istNow = new Date(new Date().getTime() + 5.5 * 60 * 60 * 1000)
-        const todayIST = istNow.toISOString().split("T")[0]
+        // YouTube Analytics API has 2-3 day reporting lag, so recent days will show 0 but overview has the total
         const dailyMap = {}
         dailyRaw.forEach(d => { dailyMap[d.day] = d })
 
         const daily = []
         const cursor = new Date(startDate + "T00:00:00Z")
-        const end = new Date(todayIST + "T00:00:00Z")
+        const end = new Date(endDate + "T00:00:00Z")
         while (cursor <= end) {
             const key = cursor.toISOString().split("T")[0]
             daily.push(dailyMap[key] || { day: key, views: 0, estimatedMinutesWatched: 0 })
             cursor.setUTCDate(cursor.getUTCDate() + 1)
         }
+
+        console.log(`[YT Analytics] Period: ${startDate} to ${endDate}, Overview Views: ${overview.views}, Daily entries: ${daily.length}, Non-zero days: ${daily.filter(d => d.views > 0).length}`)
 
         return res.status(200).json(new ApiResponse(200, { overview, daily }, "Analytics fetched"))
     } catch (e) {
