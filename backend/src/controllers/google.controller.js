@@ -291,8 +291,9 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
 
         return res.status(200).json(new ApiResponse(200, { overview, daily }, "Analytics fetched"))
     } catch (e) {
-        const msg = String(e?.message || "").replace(/<[^>]*>/g, "").trim()
-        if (msg.toLowerCase().includes("quota")) {
+        const msg = String(e?.message || e?.errors?.[0]?.message || "").replace(/<[^>]*>/g, "").trim()
+        const statusCode = e?.code || e?.status || 0
+        if (msg.toLowerCase().includes("quota") || statusCode === 403 || msg.toLowerCase().includes("forbidden") || msg.toLowerCase().includes("exceeded")) {
             throw new ApiError(429, "YouTube API quota exceeded for today. Try again after midnight Pacific Time.")
         }
         // For other analytics errors (e.g. new channel with no data), return empty gracefully

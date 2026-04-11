@@ -94,7 +94,14 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
         <div className="yt-graph-wrap">
           {graphDaily.length === 0 ? (
             <div className="yt-graph-empty">
-              <p className="yt-graph-empty-text">Daily breakdown available after YouTube Analytics quota resets (midnight PT)</p>
+              <p className="yt-graph-empty-text">
+                {ytError && ytError.toLowerCase().includes("quota")
+                  ? "YouTube Analytics quota exceeded — graph will be available after midnight Pacific Time."
+                  : ytError
+                  ? `Graph unavailable: ${ytError}`
+                  : "No daily data available for this period yet."
+                }
+              </p>
             </div>          ) : (
             <div className="yt-graph-inner">
               <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="yt-svg"
