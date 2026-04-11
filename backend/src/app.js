@@ -32,27 +32,22 @@ app.use(cookieParser())
 
 // Rate limiting
 const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 min
-    max: 100, // generous for normal usage (login, profile updates, etc)
+    windowMs: 15 * 60 * 1000,
+    max: 200,
     message: { success: false, message: "Too many requests, please try again later." },
     standardHeaders: true, legacyHeaders: false,
-    skip: (req) => {
-        // Don't rate limit profile/settings updates — only login/register
-        const sensitiveRoutes = ["/login", "/register"]
-        return !sensitiveRoutes.some(r => req.path.includes(r))
-    }
 })
 
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 10, // strict only for login/register
+    max: 10,
     message: { success: false, message: "Too many login attempts, please try again later." },
     standardHeaders: true, legacyHeaders: false,
 })
 
 const aiLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 min
-    max: 15, // slightly more generous
+    windowMs: 60 * 1000,
+    max: 15,
     message: { success: false, message: "Too many AI requests, please slow down." },
     standardHeaders: true, legacyHeaders: false,
 })
