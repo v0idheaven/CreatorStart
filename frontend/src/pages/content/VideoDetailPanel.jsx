@@ -75,7 +75,7 @@ export default function VideoDetailPanel({ video, onClose }) {
 
           {/* Main stats grid */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-            <StatCard icon={Eye} label="Views" value={fmt(video.views)} color="#2d8fa3" sub="total views" />
+            <StatCard icon={Eye} label="Views" value={fmt(video.views)} color="#818cf8" sub="total views" />
             <StatCard icon={ThumbsUp} label="Likes" value={fmt(video.likes)} color="#4ade80" sub={`${likeRate}% like rate`} />
             <StatCard icon={MessageCircle} label="Comments" value={fmt(video.comments)} color="#f59e0b" sub="total comments" />
             <StatCard icon={Share2} label="Shares" value={fmt(video.shares)} color="#06b6d4" sub="total shares" />
@@ -86,7 +86,7 @@ export default function VideoDetailPanel({ video, onClose }) {
             <p style={{ fontSize: "12px", fontWeight: "600", color: "var(--muted)", margin: "0 0 14px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Performance</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
               {[
-                { icon: TrendingUp, label: "Impressions", value: fmt(video.impressions), color: "#2d8fa3" },
+                { icon: TrendingUp, label: "Impressions", value: fmt(video.impressions), color: "#818cf8" },
                 { icon: MousePointerClick, label: "CTR", value: `${video.ctr}%`, color: "#f59e0b" },
                 { icon: Clock, label: "Avg Duration", value: video.avgViewDuration, color: "#4ade80" },
               ].map(({ icon: Icon, label, value, color }) => (

@@ -7,7 +7,7 @@ export default function CTASection({ scrollTo }) {
       <div className="landing-cta-box">
         <h2 className="landing-cta-title">
           <span style={{ display: "block" }}>Ready to start creating?</span>
-          <span style={{ display: "block", color: "#2d8fa3" }}>Join CreatorStart today.</span>
+          <span style={{ display: "block", color: "#818cf8" }}>Join CreatorStart today.</span>
         </h2>
         <p className="landing-cta-sub">Free to join. AI-powered from day one.</p>
         <div className="landing-cta-actions">

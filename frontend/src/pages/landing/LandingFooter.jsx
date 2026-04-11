@@ -21,12 +21,12 @@ export default function LandingFooter({ scrollTo }) {
           <p className="landing-footer-copy" style={{ margin: 0 }}>© 2026 CreatorStart. All rights reserved.</p>
           <div style={{ display: "flex", gap: "20px" }}>
             <a href="/privacy" style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", textDecoration: "none", transition: "color 0.15s" }}
-              onMouseEnter={e => e.target.style.color = "#2d8fa3"}
+              onMouseEnter={e => e.target.style.color = "#818cf8"}
               onMouseLeave={e => e.target.style.color = "rgba(255,255,255,0.35)"}>
               Privacy Policy
             </a>
             <a href="/terms" style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", textDecoration: "none", transition: "color 0.15s" }}
-              onMouseEnter={e => e.target.style.color = "#2d8fa3"}
+              onMouseEnter={e => e.target.style.color = "#818cf8"}
               onMouseLeave={e => e.target.style.color = "rgba(255,255,255,0.35)"}>
               Terms of Service
             </a>

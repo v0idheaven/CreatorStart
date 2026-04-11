@@ -51,7 +51,7 @@ export default function PlatformSelect() {
 
         <div className="platform-card-both"
           onClick={() => setSelected("both")}
-          style={{ border: `2px solid ${selected === "both" ? "#2d8fa3" : "var(--border2)"}`, background: selected === "both" ? "#2d8fa312" : "var(--bg)" }}>
+          style={{ border: `2px solid ${selected === "both" ? "#818cf8" : "var(--border2)"}`, background: selected === "both" ? "#818cf812" : "var(--bg)" }}>
           <LayoutGrid size={20} color={selected === "both" ? "var(--accent)" : "var(--muted)"} strokeWidth={1.8} />
           <div>
             <p className="platform-card-label" style={{ color: selected === "both" ? "var(--text)" : "var(--muted)", margin: "0 0 2px" }}>Both platforms</p>

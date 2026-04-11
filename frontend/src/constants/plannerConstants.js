@@ -1,9 +1,9 @@
-export const COLORS = { youtube: "#ff4444", instagram: "#c13584", both: "#2d8fa3" }
+export const COLORS = { youtube: "#ff4444", instagram: "#c13584", both: "#818cf8" }
 
 export const PC = {
   youtube: { color: "#ff4444", bg: "#ff444418", label: "YT" },
   instagram: { color: "#c13584", bg: "#c1358418", label: "IG" },
-  both: { color: "#2d8fa3", bg: "#2d8fa318", label: "Both" },
+  both: { color: "#818cf8", bg: "#818cf818", label: "Both" },
 }
 
 // Content types per platform with colors
@@ -15,7 +15,7 @@ export const CONTENT_TYPES = {
   ],
   instagram: [
     { id: "reel", label: "Reel", color: "#c13584", bg: "#c1358418" },
-    { id: "post", label: "Post", color: "#2d8fa3", bg: "#2d8fa318" },
+    { id: "post", label: "Post", color: "#818cf8", bg: "#818cf818" },
     { id: "carousel", label: "Carousel", color: "#4ade80", bg: "#4ade8018" },
     { id: "story", label: "Story", color: "#f97316", bg: "#f9731618" },
   ],
@@ -23,7 +23,7 @@ export const CONTENT_TYPES = {
     { id: "video", label: "Video", color: "#ff4444", bg: "#ff444418" },
     { id: "short", label: "Short", color: "#06b6d4", bg: "#06b6d418" },
     { id: "reel", label: "Reel", color: "#c13584", bg: "#c1358418" },
-    { id: "post", label: "Post", color: "#2d8fa3", bg: "#2d8fa318" },
+    { id: "post", label: "Post", color: "#818cf8", bg: "#818cf818" },
     { id: "carousel", label: "Carousel", color: "#4ade80", bg: "#4ade8018" },
   ],
 }
@@ -71,5 +71,5 @@ export const STEP_TITLES = [
 export const FOCUS_OPTIONS = [
   { id: "youtube", label: "More YouTube", desc: "70% YouTube content, 30% Instagram", color: "#ff4444" },
   { id: "instagram", label: "More Instagram", desc: "70% Instagram content, 30% YouTube", color: "#c13584" },
-  { id: "both", label: "Equal split", desc: "Balanced content across both platforms", color: "#2d8fa3" },
+  { id: "both", label: "Equal split", desc: "Balanced content across both platforms", color: "#818cf8" },
 ]

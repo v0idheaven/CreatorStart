@@ -14,7 +14,7 @@ const navItems = [
 const PLATFORM_CONFIG = {
   youtube: { color: "#ff4444", bg: "#ff444418" },
   instagram: { color: "#c13584", bg: "#c1358418" },
-  both: { color: "#2d8fa3", bg: "#2d8fa318" },
+  both: { color: "#818cf8", bg: "#818cf818" },
 }
 
 function useIsMobile() {

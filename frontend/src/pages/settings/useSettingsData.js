@@ -119,7 +119,7 @@ export default function useSettingsData() {
   function updateAvatar(url) { setAvatar(url); syncLocal({ avatar: url }) }
 
   return {
-    platform, accent: { youtube: "#ff4444", instagram: "#c13584", both: "#2d8fa3" }[platform] || "#2d8fa3",
+    platform, accent: { youtube: "#ff4444", instagram: "#c13584", both: "#818cf8" }[platform] || "#818cf8",
     name, setName, email, setEmail, username, setUsername, niche, setNiche, bio, setBio,
     avatar, updateAvatar, selectedPlatform,
     profileSaving, profileSaved, profileError, setProfileError,

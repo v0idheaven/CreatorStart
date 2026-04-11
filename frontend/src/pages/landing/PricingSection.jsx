@@ -13,7 +13,7 @@ export default function PricingSection() {
       <div className="landing-pricing-grid">
         {plans.map(([name, price, desc, cta, featured]) => (
           <article key={name} className="landing-pricing-card"
-            style={{ border: `1px solid ${featured ? "#2d8fa3" : "rgba(255,255,255,0.08)"}`, background: featured ? "linear-gradient(180deg, rgba(45,143,163,0.12), rgba(255,255,255,0.02))" : "#121212" }}>
+            style={{ border: `1px solid ${featured ? "#818cf8" : "rgba(255,255,255,0.08)"}`, background: featured ? "linear-gradient(180deg, rgba(45,143,163,0.12), rgba(255,255,255,0.02))" : "#121212" }}>
             <p className="landing-pricing-name">{name}</p>
             <strong className="landing-pricing-price">{price}</strong>
             <p className="landing-pricing-desc">{desc}</p>
