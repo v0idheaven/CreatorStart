@@ -1,7 +1,7 @@
 import { getMergedYoutubeViews } from "../../../utils/youtubeStats"
 
 // 4 top stat cards — videos, views, posted today, etc.
-export default function MetricTiles({ ov, ytVideos, ytStats, ytAnalytics, accent }) {
+export default function MetricTiles({ ov, ytVideos, ytStats, ytAnalytics }) {
   const thisMonthVideos = ytVideos.filter(v => {
     if (!v.publishedAt) return false
     const d = new Date(v.publishedAt)

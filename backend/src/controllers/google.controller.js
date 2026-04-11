@@ -3,6 +3,7 @@ import { User } from "../models/user.model.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import ApiError from "../utils/ApiError.js"
+import crypto from "crypto"
 
 const BACKEND_URL = process.env.BACKEND_URL || "https://creator-start-backend.onrender.com"
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://creator-start.vercel.app"
@@ -57,7 +58,7 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
             fullName: name,
             email,
             username,
-            password: Math.random().toString(36).slice(-12) + "Aa1!",
+            password: crypto.randomBytes(32).toString("hex"),
             avatar: picture,
             googleId,
             googleAccessToken: tokens.access_token,
@@ -109,7 +110,7 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
     res
         .cookie("accessToken", accessToken, cookieOptions)
         .cookie("refreshToken", refreshToken, cookieOptions)
-        .redirect(`${FRONTEND_URL}/auth/callback?token=${accessToken}&user=${encodeURIComponent(JSON.stringify(safeUser))}`)
+        .redirect(`${FRONTEND_URL}/auth/callback?token=${accessToken}`)
 })
 
 const refreshYoutubeStats = asyncHandler(async (req, res) => {

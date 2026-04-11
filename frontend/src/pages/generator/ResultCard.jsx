@@ -1,12 +1,6 @@
 import { useState } from "react"
 import { Copy, Check, ChevronDown, ChevronUp } from "lucide-react"
 
-const LABEL_ICONS = {
-  title: "🎯", hook: "⚡", script: "📝", outline: "📋",
-  description: "📄", tags: "🏷️", caption: "✍️", hashtags: "#",
-  cta: "👆", points: "•", tip: "💡", angle: "🔍", reelIdea: "🎬",
-}
-
 function CopyBtn({ text }) {
   const [copied, setCopied] = useState(false)
   return (
@@ -20,15 +14,12 @@ function CopyBtn({ text }) {
 export default function ResultCard({ label, content, accentColor }) {
   const [collapsed, setCollapsed] = useState(false)
   const isLong = content.length > 300
-  const iconKey = label.toLowerCase().replace(/ /g, "")
-  const icon = LABEL_ICONS[iconKey] || "✦"
 
   return (
     <div className="result-card" style={{ overflow: "hidden" }}>
       <div className="result-card-header" onClick={() => isLong && setCollapsed(p => !p)}
         style={{ cursor: isLong ? "pointer" : "default", userSelect: "none" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-          <span style={{ fontSize: "14px" }}>{icon}</span>
           <span style={{ fontSize: "11px", fontWeight: "700", color: accentColor, textTransform: "uppercase", letterSpacing: "0.6px" }}>{label}</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>

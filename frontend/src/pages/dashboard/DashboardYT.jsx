@@ -15,20 +15,21 @@ export default function DashboardYT() {
   const { ytVideos, ytStats, ytConnected, loading, realStats } = useDashboardData()
 
   // Build last 7 days chart from real video publish dates
+  // Shows number of videos uploaded per day (not views — views per publish date is misleading)
   const viewData = (() => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     if (!ytConnected || ytVideos.length === 0) return days.map(day => ({ day, views: 0 }))
-    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const todayIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+    todayIST.setHours(0, 0, 0, 0)
     return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(today); d.setDate(today.getDate() - (6 - i))
-      const dayViews = ytVideos
-        .filter(v => {
-          if (!v.publishedAt) return false
-          const vd = new Date(v.publishedAt); vd.setHours(0, 0, 0, 0)
-          return vd.getTime() === d.getTime()
-        })
-        .reduce((s, v) => s + Number(v.views || 0), 0)
-      return { day: days[d.getDay() === 0 ? 6 : d.getDay() - 1], views: dayViews }
+      const d = new Date(todayIST); d.setDate(todayIST.getDate() - (6 - i))
+      const count = ytVideos.filter(v => {
+        if (!v.publishedAt) return false
+        const vd = new Date(new Date(v.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+        vd.setHours(0, 0, 0, 0)
+        return vd.getTime() === d.getTime()
+      }).length
+      return { day: days[d.getDay() === 0 ? 6 : d.getDay() - 1], views: count }
     })
   })()
 
@@ -65,7 +66,7 @@ export default function DashboardYT() {
               <div className="chart-header">
                 <div>
                   <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", margin: "0 0 3px" }}>Upload activity</p>
-                  <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Views per upload day (last 7 days)</p>
+                  <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Videos uploaded per day (last 7 days)</p>
                 </div>
                 <span className="chart-badge" style={{ color: YT, borderColor: "#ff444430", background: YTbg }}>YouTube</span>
               </div>

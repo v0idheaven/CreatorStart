@@ -1,8 +1,10 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { X, Check, CalendarDays } from "lucide-react"
 
 // Modal to pick a planner day and save the generated content to it
 export default function AddToPlannerModal({ result, color, onClose }) {
+  const navigate = useNavigate()
   const [plannerSaved, setPlannerSaved] = useState(false)
   const _plat = localStorage.getItem("platform") || "both"
   const saved = JSON.parse(localStorage.getItem(`planner_data_${_plat}`) || "null")
@@ -20,7 +22,7 @@ export default function AddToPlannerModal({ result, color, onClose }) {
         {!saved ? (
           <div style={{ textAlign: "center", padding: "16px 0" }}>
             <p style={{ fontSize: "13px", color: "var(--dim)", margin: "0 0 12px" }}>No planner found. Create a plan first.</p>
-            <button onClick={() => { onClose(); window.location.href = "/planner" }}
+            <button onClick={() => { onClose(); navigate("/planner") }}
               style={{ padding: "9px 18px", borderRadius: "9px", border: "none", background: color, color: "#fff", fontSize: "13px", fontWeight: "600", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}>
               <CalendarDays size={14} /> Go to Planner
             </button>

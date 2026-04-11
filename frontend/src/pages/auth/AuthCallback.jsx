@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
+import { API_ENDPOINTS } from "../../constants/api"
 
 export default function AuthCallback() {
   const navigate = useNavigate()
@@ -9,12 +10,20 @@ export default function AuthCallback() {
   useEffect(() => {
     const timeout = setTimeout(() => setTimedOut(true), 15000)
     const token = params.get("token")
-    const userRaw = params.get("user")
 
-    if (token && userRaw) {
+    async function handleCallback() {
+      if (!token) { clearTimeout(timeout); navigate("/auth", { replace: true }); return }
       try {
-        const user = JSON.parse(decodeURIComponent(userRaw))
         localStorage.setItem("accessToken", token)
+        // Fetch user data from backend instead of URL param (security)
+        const res = await fetch(API_ENDPOINTS.me, {
+          headers: { "Authorization": `Bearer ${token}` },
+          credentials: "include"
+        })
+        if (!res.ok) throw new Error("Failed to fetch user")
+        const data = await res.json()
+        const user = data?.data?.user
+        if (!user) throw new Error("No user data")
         localStorage.setItem("user", JSON.stringify(user))
         if (user.platform) localStorage.setItem("platform", user.platform)
         clearTimeout(timeout)
@@ -23,10 +32,9 @@ export default function AuthCallback() {
         clearTimeout(timeout)
         navigate("/auth", { replace: true })
       }
-    } else {
-      clearTimeout(timeout)
-      navigate("/auth", { replace: true })
     }
+
+    handleCallback()
     return () => clearTimeout(timeout)
   }, [navigate, params])
 

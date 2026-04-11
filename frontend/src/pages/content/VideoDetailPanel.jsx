@@ -1,4 +1,5 @@
-import { X, ExternalLink, Eye, ThumbsUp, MessageCircle, Share2, TrendingUp, Clock, MousePointerClick, Youtube } from "lucide-react"
+import { createElement } from "react"
+import { X, ExternalLink, Eye, ThumbsUp, MessageCircle, Clock, Youtube, Calendar, BarChart2, Percent } from "lucide-react"
 
 function fmt(n) {
   const num = Number(n || 0)
@@ -7,28 +8,22 @@ function fmt(n) {
   return num.toLocaleString()
 }
 
-function MiniChart({ data, color }) {
-  if (!data?.length) return null
-  const W = 400, H = 60, PAD = 4
-  const max = Math.max(...data, 1)
-  const step = (W - PAD * 2) / (data.length - 1)
-  const coords = data.map((v, i) => ({ x: PAD + i * step, y: PAD + (1 - v / max) * (H - PAD * 2) }))
-  const line = coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x} ${c.y}`).join(" ")
-  const area = `${line} L ${coords[coords.length - 1].x} ${H} L ${PAD} ${H} Z`
-  return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block" }}>
-      <path d={area} fill={color} opacity="0.1" />
-      <path d={line} stroke={color} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
+function fmtDuration(seconds) {
+  const s = Number(seconds || 0)
+  if (!s) return "—"
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
+  return `${m}:${String(sec).padStart(2, "0")}`
 }
 
-function StatCard({ icon: Icon, label, value, color, sub }) {
+function StatCard({ icon, label, value, color, sub }) {
   return (
     <div style={{ background: "var(--bg)", borderRadius: "10px", padding: "14px 16px", border: "1px solid var(--border)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "8px" }}>
         <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: color + "20", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Icon size={13} color={color} />
+          {createElement(icon, { size: 13, color })}
         </div>
         <span style={{ fontSize: "11px", color: "var(--dim)", fontWeight: "500" }}>{label}</span>
       </div>
@@ -42,7 +37,22 @@ export default function VideoDetailPanel({ video, onClose }) {
   if (!video) return null
   const accent = "#ff4444"
   const date = new Date(video.publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
-  const likeRate = video.views ? ((video.likes / video.views) * 100).toFixed(1) : 0
+  const likeRate = Number(video.views) > 0 ? ((Number(video.likes) / Number(video.views)) * 100).toFixed(1) : "0"
+  const commentRate = Number(video.views) > 0 ? ((Number(video.comments) / Number(video.views)) * 100).toFixed(2) : "0"
+  const engagementRate = Number(video.views) > 0
+    ? (((Number(video.likes) + Number(video.comments)) / Number(video.views)) * 100).toFixed(1)
+    : "0"
+  const duration = fmtDuration(video.duration)
+
+  // Days since published
+  const daysSince = video.publishedAt
+    ? Math.floor((Date.now() - new Date(video.publishedAt).getTime()) / 86400000)
+    : null
+
+  // Views per day since publish
+  const viewsPerDay = daysSince > 0
+    ? (Number(video.views) / daysSince).toFixed(1)
+    : Number(video.views)
 
   return (
     <>
@@ -58,7 +68,10 @@ export default function VideoDetailPanel({ video, onClose }) {
                 <span style={{ fontSize: "11px", color: accent, fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>YouTube · {video.type}</span>
               </div>
               <h2 style={{ fontSize: "15px", fontWeight: "700", color: "var(--text)", margin: 0, lineHeight: "1.4" }}>{video.title}</h2>
-              <p style={{ fontSize: "12px", color: "var(--dim)", margin: "6px 0 0" }}>Published {date} · {video.duration}</p>
+              <p style={{ fontSize: "12px", color: "var(--dim)", margin: "6px 0 0" }}>
+                Published {date} · {duration}
+                {daysSince !== null && <span> · {daysSince} days ago</span>}
+              </p>
             </div>
             <button onClick={onClose} style={{ background: "var(--border)", border: "none", borderRadius: "8px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
               <X size={15} color="var(--muted)" />
@@ -66,64 +79,41 @@ export default function VideoDetailPanel({ video, onClose }) {
           </div>
         </div>
 
-        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
 
           {/* Thumbnail */}
           <div style={{ borderRadius: "10px", overflow: "hidden", aspectRatio: "16/9", background: "var(--border)" }}>
             {video.thumbnail && <img src={video.thumbnail} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
           </div>
 
-          {/* Main stats grid */}
+          {/* Main stats */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
             <StatCard icon={Eye} label="Views" value={fmt(video.views)} color="#818cf8" sub="total views" />
             <StatCard icon={ThumbsUp} label="Likes" value={fmt(video.likes)} color="#4ade80" sub={`${likeRate}% like rate`} />
-            <StatCard icon={MessageCircle} label="Comments" value={fmt(video.comments)} color="#f59e0b" sub="total comments" />
-            <StatCard icon={Share2} label="Shares" value={fmt(video.shares)} color="#06b6d4" sub="total shares" />
+            <StatCard icon={MessageCircle} label="Comments" value={fmt(video.comments)} color="#f59e0b" sub={`${commentRate}% comment rate`} />
+            <StatCard icon={Clock} label="Duration" value={duration} color="#06b6d4" sub="video length" />
           </div>
 
-          {/* Performance stats */}
-          <div style={{ background: "var(--bg)", borderRadius: "12px", padding: "16px", border: "1px solid var(--border)" }}>
-            <p style={{ fontSize: "12px", fontWeight: "600", color: "var(--muted)", margin: "0 0 14px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Performance</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
-              {[
-                { icon: TrendingUp, label: "Impressions", value: fmt(video.impressions), color: "#818cf8" },
-                { icon: MousePointerClick, label: "CTR", value: `${video.ctr}%`, color: "#f59e0b" },
-                { icon: Clock, label: "Avg Duration", value: video.avgViewDuration, color: "#4ade80" },
-              ].map(({ icon: Icon, label, value, color }) => (
-                <div key={label} style={{ textAlign: "center" }}>
-                  <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: color + "20", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 8px" }}>
-                    <Icon size={14} color={color} />
-                  </div>
-                  <p style={{ fontSize: "16px", fontWeight: "800", color: "var(--text)", margin: "0 0 2px", letterSpacing: "-0.3px" }}>{value}</p>
-                  <p style={{ fontSize: "10px", color: "var(--dim)", margin: 0 }}>{label}</p>
+          {/* Performance metrics */}
+          <div style={{ background: "var(--bg)", borderRadius: "10px", border: "1px solid var(--border)", overflow: "hidden" }}>
+            <p style={{ fontSize: "11px", fontWeight: "600", color: "var(--dim)", textTransform: "uppercase", letterSpacing: "0.5px", padding: "12px 16px 8px", margin: 0 }}>Performance</p>
+            {[
+              { label: "Engagement rate", value: `${engagementRate}%`, sub: "likes + comments / views", icon: Percent, color: "#818cf8" },
+              { label: "Views per day", value: fmt(viewsPerDay), sub: `avg since publish`, icon: BarChart2, color: "#f59e0b" },
+              { label: "Published", value: date, sub: `${daysSince} days ago`, icon: Calendar, color: "#4ade80" },
+            ].map(({ label, value, sub, icon, color }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderTop: "1px solid var(--border)" }}>
+                <div style={{ width: "30px", height: "30px", borderRadius: "8px", background: color + "20", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {createElement(icon, { size: 13, color })}
                 </div>
-              ))}
-            </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: "12px", color: "var(--muted)", margin: "0 0 1px" }}>{label}</p>
+                  <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{sub}</p>
+                </div>
+                <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--text)" }}>{value}</span>
+              </div>
+            ))}
           </div>
-
-          {/* Daily views chart */}
-          <div style={{ background: "var(--bg)", borderRadius: "12px", padding: "16px", border: "1px solid var(--border)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-              <p style={{ fontSize: "12px", fontWeight: "600", color: "var(--muted)", margin: 0, textTransform: "uppercase", letterSpacing: "0.5px" }}>Daily Views</p>
-              <span style={{ fontSize: "11px", color: "var(--dim)" }}>Last 14 days</span>
-            </div>
-            <MiniChart data={video.dailyViews} color={accent} />
-          </div>
-
-          {/* Watch time */}
-          <div style={{ background: "var(--bg)", borderRadius: "12px", padding: "16px", border: "1px solid var(--border)" }}>
-            <p style={{ fontSize: "12px", fontWeight: "600", color: "var(--muted)", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Watch Time</p>
-            <p style={{ fontSize: "28px", fontWeight: "800", color: "var(--text)", margin: "0 0 4px", letterSpacing: "-1px" }}>{fmt(video.watchTime)} <span style={{ fontSize: "14px", fontWeight: "400", color: "var(--dim)" }}>hours</span></p>
-            <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0 }}>Total watch time across all views</p>
-          </div>
-
-          {/* Description */}
-          {video.description && (
-            <div style={{ background: "var(--bg)", borderRadius: "12px", padding: "16px", border: "1px solid var(--border)" }}>
-              <p style={{ fontSize: "12px", fontWeight: "600", color: "var(--muted)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Description</p>
-              <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0, lineHeight: "1.6" }}>{video.description}</p>
-            </div>
-          )}
 
           {/* View on YouTube */}
           <a href={video.url || "#"} target="_blank" rel="noreferrer"

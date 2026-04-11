@@ -113,15 +113,25 @@ const updateProfile = asyncHandler(async (req, res) => {
     const { fullName, username, email, niche, bio, goal, tone, platform } = req.body
 
     const updates = {}
-    if (fullName !== undefined) updates.fullName = fullName
-    if (username !== undefined) updates.username = username.toLowerCase()
-    if (email !== undefined) updates.email = email
+    if (fullName !== undefined) updates.fullName = fullName.trim()
     if (niche !== undefined) updates.niche = niche
     if (bio !== undefined) updates.bio = bio
     if (goal !== undefined) updates.goal = goal
     if (tone !== undefined) updates.tone = tone
     if (platform !== undefined && ["youtube", "instagram", "both"].includes(platform)) {
         updates.platform = platform
+    }
+
+    // Check for duplicate email/username (excluding current user)
+    if (username !== undefined) {
+        const existing = await User.findOne({ username: username.toLowerCase(), _id: { $ne: req.user._id } })
+        if (existing) throw new ApiError(400, "Username already taken")
+        updates.username = username.toLowerCase()
+    }
+    if (email !== undefined) {
+        const existing = await User.findOne({ email: email.toLowerCase(), _id: { $ne: req.user._id } })
+        if (existing) throw new ApiError(400, "Email already in use")
+        updates.email = email.toLowerCase()
     }
 
     const user = await User.findByIdAndUpdate(

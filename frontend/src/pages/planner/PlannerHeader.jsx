@@ -1,11 +1,7 @@
-import { COLORS, GOALS, TOPICS, FREQUENCIES } from "../../constants/plannerConstants"
-import { STORAGE_KEYS } from "../../constants/storageKeys"
+import { GOALS, TOPICS, FREQUENCIES } from "../../constants/plannerConstants"
 
 // Top header with title, month, plan info, and "New Plan" button
 export default function PlannerHeader({ planInfo, screen, onNewPlan }) {
-  const platform = localStorage.getItem(STORAGE_KEYS.PLATFORM) || "both"
-  const accent = COLORS[platform] || COLORS.both
-
   return (
     <div className="planner-header">
       <div>

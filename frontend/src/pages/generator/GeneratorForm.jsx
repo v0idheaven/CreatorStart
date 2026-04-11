@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Sparkles, ChevronDown, BookmarkCheck } from "lucide-react"
 import { NICHES, OUTPUT_TYPES } from "./generatorConfig"
 import { apiFetch } from "../../utils/api"
@@ -35,26 +35,15 @@ function Dropdown({ label, options, value, onChange, color, placeholder, hint })
 }
 
 export default function GeneratorForm({ formats, goals, tones, color, onGenerate, loading, error }) {
-  const [format, setFormat] = useState("")
-  const [niche, setNiche] = useState("")
-  const [goal, setGoal] = useState("")
-  const [tone, setTone] = useState("")
-  const [topic, setTopic] = useState("")
+  const profile = JSON.parse(localStorage.getItem("user") || "{}")?.creatorProfile || {}
+  const [format, setFormat] = useState(() => (profile.format && formats.includes(profile.format) ? profile.format : ""))
+  const [niche, setNiche] = useState(() => (profile.niche && NICHES.includes(profile.niche) ? profile.niche : ""))
+  const [goal, setGoal] = useState(() => (profile.goal && goals.includes(profile.goal) ? profile.goal : ""))
+  const [tone, setTone] = useState(() => (profile.tone && tones.includes(profile.tone) ? profile.tone : ""))
+  const [topic, setTopic] = useState(() => profile.topic || "")
   const [outputType, setOutputType] = useState("full_script")
   const [customValues, setCustomValues] = useState({})
   const [profileSaved, setProfileSaved] = useState(false)
-
-  // Auto-fill from saved creator profile on mount
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}")
-    const p = user.creatorProfile
-    if (!p) return
-    if (p.format && formats.includes(p.format)) setFormat(p.format)
-    if (p.niche && NICHES.includes(p.niche)) setNiche(p.niche)
-    if (p.goal && goals.includes(p.goal)) setGoal(p.goal)
-    if (p.tone && tones.includes(p.tone)) setTone(p.tone)
-    if (p.topic) setTopic(p.topic)
-  }, [])
 
   const setCustom = (key, val) => setCustomValues(p => ({ ...p, [key]: val }))
   const resolve = (val, key) => val === "Other" ? (customValues[key] || "") : val

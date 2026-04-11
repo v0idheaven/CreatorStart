@@ -6,16 +6,15 @@ import { getMergedYoutubeViews } from "../../utils/youtubeStats"
 // Fetches real YouTube data + computes streak from videos
 export default function useDashboardData() {
   const [storedUser] = useState(() => JSON.parse(localStorage.getItem("user") || "{}"))
-  const [ytVideos, setYtVideos] = useState([])
-  const [ytAnalytics, setYtAnalytics] = useState(null)
-  const [loading, setLoading] = useState(false)
-
   const ytStats = storedUser.youtubeStats || null
   const ytConnected = !!ytStats
 
+  const [ytVideos, setYtVideos] = useState([])
+  const [ytAnalytics, setYtAnalytics] = useState(null)
+  const [loading, setLoading] = useState(ytConnected)
+
   useEffect(() => {
     if (!ytConnected) return
-    setLoading(true)
     Promise.all([
       apiFetch(API_ENDPOINTS.youtubeVideos),
       apiFetch(`${API_ENDPOINTS.youtubeAnalytics}?days=28`),
@@ -30,7 +29,9 @@ export default function useDashboardData() {
           setYtAnalytics(analyticsData.data)
         }
       })
-      .catch(() => {})
+      .catch((err) => {
+        if (import.meta.env.DEV) console.error("Dashboard data fetch failed:", err)
+      })
       .finally(() => setLoading(false))
   }, [ytConnected])
 
@@ -40,7 +41,6 @@ export default function useDashboardData() {
     const todayIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
     todayIST.setHours(0, 0, 0, 0)
 
-    // Get unique publish dates (IST)
     const publishDates = new Set(
       ytVideos
         .filter(v => v.publishedAt)
@@ -52,7 +52,7 @@ export default function useDashboardData() {
     )
 
     let count = 0
-    let check = new Date(todayIST)
+    const check = new Date(todayIST)
     while (publishDates.has(check.getTime())) {
       count++
       check.setDate(check.getDate() - 1)
