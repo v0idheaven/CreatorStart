@@ -30,7 +30,7 @@ class ErrorBoundary extends Component {
               localStorage.removeItem("user")
               window.location.href = "/"
             }}
-              style={{ padding: "10px 20px", background: "#2d8fa3", border: "none", borderRadius: "8px", color: "#fff", cursor: "pointer" }}>
+              style={{ padding: "10px 20px", background: "#818cf8", border: "none", borderRadius: "8px", color: "#fff", cursor: "pointer" }}>
               Clear auth & reload
             </button>
           </div>

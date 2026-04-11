@@ -8,7 +8,7 @@ export default function PlannerSection() {
           <h2 className="landing-planner-title">
             <span style={{ display: "block" }}>Your content.</span>
             <span style={{ display: "block" }}>Your schedule.</span>
-            <span style={{ display: "block", color: "#2d8fa3" }}>Your streak.</span>
+            <span style={{ display: "block", color: "#818cf8" }}>Your streak.</span>
           </h2>
           <p className="landing-planner-sub">AI generates a full month of content ideas based on your goal, niche, and posting frequency. Edit any day, add multiple posts, track your streak like GitHub contributions.</p>
           <div className="landing-planner-points">
@@ -30,15 +30,15 @@ export default function PlannerSection() {
               const done = [0,2,4,6,8].includes(i)
               const planned = [10,12,14,16,18,20,22,24,26,28].includes(i)
               return (
-                <div key={i} style={{ aspectRatio: "1", borderRadius: "4px", background: done ? "#2d8fa3" : planned ? "rgba(45,143,163,0.3)" : "rgba(255,255,255,0.05)" }} />
+                <div key={i} style={{ aspectRatio: "1", borderRadius: "4px", background: done ? "#818cf8" : planned ? "rgba(45,143,163,0.3)" : "rgba(255,255,255,0.05)" }} />
               )
             })}
           </div>
           <div className="landing-planner-legend">
             <span style={{ display: "flex", alignItems: "center", gap: "5px" }}><span className="landing-planner-legend-dot" style={{ background: "rgba(255,255,255,0.08)" }} />Empty</span>
             <span style={{ display: "flex", alignItems: "center", gap: "5px" }}><span className="landing-planner-legend-dot" style={{ background: "rgba(45,143,163,0.35)" }} />Planned</span>
-            <span style={{ display: "flex", alignItems: "center", gap: "5px" }}><span className="landing-planner-legend-dot" style={{ background: "#2d8fa3" }} />Done</span>
-            <span style={{ marginLeft: "auto", color: "#2d8fa3", fontWeight: "600" }}>5 posted</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "5px" }}><span className="landing-planner-legend-dot" style={{ background: "#818cf8" }} />Done</span>
+            <span style={{ marginLeft: "auto", color: "#818cf8", fontWeight: "600" }}>5 posted</span>
           </div>
         </div>
       </div>

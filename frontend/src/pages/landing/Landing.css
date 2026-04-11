@@ -40,7 +40,7 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #2d8fa3, #1e6e80);
+  background: linear-gradient(135deg, #818cf8, #6366f1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -96,7 +96,7 @@
 .landing-btn-primary {
   padding: 8px 18px;
   border-radius: 20px;
-  background: #2d8fa3;
+  background: #818cf8;
   border: none;
   color: #fff;
   font-size: 13px;
@@ -131,7 +131,7 @@
   padding: 6px 14px;
   font-size: 13px;
   font-weight: 500;
-  color: #2d8fa3;
+  color: #818cf8;
   margin-bottom: 32px;
 }
 
@@ -139,7 +139,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #2d8fa3;
+  background: #818cf8;
 }
 
 .landing-hero-title {
@@ -156,7 +156,7 @@
 
 .landing-hero-title-accent {
   display: block;
-  color: #2d8fa3;
+  color: #818cf8;
 }
 
 .landing-hero-sub {
@@ -182,7 +182,7 @@
 }
 
 .landing-btn-lg-primary {
-  background: #2d8fa3;
+  background: #818cf8;
   border: none;
   color: #fff;
 }
@@ -241,7 +241,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.3em;
-  color: #2d8fa3;
+  color: #818cf8;
   margin-bottom: 16px;
 }
 
@@ -286,7 +286,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.25em;
-  color: #2d8fa3;
+  color: #818cf8;
   margin-bottom: 20px;
 }
 
@@ -347,7 +347,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #2d8fa3;
+  color: #818cf8;
   font-size: 14px;
   flex-shrink: 0;
 }

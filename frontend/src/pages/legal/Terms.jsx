@@ -58,7 +58,7 @@ export default function Terms() {
         ))}
 
         <div style={{ borderTop: "1px solid #222", paddingTop: "24px", marginTop: "40px" }}>
-          <p style={{ fontSize: "13px", color: "#555" }}>© 2026 CreatorStart · <span style={{ cursor: "pointer", color: "#2d8fa3" }} onClick={() => navigate("/privacy")}>Privacy Policy</span></p>
+          <p style={{ fontSize: "13px", color: "#555" }}>© 2026 CreatorStart · <span style={{ cursor: "pointer", color: "#818cf8" }} onClick={() => navigate("/privacy")}>Privacy Policy</span></p>
         </div>
       </div>
     </div>
