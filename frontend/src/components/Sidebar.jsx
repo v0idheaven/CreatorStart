@@ -12,9 +12,9 @@ const navItems = [
 ]
 
 const PLATFORM_CONFIG = {
-  youtube: { color: "#ff4444", bg: "#ff444418", logoColor: "#ff4444", label: "YouTube" },
-  instagram: { color: "#c13584", bg: "#c1358418", logoColor: "#c13584", label: "Instagram" },
-  both: { color: "#2d8fa3", bg: "#2d8fa318", logoColor: "#2d3a58", label: "CreatorStart" },
+  youtube: { color: "#ff4444", bg: "#ff444418" },
+  instagram: { color: "#c13584", bg: "#c1358418" },
+  both: { color: "#2d8fa3", bg: "#2d8fa318" },
 }
 
 function useIsMobile() {
@@ -35,7 +35,7 @@ export default function Sidebar() {
 
   const platform = localStorage.getItem("platform") || "both"
   const cfg = PLATFORM_CONFIG[platform] || PLATFORM_CONFIG.both
-  const { color, bg, logoColor, label } = cfg
+  const { color, bg } = cfg
 
   const [userState, setUserState] = useState(() => JSON.parse(localStorage.getItem("user") || "{}"))
   useEffect(() => {
@@ -74,14 +74,8 @@ export default function Sidebar() {
 
       <div className="sidebar-logo">
         <div className="sidebar-logo-icon" style={{ background: "transparent", padding: 0, border: "none", borderRadius: 0 }}>
-          <img src="/favicon.svg" alt="CreatorStart" style={{ width: "32px", height: "32px", display: "block", borderRadius: "8px" }} />
+          <img src="/logo.svg" alt="CreatorStart" style={{ width: isOpen ? "148px" : "32px", height: "32px", display: "block", objectFit: "contain" }} />
         </div>
-        <span className="sidebar-logo-text" style={{ opacity: isOpen ? 1 : 0 }}>
-          {platform === "both"
-            ? <>Creator<span style={{ color: logoColor }}>Start</span></>
-            : <span style={{ color: logoColor }}>{label}</span>
-          }
-        </span>
       </div>
 
       <nav className="sidebar-nav">

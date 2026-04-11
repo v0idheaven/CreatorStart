@@ -16,8 +16,7 @@ export default function AuthAside({ isLogin }) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
             Back
           </button>
-          <img src="/favicon.svg" alt="CreatorStart" style={{ width: "36px", height: "36px", borderRadius: "9px" }} />
-          <span className="auth-logo-text">Creator<span className="auth-logo-accent">Start</span></span>
+          <img src="/logo.svg" alt="CreatorStart" style={{ width: "170px", height: "36px", objectFit: "contain" }} />
         </div>
 
         <div className="auth-badge">{isLogin ? "Welcome back" : "Get started"}</div>

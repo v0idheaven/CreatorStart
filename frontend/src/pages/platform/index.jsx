@@ -24,7 +24,7 @@ export default function PlatformSelect() {
   return (
     <div className="platform-select-page">
       <div className="platform-select-logo">
-        Creator<span style={{ color: "var(--brand-logo-color)" }}>Start</span>
+        <img src="/logo.svg" alt="CreatorStart" style={{ width: "220px", height: "44px", objectFit: "contain" }} />
       </div>
 
       <div className="card platform-select-card">
