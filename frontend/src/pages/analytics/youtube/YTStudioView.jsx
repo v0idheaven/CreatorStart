@@ -74,10 +74,10 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
             <button key={t} onClick={() => setYtTab(t)} className={`yt-tab${ytTab === t ? " yt-tab--active" : ""}`}>{t}</button>
           ))}
           <div className="yt-tab-period">
-            {[7, 28, 90].map(d => (
+            {[7, 28, 90, 365].map(d => (
               <button key={d} onClick={() => onChangeDays(d)}
                 style={{ padding: "3px 10px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "11px", fontWeight: days === d ? "600" : "400", background: days === d ? "#ff444420" : "transparent", color: days === d ? "#ff4444" : "var(--dim)", transition: "all 0.15s" }}>
-                {d}d
+                {d === 365 ? "1y" : `${d}d`}
               </button>
             ))}
           </div>
