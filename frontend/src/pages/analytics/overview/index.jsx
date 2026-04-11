@@ -4,7 +4,7 @@ import WeeklyChart from "./WeeklyChart"
 import ContentTable from "./ContentTable"
 
 // Overview tab — composes all overview sub-components
-export default function OverviewTab({ ov, ytVideos, ytStats, ytAnalytics, accent, loadingVideos, ytError, fetchYTVideos, fmt }) {
+export default function OverviewTab({ ov, ytVideos, ytStats, ytAnalytics, accent }) {
   return (
     <div>
       <MetricTiles ov={ov} ytVideos={ytVideos} ytStats={ytStats} ytAnalytics={ytAnalytics} accent={accent} />
