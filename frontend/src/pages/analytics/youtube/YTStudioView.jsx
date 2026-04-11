@@ -12,6 +12,19 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   // The graph shows period breakdown with the API's daily data
   const displayViews = Number(ytStats?.views || 0)
 
+  // Calculate pending analytics: views from videos minus what analytics has processed
+  const videosFromRecentDays = ytVideos.filter(v => {
+    if (!v.publishedAt) return false
+    const vDay = new Date(v.publishedAt).toISOString().split("T")[0]
+    const today = new Date().toISOString().split("T")[0]
+    // Get videos from last 3 days (accounting for API lag)
+    const daysAgo = Math.floor((new Date(today) - new Date(vDay)) / 86400000)
+    return daysAgo <= 3
+  })
+  const videoViewsRecent = videosFromRecentDays.reduce((sum, v) => sum + Number(v.views || 0), 0)
+  const analyticsViewsRecent = daily.slice(-3).reduce((sum, d) => sum + Number(d.views || 0), 0)
+  const pendingViews = Math.max(0, videoViewsRecent - analyticsViewsRecent)
+
   const W = 800, H = 140, PADX = 40, PADY = 16
   const graphMetric = ytTab === "audience" ? "estimatedMinutesWatched" : "views"
   const maxV = Math.max(...daily.map(d => Number(d[graphMetric] || 0)), 1)
@@ -90,6 +103,12 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
           ))}
         </div>
 
+        {pendingViews > 0 && (
+          <div style={{ padding: "8px 20px", fontSize: "12px", color: "#ff4444", borderTop: "1px solid var(--border)", marginTop: "12px" }}>
+            ⏳ +{fmt(pendingViews)} views pending (processing by YouTube)
+          </div>
+        )}
+
         <div className="yt-graph-wrap">
           {daily.length === 0 ? (
             <div className="yt-graph-empty">
@@ -100,6 +119,11 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
               {daily.filter(d => d.views > 0).length === 0 && (
                 <div style={{ fontSize: "11px", color: "var(--dim)", padding: "8px 0", textAlign: "center" }}>
                   📊 Daily data lags 2-3 days (YouTube updates with a delay)
+                </div>
+              )}
+              {pendingViews > 0 && (
+                <div style={{ fontSize: "11px", color: "#ff4444", padding: "8px 0", textAlign: "center", fontWeight: "500" }}>
+                  ⏳ {fmt(pendingViews)} views pending from recent days (YouTube still processing)
                 </div>
               )}
               <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="yt-svg"
