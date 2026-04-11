@@ -256,14 +256,11 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
 
     const youtubeAnalytics = google.youtubeAnalytics({ version: "v2", auth: oauth2Client })
     const days = parseInt(req.query.days) || 28
-    
-    // Get today's date in IST (YYYY-MM-DD format)
+
+    // YouTube Analytics API uses UTC dates — keep everything in UTC
     const now = new Date()
-    const istDate = new Date(now.getTime() + 5.5 * 60 * 60 * 1000)
-    const endDate = istDate.toISOString().slice(0, 10)
-    
-    // Calculate start date by subtracting days from today (in IST)
-    const startDateObj = new Date(now.getTime() + 5.5 * 60 * 60 * 1000)
+    const endDate = now.toISOString().slice(0, 10)
+    const startDateObj = new Date(now)
     startDateObj.setUTCDate(startDateObj.getUTCDate() - days)
     const startDate = startDateObj.toISOString().slice(0, 10)
 
@@ -297,8 +294,7 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
             return obj
         })
 
-        // Fill all days from startDate to today (IST) with 0 if API didn't return data for that day
-        // YouTube Analytics API has 2-3 day reporting lag, so recent days will show 0 but overview has the total
+        // Fill all days from startDate to today with 0 for days YT API hasn't reported yet (2-3 day lag)
         const dailyMap = {}
         dailyRaw.forEach(d => { dailyMap[d.day] = d })
 
