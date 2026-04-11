@@ -12,11 +12,41 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   // Use video-level total views when analytics API returns 0
   const videoTotalViews = (ytVideos || []).reduce((s, v) => s + Number(v.views || 0), 0)
   const channelViews = Number(ytStats?.views || 0)
-  // Use analytics total if available (most accurate), else video sum, else channel stats
   const analyticsTotal = daily.length > 0 ? daily.reduce((s, d) => s + Number(d.views || 0), 0) : 0
   const displayViews = analyticsTotal > 0 ? analyticsTotal : videoTotalViews > 0 ? videoTotalViews : channelViews
-  // Graph only from Analytics API — video-level fallback is misleading (assigns all views to publish date)
-  const graphDaily = daily
+
+  // Build fallback graph from videos when Analytics API has no daily data
+  // Group videos by publish date (IST), sum views per day
+  function buildVideoFallbackGraph(videos, numDays) {
+    if (!videos || videos.length === 0) return []
+    const now = new Date()
+    const cutoff = new Date(now.getTime() - numDays * 24 * 60 * 60 * 1000)
+    // Build a map of date -> views from videos published in range
+    const map = {}
+    videos.forEach(v => {
+      if (!v.publishedAt) return
+      const d = new Date(v.publishedAt)
+      if (d < cutoff) return
+      // Convert to IST date string
+      const istDate = new Date(d.getTime() + (5.5 * 60 * 60 * 1000))
+      const key = istDate.toISOString().split("T")[0]
+      map[key] = (map[key] || 0) + Number(v.views || 0)
+    })
+    if (Object.keys(map).length === 0) return []
+    // Fill all days in range with 0 if no video, or views if video published
+    const result = []
+    for (let i = numDays - 1; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
+      const istDate = new Date(d.getTime() + (5.5 * 60 * 60 * 1000))
+      const key = istDate.toISOString().split("T")[0]
+      result.push({ day: key, views: map[key] || 0 })
+    }
+    return result
+  }
+
+  const fallbackGraph = daily.length === 0 ? buildVideoFallbackGraph(ytVideos, days) : []
+  const graphDaily = daily.length > 0 ? daily : fallbackGraph
+  const usingFallback = daily.length === 0 && fallbackGraph.length > 0
 
   const W = 800, H = 140, PADX = 40, PADY = 16
   // For audience tab with no analytics data, fall back to views (watch time not available)
@@ -96,14 +126,17 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
             <div className="yt-graph-empty">
               <p className="yt-graph-empty-text">
                 {ytError && ytError.toLowerCase().includes("quota")
-                  ? "YouTube Analytics quota exceeded — graph will be available after midnight Pacific Time."
-                  : ytError
-                  ? `Graph unavailable: ${ytError}`
-                  : "No daily data available for this period yet."
-                }
+                  ? "YouTube Analytics quota exceeded — resets at midnight Pacific Time."
+                  : "No video data available for this period."}
               </p>
-            </div>          ) : (
+            </div>
+          ) : (
             <div className="yt-graph-inner">
+              {usingFallback && (
+                <p style={{ fontSize: "11px", color: "var(--dim)", margin: "0 0 8px", textAlign: "right" }}>
+                  Showing video publish data · Analytics API quota resets at midnight PT
+                </p>
+              )}
               <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="yt-svg"
                 onMouseMove={e => {
                   const rect = e.currentTarget.getBoundingClientRect()
