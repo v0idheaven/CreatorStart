@@ -53,7 +53,7 @@ export default function Analytics() {
 
         <div className="analytics-body">
           {tab === "overview" && (
-            <OverviewTab ov={ov} ytVideos={ytVideos} accent={accent} loadingVideos={loadingVideos} ytError={ytError} fetchYTVideos={fetchYTVideos} fmt={fmt} />
+            <OverviewTab ov={ov} ytVideos={ytVideos} ytStats={ytStats} ytAnalytics={ytAnalytics} accent={accent} loadingVideos={loadingVideos} ytError={ytError} fetchYTVideos={fetchYTVideos} fmt={fmt} />
           )}
           {tab === "youtube" && (
             <YouTubeTab

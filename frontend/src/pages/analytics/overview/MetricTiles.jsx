@@ -1,5 +1,7 @@
+import { getMergedYoutubeViews } from "../../../utils/youtubeStats"
+
 // 4 top stat cards — videos, views, posted today, etc.
-export default function MetricTiles({ ov, ytVideos, accent }) {
+export default function MetricTiles({ ov, ytVideos, ytStats, ytAnalytics, accent }) {
   const thisMonthVideos = ytVideos.filter(v => {
     if (!v.publishedAt) return false
     const d = new Date(v.publishedAt)
@@ -10,7 +12,7 @@ export default function MetricTiles({ ov, ytVideos, accent }) {
     { n: thisMonthVideos.length, label: "videos this month", sub: "published on YouTube" },
     { n: ytVideos.length, label: "total videos", sub: "on your channel" },
     { n: ov.todayPosted ? "Yes" : "No", label: "posted today", sub: "on YouTube", green: ov.todayPosted },
-    { n: ytVideos.reduce((s, v) => s + Number(v.views || 0), 0).toLocaleString(), label: "total views", sub: "across all videos" },
+    { n: getMergedYoutubeViews({ ytStats, ytAnalytics, ytVideos }).toLocaleString(), label: "total views", sub: "across all videos" },
   ] : [
     { n: ov.done, label: "posts done", sub: `of ${ov.active} planned` },
     { n: `${ov.rate}%`, label: "completion rate", sub: "past days" },
