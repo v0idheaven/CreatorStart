@@ -4,16 +4,10 @@ import OverviewTab from "./overview"
 import YouTubeTab from "./youtube"
 import useYouTubeData from "./useYouTubeData"
 import useOverviewData from "./useOverviewData"
+import { fmt } from "./format"
 import "./Analytics.css"
 
 const COLORS = { youtube: "#ff4444", instagram: "#c13584", both: "#818cf8" }
-
-export function fmt(n) {
-  const num = Number(n || 0)
-  if (num >= 1000000) return (num / 1000000).toFixed(1) + "M"
-  if (num >= 1000) return (num / 1000).toFixed(1) + "K"
-  return num.toLocaleString()
-}
 
 export default function Analytics() {
   const platform = localStorage.getItem("platform") || "both"
@@ -27,7 +21,7 @@ export default function Analytics() {
     sessionStorage.setItem("analytics_tab", t)
   }
 
-  const { ytStats, ytVideos, ytAnalytics, loadingVideos, refreshingYT, ytError, days, changeDays, fetchYTVideos, handleRefreshYT } = useYouTubeData(storedUser.youtubeStats)
+  const { ytStats, ytVideos, ytAnalytics, refreshingYT, ytError, days, changeDays, handleRefreshYT } = useYouTubeData(storedUser.youtubeStats)
   const ov = useOverviewData(platform, ytVideos, storedUser.youtubeStats)
 
   const showYT = platform === "youtube" || platform === "both"
@@ -53,14 +47,14 @@ export default function Analytics() {
 
         <div className="analytics-body">
           {tab === "overview" && (
-            <OverviewTab ov={ov} ytVideos={ytVideos} accent={accent} loadingVideos={loadingVideos} ytError={ytError} fetchYTVideos={fetchYTVideos} fmt={fmt} />
+            <OverviewTab ov={ov} ytVideos={ytVideos} ytStats={ytStats} ytAnalytics={ytAnalytics} accent={accent} />
           )}
           {tab === "youtube" && (
             <YouTubeTab
               ytStats={ytStats} ytAnalytics={ytAnalytics} ytVideos={ytVideos}
-              loadingVideos={loadingVideos} refreshingYT={refreshingYT} ytError={ytError}
+              refreshingYT={refreshingYT} ytError={ytError}
               days={days} onChangeDays={changeDays}
-              onRefresh={handleRefreshYT} fetchYTVideos={fetchYTVideos} fmt={fmt}
+              onRefresh={handleRefreshYT} fmt={fmt}
             />
           )}
         </div>
