@@ -4,6 +4,7 @@ import Sidebar from "../../components/Sidebar"
 import VideoDetailPanel from "./VideoDetailPanel"
 import { apiFetch } from "../../utils/api"
 import { API_ENDPOINTS } from "../../constants/api"
+import { getMergedYoutubeViews } from "../../utils/youtubeStats"
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://creator-start-backend.onrender.com"
 
@@ -95,6 +96,7 @@ export default function Content() {
   const [ytVideos, setYtVideos] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [ytAnalytics, setYtAnalytics] = useState(null)
   const [search, setSearch] = useState("")
   const [filterType, setFilterType] = useState("All")
   const [selectedVideo, setSelectedVideo] = useState(null)
@@ -108,14 +110,20 @@ export default function Content() {
     try {
       const controller = new AbortController()
       const timeout = setTimeout(() => controller.abort(), 20000)
-      const res = await apiFetch(API_ENDPOINTS.youtubeVideos, { signal: controller.signal })
+      const [videosRes, analyticsRes] = await Promise.all([
+        apiFetch(API_ENDPOINTS.youtubeVideos, { signal: controller.signal }),
+        apiFetch(`${API_ENDPOINTS.youtubeAnalytics}?days=28`, { signal: controller.signal }),
+      ])
       clearTimeout(timeout)
-      const data = await res.json()
-      if (res.ok && Array.isArray(data?.data)) {
-        setYtVideos(data.data.map(v => ({ ...v, platform: "youtube" })))
+      const [videosData, analyticsData] = await Promise.all([videosRes.json(), analyticsRes.json()])
+      if (videosRes.ok && Array.isArray(videosData?.data)) {
+        setYtVideos(videosData.data.map(v => ({ ...v, platform: "youtube" })))
       } else {
-        const msg = String(data?.message || "").replace(/<[^>]*>/g, "").trim()
+        const msg = String(videosData?.message || "").replace(/<[^>]*>/g, "").trim()
         setError(msg.toLowerCase().includes("quota") ? "YouTube API quota exceeded. Try again after midnight Pacific Time." : msg || "Failed to load videos")
+      }
+      if (analyticsRes.ok && analyticsData?.data) {
+        setYtAnalytics(analyticsData.data)
       }
     } catch (e) {
       setError(e.name === "AbortError" ? "Backend is waking up. Click Refresh in a moment." : "Could not load videos.")
@@ -141,7 +149,7 @@ export default function Content() {
   }), [allContent, filterType, search, platformTab])
 
   const tabContent = platformTab === "all" ? allContent : allContent.filter(c => c.platform === platformTab)
-  const totalViews = tabContent.reduce((s, c) => s + Number(c.views || 0), 0)
+  const totalViews = getMergedYoutubeViews({ ytStats: storedUser.youtubeStats, ytAnalytics, ytVideos }) || tabContent.reduce((s, c) => s + Number(c.views || 0), 0)
   const totalLikes = tabContent.reduce((s, c) => s + Number(c.likes || 0), 0)
   const totalCount = tabContent.length
 

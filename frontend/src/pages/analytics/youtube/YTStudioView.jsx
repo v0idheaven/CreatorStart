@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Youtube, RefreshCw } from "lucide-react"
+import { getMergedYoutubeViews } from "../../../utils/youtubeStats"
 
 export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshingYT, ytError, onRefresh, days, onChangeDays, fmt }) {
   const [ytTab, setYtTab] = useState("overview")
@@ -20,7 +21,6 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
     return d.toISOString().slice(0, 10)
   }
 
-  const analyticsViews = Number(ov.views || 0)
   const recentCutoff = new Date()
   recentCutoff.setDate(recentCutoff.getDate() - 3)
   const recentCutoffKey = toISTDayKey(recentCutoff)
@@ -29,8 +29,7 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
     const dayKey = toISTDayKey(v.publishedAt)
     return dayKey && dayKey >= recentCutoffKey
   })
-  const recentVideoViews = recentVideos.reduce((sum, v) => sum + Number(v.views || 0), 0)
-  const displayViews = analyticsViews + recentVideoViews
+  const displayViews = getMergedYoutubeViews({ ytStats, ytAnalytics, ytVideos })
 
   const W = 800, H = 140, PADX = 40, PADY = 16
   const graphMetric = ytTab === "audience" ? "estimatedMinutesWatched" : "views"
