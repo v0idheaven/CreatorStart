@@ -54,7 +54,7 @@ export default function useSettingsData() {
       { label: "Current streak", value: streak > 0 ? `${streak}d` : "0d", sub: streak > 0 ? "consecutive days posted" : "post today to start streak" },
       { label: "Audience", value: subscribers.toLocaleString(), sub: ytConnected ? "subscribers" : "connect YouTube to see" },
     ]
-  }, [platform])
+  }, [])
 
   function syncLocal(updates) {
     const current = JSON.parse(localStorage.getItem("user") || "{}")

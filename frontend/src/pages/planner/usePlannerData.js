@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { apiFetch } from "../../utils/api"
 import { API_ENDPOINTS } from "../../constants/api"
 import { STORAGE_KEYS } from "../../constants/storageKeys"
@@ -6,22 +6,25 @@ import { generatePlan } from "./plannerUtils"
 
 // Manages all planner state: entries, planInfo, screen, saving, generating
 export default function usePlannerData(platform) {
-  const rawSaved = JSON.parse(localStorage.getItem(STORAGE_KEYS.getPlannerData()) || "null")
-  const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
-  const todayIST = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate())
+  const saved = useMemo(() => {
+    const rawSaved = JSON.parse(localStorage.getItem(STORAGE_KEYS.getPlannerData()) || "null")
+    const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+    const todayIST = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate())
 
-  let saved = rawSaved
-  if (rawSaved?.entries?.length > 0) {
-    const first = rawSaved.entries[0]
-    if (first?.date) {
-      const fd = new Date(first.date)
-      const sameMonth = fd.getFullYear() === todayIST.getFullYear() && fd.getMonth() === todayIST.getMonth()
-      if (!sameMonth || fd.getDate() !== 1 || typeof first.date !== "string") {
-        saved = null
-        localStorage.removeItem(STORAGE_KEYS.getPlannerData())
+    let validated = rawSaved
+    if (rawSaved?.entries?.length > 0) {
+      const first = rawSaved.entries[0]
+      if (first?.date) {
+        const fd = new Date(first.date)
+        const sameMonth = fd.getFullYear() === todayIST.getFullYear() && fd.getMonth() === todayIST.getMonth()
+        if (!sameMonth || fd.getDate() !== 1 || typeof first.date !== "string") {
+          validated = null
+          localStorage.removeItem(STORAGE_KEYS.getPlannerData())
+        }
       }
     }
-  }
+    return validated
+  }, [])
 
   const [screen, setScreen] = useState(saved ? "plan" : "setup")
   const [generating, setGenerating] = useState(false)
@@ -122,7 +125,7 @@ export default function usePlannerData(platform) {
       } catch { /* silent fail — backend may be unavailable */ }
     }
     load()
-  }, [])
+  }, [platform, saved])
 
   return { screen, setScreen, generating, entries, planInfo, handleGenerate, toggleDone, saveEdit, deleteEntry, addToDay, removeExtraPost, clearPlan }
 }

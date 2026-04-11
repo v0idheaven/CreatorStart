@@ -1,8 +1,6 @@
 import { useState } from "react"
 import Sidebar from "../../components/Sidebar"
 import { STORAGE_KEYS } from "../../constants/storageKeys"
-import { API_ENDPOINTS } from "../../constants/api"
-import { apiFetch } from "../../utils/api"
 import usePlannerData from "./usePlannerData"
 import useAiBrief from "./useAiBrief"
 import GeneratingScreen from "./GeneratingScreen"
@@ -17,7 +15,7 @@ import "./Planner.css"
 export default function Planner() {
   const platform = localStorage.getItem(STORAGE_KEYS.PLATFORM) || "both"
 
-  const { screen, setScreen, generating, entries, planInfo, handleGenerate, toggleDone, saveEdit, deleteEntry, addToDay, removeExtraPost, clearPlan } = usePlannerData(platform)
+  const { screen, generating, entries, planInfo, handleGenerate, toggleDone, saveEdit, deleteEntry, addToDay, removeExtraPost, clearPlan } = usePlannerData(platform)
   const { aiDetail, aiLoading, aiError, generateBrief, clearBrief } = useAiBrief()
 
   const [activeDay, setActiveDay] = useState(null)
