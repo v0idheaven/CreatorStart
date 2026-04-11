@@ -73,8 +73,8 @@ export default function Sidebar() {
       onMouseLeave={() => setIsOpen(false)}>
 
       <div className="sidebar-logo">
-        <div className="sidebar-logo-icon" style={{ background: "#818cf820", borderRadius: "8px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <img src="/logo.svg" alt="CreatorStart" style={{ width: "22px", height: "22px", display: "block", objectFit: "contain" }} />
+        <div className="sidebar-logo-icon" style={{ background: "transparent", border: "none", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <img src="/logo.svg" alt="CreatorStart" style={{ width: "28px", height: "28px", display: "block", objectFit: "contain" }} />
         </div>
         <span className="sidebar-logo-text" style={{ opacity: isOpen ? 1 : 0, fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: "15px", letterSpacing: "-0.3px" }}>
           Creator<span style={{ color: "#818cf8" }}>Start</span>
