@@ -45,14 +45,16 @@ export default function DashboardBoth() {
 
   // Overall chart: last 7 days posting activity from planner
   const overallChartData = (() => {
-    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const todayIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+    todayIST.setHours(0, 0, 0, 0)
     const plan = JSON.parse(localStorage.getItem(`planner_data_${platform}`) || "null")
     const entries = plan?.entries || []
     return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(today); d.setDate(today.getDate() - (6 - i))
+      const d = new Date(todayIST); d.setDate(todayIST.getDate() - (6 - i))
       const posted = entries.filter(e => {
         if (!e.date || !e.isCompleted) return false
-        const ed = new Date(e.date); ed.setHours(0, 0, 0, 0)
+        const ed = new Date(new Date(e.date).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+        ed.setHours(0, 0, 0, 0)
         return ed.getTime() === d.getTime()
       }).length
       return { day: DAYS[d.getDay() === 0 ? 6 : d.getDay() - 1], value: posted }
@@ -61,9 +63,10 @@ export default function DashboardBoth() {
 
   // YouTube chart: last 7 days — videos uploaded per day (IST)
   const ytChartData = (() => {
-    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const todayIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+    todayIST.setHours(0, 0, 0, 0)
     return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(today); d.setDate(today.getDate() - (6 - i))
+      const d = new Date(todayIST); d.setDate(todayIST.getDate() - (6 - i))
       const count = ytVideos.filter(v => {
         if (!v.publishedAt) return false
         const vd = new Date(new Date(v.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))

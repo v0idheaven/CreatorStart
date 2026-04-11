@@ -19,9 +19,10 @@ export default function DashboardYT() {
   const viewData = (() => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     if (!ytConnected || ytVideos.length === 0) return days.map(day => ({ day, views: 0 }))
-    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const todayIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+    todayIST.setHours(0, 0, 0, 0)
     return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(today); d.setDate(today.getDate() - (6 - i))
+      const d = new Date(todayIST); d.setDate(todayIST.getDate() - (6 - i))
       const count = ytVideos.filter(v => {
         if (!v.publishedAt) return false
         const vd = new Date(new Date(v.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
