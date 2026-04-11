@@ -109,15 +109,15 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
             <p className="yt-graph-caption-title">{graphLabel}</p>
             <p className="yt-graph-caption-sub">{graphSubLabel}</p>
           </div>
-          {graphDaily.length === 0 ? (
+          {daily.length === 0 ? (
             <div className="yt-graph-empty">
               <p className="yt-graph-empty-text">No daily data for this period yet.</p>
             </div>
           ) : (
             <div className="yt-graph-inner">
-              {graphDaily.filter(d => Number(d.views || 0) > 0).length === 0 && (
+              {daily.filter(d => Number(d.views || 0) > 0).length === 0 && (
                 <div style={{ fontSize: "11px", color: "var(--dim)", padding: "8px 0", textAlign: "center" }}>
-                  📊 Daily data lags 2-3 days (YouTube updates with a delay)
+                  Daily data lags 2-3 days (YouTube updates with a delay)
                 </div>
               )}
               <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="yt-svg"
