@@ -7,7 +7,8 @@ import { CONFIG } from "./generatorConfig"
 import GeneratorForm from "./GeneratorForm"
 import ResultCard from "./ResultCard"
 import AddToPlannerModal from "./AddToPlannerModal"
-import GenerationHistory, { saveToHistory } from "./GenerationHistory"
+import GenerationHistory from "./GenerationHistory"
+import { saveToHistory } from "./historyStorage"
 
 const LABEL_MAP = {
   title: "Video Title", hook: "Hook", script: "Full Script", outline: "Outline",
