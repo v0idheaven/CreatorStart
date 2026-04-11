@@ -166,6 +166,26 @@
   min-height: 200px;
 }
 
+.yt-graph-caption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 14px;
+}
+
+.yt-graph-caption-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.yt-graph-caption-sub {
+  font-size: 11px;
+  color: var(--dim);
+  margin: 0;
+}
+
 .yt-graph-empty {
   height: 160px;
   display: flex;

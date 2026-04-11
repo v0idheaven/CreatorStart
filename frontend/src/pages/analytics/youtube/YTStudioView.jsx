@@ -88,13 +88,18 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
     : ""
   const yLabels = [maxV, Math.round(maxV * 0.5), 0]
 
+  const graphLabel = ytTab === "overview" ? "Views graph" : "Watch time graph"
+  const graphSubLabel = ytTab === "overview"
+    ? "Daily views from YouTube Analytics + recent video stats"
+    : "Estimated minutes watched from YouTube Analytics"
+
   const metricTiles = ytTab === "overview" ? [
     { label: "Views", value: fmt(displayViews) },
     { label: "Watch time (hrs)", value: fmt(Math.round((ov.estimatedMinutesWatched || 0) / 60)) },
     { label: "Subscribers", value: fmt(ytStats?.subscribers || 0) },
   ] : [
-    { label: "Unique viewers", value: fmt(displayViews) },
-    { label: "Subs gained", value: fmt(ov.subscribersGained || 0), color: "#4ade80" },
+    { label: "Current subscribers", value: fmt(ytStats?.subscribers || 0), color: "#4ade80" },
+    { label: "Net change", value: fmt((ov.subscribersGained || 0) - (ov.subscribersLost || 0)), color: "#60a5fa" },
     { label: "Subs lost", value: fmt(ov.subscribersLost || 0), color: "#f87171" },
   ]
 
@@ -154,6 +159,10 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
         </div>
 
         <div className="yt-graph-wrap">
+          <div className="yt-graph-caption">
+            <p className="yt-graph-caption-title">{graphLabel}</p>
+            <p className="yt-graph-caption-sub">{graphSubLabel}</p>
+          </div>
           {graphDaily.length === 0 ? (
             <div className="yt-graph-empty">
               <p className="yt-graph-empty-text">No daily data for this period yet.</p>
