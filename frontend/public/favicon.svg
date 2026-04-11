@@ -1,41 +1,38 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
-  <!-- Outer background — teal -->
-  <rect width="200" height="200" rx="36" fill="#2d6e7e"/>
-
-  <!-- Inner border frame — gold -->
-  <rect x="14" y="14" width="172" height="172" rx="24"
-    stroke="#c9956a" stroke-width="4" fill="none"/>
-
-  <!-- Large C -->
-  <path d="
-    M 148 52
-    C 148 52 110 28 72 44
-    C 34 60 22 96 28 124
-    C 34 152 60 176 100 176
-    C 130 176 152 162 160 148
-    L 144 136
-    C 136 148 118 160 100 160
-    C 68 160 48 140 44 120
-    C 40 100 48 72 72 58
-    C 96 44 128 54 140 66
-    Z
-  " fill="#c9956a"/>
-
-  <!-- S inside C -->
-  <path d="
-    M 120 68
-    C 108 60 90 60 82 70
-    C 74 80 80 94 96 100
-    C 112 106 120 116 114 128
-    C 108 140 90 142 78 134
-    L 70 146
-    C 86 158 110 156 122 142
-    C 134 128 126 112 108 104
-    C 90 96 84 86 90 76
-    C 96 66 112 66 122 74
-    Z
-  " fill="#2d6e7e"/>
-
-  <!-- Flag on top -->
-  <path d="M 140 66 L 148 52 L 168 58 L 162 72 Z" fill="#c9956a"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1a1e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f1e22;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="100" height="100" rx="18" fill="url(#bg)"/>
+  
+  <!-- Corner ticks (top-left) -->
+  <path d="M 15 25 L 15 15 L 25 15" stroke="#2d8fa3" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  
+  <!-- Corner ticks (top-right) -->
+  <path d="M 75 15 L 85 15 L 85 25" stroke="#2d8fa3" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  
+  <!-- Corner ticks (bottom-left) -->
+  <path d="M 25 85 L 15 85 L 15 75" stroke="#2d8fa3" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  
+  <!-- Corner ticks (bottom-right) -->
+  <path d="M 85 75 L 85 85 L 75 85" stroke="#2d8fa3" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  
+  <!-- Outer eye shape -->
+  <ellipse cx="50" cy="50" rx="32" ry="20" fill="none" stroke="#2d8fa3" stroke-width="2.5"/>
+  
+  <!-- Middle eye shape -->
+  <ellipse cx="50" cy="50" rx="22" ry="14" fill="none" stroke="#2d8fa3" stroke-width="2"/>
+  
+  <!-- Inner iris -->
+  <circle cx="50" cy="50" r="10" fill="#2d8fa3" opacity="0.3"/>
+  
+  <!-- Pupil with gold accent -->
+  <circle cx="50" cy="50" r="6" fill="#c9956a"/>
+  
+  <!-- Highlight -->
+  <circle cx="48" cy="47" r="2" fill="#ffffff" opacity="0.8"/>
 </svg>
