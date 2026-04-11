@@ -30,8 +30,8 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
     { label: "Watch time (hrs)", value: fmt(Math.round((ov.estimatedMinutesWatched || 0) / 60)) },
     { label: "Subscribers", value: fmt(ytStats.subscribers) },
   ] : ytTab === "content" ? [
-    { label: "Impressions", value: fmt(ov.impressions || 0) },
-    { label: "CTR", value: `${((ov.impressionClickThroughRate || 0) * 100).toFixed(1)}%` },
+    { label: "Likes", value: fmt(ov.likes || 0) },
+    { label: "Comments", value: fmt(ov.comments || 0) },
     { label: "Avg view duration", value: (() => { const s = ov.averageViewDuration || 0; return `${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,"0")}` })() },
   ] : [
     { label: "Unique viewers", value: fmt(displayViews), color: "var(--text)" },
