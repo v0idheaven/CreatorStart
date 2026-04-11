@@ -3,6 +3,7 @@ import connectDB from "./db/index.js"
 import { app } from "./app.js"
 
 dotenv.config()
+// v2 - analytics metrics fix
 
 // Validate required environment variables before starting
 const REQUIRED_ENV = ["MONGODB_URI", "ACCESS_TOKEN_SECRET", "REFRESH_TOKEN_SECRET", "GROQ_API_KEY"]
