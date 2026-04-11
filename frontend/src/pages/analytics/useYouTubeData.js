@@ -20,7 +20,7 @@ export default function useYouTubeData(youtubeStats) {
   const [loadingVideos, setLoadingVideos] = useState(false)
   const [refreshingYT, setRefreshingYT] = useState(false)
   const [ytError, setYtError] = useState("")
-  const [days, setDays] = useState(90)
+  const [days, setDays] = useState(28)
 
   async function fetchYTVideos(d = days) {
     setLoadingVideos(true)

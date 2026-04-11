@@ -198,17 +198,17 @@ const getYoutubeVideos = asyncHandler(async (req, res) => {
     const videoIds = allVideoIds
     if (!videoIds?.length) return res.status(200).json(new ApiResponse(200, [], "No videos found"))
 
-    // YouTube videos.list accepts max 50 IDs — batch if needed
+    // YouTube videos.list accepts max 50 IDs — batch in parallel
     let allVideoItems = []
     try {
+        const batches = []
         for (let i = 0; i < videoIds.length; i += 50) {
-            const batch = videoIds.slice(i, i + 50)
-            const batchRes = await youtube.videos.list({
-                part: ["snippet", "statistics", "contentDetails"],
-                id: batch.join(",")
-            })
-            allVideoItems = [...allVideoItems, ...(batchRes.data.items || [])]
+            batches.push(videoIds.slice(i, i + 50))
         }
+        const batchResults = await Promise.all(batches.map(batch =>
+            youtube.videos.list({ part: ["snippet", "statistics", "contentDetails"], id: batch.join(",") })
+        ))
+        batchResults.forEach(r => { allVideoItems = [...allVideoItems, ...(r.data.items || [])] })
         statsRes = { data: { items: allVideoItems } }
     } catch (e) {
         const msg = String(e?.message || "").replace(/<[^>]*>/g, "").trim()
@@ -310,8 +310,6 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
             daily.push(dailyMap[key] || { day: key, views: 0, estimatedMinutesWatched: 0 })
             cursor.setUTCDate(cursor.getUTCDate() + 1)
         }
-
-        console.log(`[YT Analytics] Period: ${startDate} to ${endDate} (${days}d), Overview Views: ${overview.views}, API Daily entries: ${dailyRaw.length}, Filled Daily: ${daily.length}`)
 
         return res.status(200).json(new ApiResponse(200, { overview, daily }, "Analytics fetched"))
     } catch (e) {
