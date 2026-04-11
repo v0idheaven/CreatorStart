@@ -8,8 +8,8 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   const daily = ytAnalytics?.daily || []
   const ov = ytAnalytics?.overview || {}
 
-  // Strict API-only: selected period total from analytics overview.
-  const displayViews = Number(ov.views || 0)
+  // Strict API-only: prefer adjusted overview views when provided by backend.
+  const displayViews = Number(ov.viewsAdjusted || ov.views || 0)
 
   const W = 800, H = 140, PADX = 40, PADY = 16
   const graphMetric = ytTab === "audience" ? "estimatedMinutesWatched" : "views"

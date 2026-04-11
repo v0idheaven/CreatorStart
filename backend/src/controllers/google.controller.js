@@ -311,6 +311,49 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
             cursor.setUTCDate(cursor.getUTCDate() + 1)
         }
 
+        // Merge near-real-time views (last 2 days) from API to better match Studio numbers.
+        try {
+            const rtStart = new Date(`${endDate}T00:00:00Z`)
+            rtStart.setUTCDate(rtStart.getUTCDate() - 2)
+            const rtStartDate = rtStart.toISOString().slice(0, 10)
+
+            const rtRes = await youtubeAnalytics.reports.query({
+                ids: "channel==MINE",
+                startDate: rtStartDate,
+                endDate,
+                metrics: "views",
+                dimensions: "day",
+                sort: "day",
+            })
+
+            const rtHeaders = rtRes.data.columnHeaders?.map(h => h.name) || []
+            const rtRows = (rtRes.data.rows || []).map(r => {
+                const obj = {}
+                rtHeaders.forEach((h, i) => { obj[h] = r[i] })
+                return obj
+            })
+            const rtByDay = {}
+            rtRows.forEach(r => {
+                if (r?.day) rtByDay[r.day] = Number(r.views || 0)
+            })
+
+            let addedViews = 0
+            const mergedDaily = daily.map(d => {
+                const baseViews = Number(d.views || 0)
+                const rtViews = Number(rtByDay[d.day] || 0)
+                const mergedViews = Math.max(baseViews, rtViews)
+                addedViews += Math.max(0, mergedViews - baseViews)
+                return { ...d, views: mergedViews }
+            })
+
+            daily.length = 0
+            daily.push(...mergedDaily)
+            overview.viewsAdjusted = Number(overview.views || 0) + addedViews
+        } catch (_rtErr) {
+            // If near-real-time report is unavailable, keep base analytics response.
+            overview.viewsAdjusted = Number(overview.views || 0)
+        }
+
         return res.status(200).json(new ApiResponse(200, { overview, daily }, "Analytics fetched"))
     } catch (e) {
         const msg = String(e?.message || e?.errors?.[0]?.message || "").replace(/<[^>]*>/g, "").trim()
