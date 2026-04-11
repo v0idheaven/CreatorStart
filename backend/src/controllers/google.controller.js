@@ -109,7 +109,7 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
     res
         .cookie("accessToken", accessToken, cookieOptions)
         .cookie("refreshToken", refreshToken, cookieOptions)
-        .redirect(`${FRONTEND_URL}/auth/callback?token=${accessToken}&user=${encodeURIComponent(JSON.stringify(safeUser))}`)
+        .redirect(`${FRONTEND_URL}/auth/callback?token=${accessToken}`)
 })
 
 const refreshYoutubeStats = asyncHandler(async (req, res) => {

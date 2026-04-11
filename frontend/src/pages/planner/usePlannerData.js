@@ -7,23 +7,31 @@ import { generatePlan } from "./plannerUtils"
 // Manages all planner state: entries, planInfo, screen, saving, generating
 export default function usePlannerData(platform) {
   const saved = useMemo(() => {
-    const rawSaved = JSON.parse(localStorage.getItem(STORAGE_KEYS.getPlannerData()) || "null")
-    const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
-    const todayIST = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate())
+    try {
+      const rawSaved = JSON.parse(localStorage.getItem(STORAGE_KEYS.getPlannerData()) || "null")
+      const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+      const todayIST = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate())
 
-    let validated = rawSaved
-    if (rawSaved?.entries?.length > 0) {
-      const first = rawSaved.entries[0]
-      if (first?.date) {
-        const fd = new Date(first.date)
-        const sameMonth = fd.getFullYear() === todayIST.getFullYear() && fd.getMonth() === todayIST.getMonth()
-        if (!sameMonth || fd.getDate() !== 1 || typeof first.date !== "string") {
-          validated = null
-          localStorage.removeItem(STORAGE_KEYS.getPlannerData())
+      let validated = rawSaved
+      if (rawSaved?.entries?.length > 0) {
+        const first = rawSaved.entries[0]
+        if (first?.date) {
+          const fd = new Date(first.date)
+          if (isNaN(fd.getTime())) { validated = null; localStorage.removeItem(STORAGE_KEYS.getPlannerData()) }
+          else {
+            const sameMonth = fd.getFullYear() === todayIST.getFullYear() && fd.getMonth() === todayIST.getMonth()
+            if (!sameMonth || fd.getDate() !== 1) {
+              validated = null
+              localStorage.removeItem(STORAGE_KEYS.getPlannerData())
+            }
+          }
         }
       }
+      return validated
+    } catch {
+      localStorage.removeItem(STORAGE_KEYS.getPlannerData())
+      return null
     }
-    return validated
   }, [])
 
   const [screen, setScreen] = useState(saved ? "plan" : "setup")
