@@ -41,7 +41,6 @@ export default function useDashboardData() {
     const todayIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
     todayIST.setHours(0, 0, 0, 0)
 
-    // Get unique publish dates (IST)
     const publishDates = new Set(
       ytVideos
         .filter(v => v.publishedAt)
@@ -53,7 +52,7 @@ export default function useDashboardData() {
     )
 
     let count = 0
-    let check = new Date(todayIST)
+    const check = new Date(todayIST)
     while (publishDates.has(check.getTime())) {
       count++
       check.setDate(check.getDate() - 1)
