@@ -1,4 +1,5 @@
 import { createElement, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
 import { Zap, CalendarDays, FileText, AlignLeft, Clock, CheckCheck, Users, Eye, PlaySquare, Timer, Instagram, Youtube } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
@@ -22,6 +23,7 @@ export default function DashboardBoth() {
   const [view, setView] = useState("overall")
   const { ytVideos, ytConnected, realStats, storedUser, streak } = useDashboardData()
 
+  const navigate = useNavigate()
   const firstName = storedUser.fullName?.split(" ")[0] || "Creator"
   const platform = localStorage.getItem("platform") || "both"
   const accent = SWITCHER.find(s => s.id === view).color
@@ -57,17 +59,18 @@ export default function DashboardBoth() {
     })
   })()
 
-  // YouTube chart: last 7 days upload views
+  // YouTube chart: last 7 days — videos uploaded per day (IST)
   const ytChartData = (() => {
     const today = new Date(); today.setHours(0, 0, 0, 0)
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(today); d.setDate(today.getDate() - (6 - i))
-      const views = ytVideos.filter(v => {
+      const count = ytVideos.filter(v => {
         if (!v.publishedAt) return false
-        const vd = new Date(v.publishedAt); vd.setHours(0, 0, 0, 0)
+        const vd = new Date(new Date(v.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+        vd.setHours(0, 0, 0, 0)
         return vd.getTime() === d.getTime()
-      }).reduce((s, v) => s + Number(v.views || 0), 0)
-      return { day: DAYS[d.getDay() === 0 ? 6 : d.getDay() - 1], value: views }
+      }).length
+      return { day: DAYS[d.getDay() === 0 ? 6 : d.getDay() - 1], value: count }
     })
   })()
 
@@ -184,7 +187,7 @@ export default function DashboardBoth() {
                 <p className="dash-quick-label">Quick Actions</p>
                 <div className="quick-actions-grid">
                   {[{ icon: Zap, title: "Content Generator", desc: "Generate hooks, scripts & CTAs.", href: "/generator" }, { icon: CalendarDays, title: "30-Day Planner", desc: "Organize your content pipeline.", href: "/planner" }].map(({ icon, title, desc, href }) => (
-                    <div key={title} className="card dash-quick-card" onClick={() => window.location.href = href} style={{ cursor: "pointer" }}>
+                    <div key={title} className="card dash-quick-card" onClick={() => navigate(href)} style={{ cursor: "pointer" }}>
                       <div className="quick-action-icon" style={{ background: accent + "15" }}>
                         {createElement(icon, { size: 16, color: accent, strokeWidth: 2 })}
                       </div>

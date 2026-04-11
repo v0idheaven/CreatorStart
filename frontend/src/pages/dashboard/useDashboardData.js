@@ -29,7 +29,9 @@ export default function useDashboardData() {
           setYtAnalytics(analyticsData.data)
         }
       })
-      .catch(() => {})
+      .catch((err) => {
+        if (import.meta.env.DEV) console.error("Dashboard data fetch failed:", err)
+      })
       .finally(() => setLoading(false))
   }, [ytConnected])
 
