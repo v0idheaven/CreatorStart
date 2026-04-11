@@ -9,17 +9,47 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   const daily = ytAnalytics?.daily || []
   const ov = ytAnalytics?.overview || {}
 
-  // Use API totals for selected period only (no video publish fallback)
-  const displayViews = Number(ov.views || 0)
+  // Views: analytics period total > video sum > channel lifetime stats
+  const videoTotalViews = (ytVideos || []).reduce((s, v) => s + Number(v.views || 0), 0)
+  const channelViews = Number(ytStats?.views || 0)
+  const analyticsViews = Number(ov.views || 0)
+  const displayViews = analyticsViews > 0 ? analyticsViews : videoTotalViews > 0 ? videoTotalViews : channelViews
+
   const graphDaily = Array.isArray(daily) ? daily : []
+
+  // Fallback graph from video data when analytics API returns no daily rows
+  function buildFallback(videos, numDays) {
+    if (!videos?.length) return []
+    const now = new Date()
+    const cutoff = new Date(now - numDays * 86400000)
+    const map = {}
+    videos.forEach(v => {
+      if (!v.publishedAt) return
+      const ist = new Date(new Date(v.publishedAt).getTime() + 19800000)
+      const key = ist.toISOString().split("T")[0]
+      if (new Date(v.publishedAt) >= cutoff) map[key] = (map[key] || 0) + Number(v.views || 0)
+    })
+    if (!Object.keys(map).length) return []
+    const result = []
+    for (let i = numDays - 1; i >= 0; i--) {
+      const ist = new Date(new Date(now - i * 86400000).getTime() + 19800000)
+      const key = ist.toISOString().split("T")[0]
+      result.push({ day: key, views: map[key] || 0 })
+    }
+    return result
+  }
+
+  const fallback = graphDaily.length === 0 ? buildFallback(ytVideos, days) : []
+  const activeGraph = graphDaily.length > 0 ? graphDaily : fallback
+  const isFallback = graphDaily.length === 0 && fallback.length > 0
 
   const W = 800, H = 140, PADX = 40, PADY = 16
   // For audience tab with no analytics data, fall back to views (watch time not available)
   const graphMetric = (ytTab === "audience" && daily.length > 0) ? "estimatedMinutesWatched" : "views"
-  const maxV = Math.max(...graphDaily.map(d => Number(d[graphMetric] || d.views || 0)), 1)
-  const coords = graphDaily.map((p, i) => {
+  const maxV = Math.max(...activeGraph.map(d => Number(d[graphMetric] || d.views || 0)), 1)
+  const coords = activeGraph.map((p, i) => {
     const v = Number(p[graphMetric] || p.views || 0)
-    return { x: PADX + i * ((W - PADX * 2) / (graphDaily.length - 1 || 1)), y: PADY + (1 - v / maxV) * (H - PADY * 2), v, day: p.day }
+    return { x: PADX + i * ((W - PADX * 2) / (activeGraph.length - 1 || 1)), y: PADY + (1 - v / maxV) * (H - PADY * 2), v, day: p.day }
   })
   const linePath = coords.length > 1 ? coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x} ${c.y}`).join(" ") : ""
   const areaPath = linePath ? `${linePath} L ${coords[coords.length-1]?.x} ${H} L ${PADX} ${H} Z` : ""
@@ -87,16 +117,17 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
         </div>
 
         <div className="yt-graph-wrap">
-          {graphDaily.length === 0 ? (
+          {activeGraph.length === 0 ? (
             <div className="yt-graph-empty">
-              <p className="yt-graph-empty-text">
-                {ytError && ytError.toLowerCase().includes("quota")
-                  ? "YouTube Analytics quota exceeded — resets at midnight Pacific Time."
-                  : "No YouTube analytics data available for this period."}
-              </p>
+              <p className="yt-graph-empty-text">No analytics data available for this period.</p>
             </div>
           ) : (
             <div className="yt-graph-inner">
+              {isFallback && (
+                <p style={{ fontSize: "11px", color: "var(--dim)", margin: "0 0 6px", textAlign: "right" }}>
+                  Based on video publish data · Full analytics resets at midnight PT
+                </p>
+              )}
               <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="yt-svg"
                 onMouseMove={e => {
                   const rect = e.currentTarget.getBoundingClientRect()
