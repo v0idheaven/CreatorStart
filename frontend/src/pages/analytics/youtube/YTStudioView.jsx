@@ -8,8 +8,11 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   const daily = ytAnalytics?.daily || []
   const ov = ytAnalytics?.overview || {}
 
-  // Use max of: analytics API views, video sum, channel lifetime views
-  // This ensures we always show the highest/most accurate number available
+  // Views sources:
+  // 1. analyticsViews = YouTube Analytics API (28-day window, lags 2-3 days) — most accurate for period
+  // 2. videoSumViews = sum of all video stats (lifetime total, always up to date)
+  // 3. channelViews = channel-level lifetime stat
+  // Use max so we always show the highest known value
   const analyticsViews = Number(ov.views || 0)
   const videoSumViews = (ytVideos || []).reduce((s, v) => s + Number(v.views || 0), 0)
   const channelViews = Number(ytStats?.views || 0)
@@ -64,7 +67,12 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
       </div>
 
       <div className="yt-stats-heading">
-        <h2 className="yt-stats-title">Your channel got {fmt(displayViews)} views in the last {days} days</h2>
+        <h2 className="yt-stats-title">
+          {analyticsViews > 0
+            ? `Your channel got ${fmt(analyticsViews)} views in the last ${days} days`
+            : `Your channel has ${fmt(videoSumViews || channelViews)} total views`
+          }
+        </h2>
       </div>
 
       {ytError && (
