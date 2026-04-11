@@ -20,7 +20,7 @@ const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 export default function DashboardBoth() {
   const [view, setView] = useState("overall")
-  const { ytVideos, ytStats, ytConnected, realStats, storedUser, streak } = useDashboardData()
+  const { ytVideos, ytConnected, realStats, storedUser, streak } = useDashboardData()
 
   const firstName = storedUser.fullName?.split(" ")[0] || "Creator"
   const platform = localStorage.getItem("platform") || "both"

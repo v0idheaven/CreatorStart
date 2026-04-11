@@ -1,3 +1,4 @@
+import { createElement } from "react"
 import { X, ExternalLink, Eye, ThumbsUp, MessageCircle, Share2, TrendingUp, Clock, MousePointerClick, Youtube } from "lucide-react"
 
 function fmt(n) {
@@ -23,12 +24,12 @@ function MiniChart({ data, color }) {
   )
 }
 
-function StatCard({ icon: Icon, label, value, color, sub }) {
+function StatCard({ icon, label, value, color, sub }) {
   return (
     <div style={{ background: "var(--bg)", borderRadius: "10px", padding: "14px 16px", border: "1px solid var(--border)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "8px" }}>
         <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: color + "20", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Icon size={13} color={color} />
+          {createElement(icon, { size: 13, color })}
         </div>
         <span style={{ fontSize: "11px", color: "var(--dim)", fontWeight: "500" }}>{label}</span>
       </div>
@@ -89,10 +90,10 @@ export default function VideoDetailPanel({ video, onClose }) {
                 { icon: TrendingUp, label: "Impressions", value: fmt(video.impressions), color: "#818cf8" },
                 { icon: MousePointerClick, label: "CTR", value: `${video.ctr}%`, color: "#f59e0b" },
                 { icon: Clock, label: "Avg Duration", value: video.avgViewDuration, color: "#4ade80" },
-              ].map(({ icon: Icon, label, value, color }) => (
+              ].map(({ icon, label, value, color }) => (
                 <div key={label} style={{ textAlign: "center" }}>
                   <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: color + "20", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 8px" }}>
-                    <Icon size={14} color={color} />
+                    {createElement(icon, { size: 14, color })}
                   </div>
                   <p style={{ fontSize: "16px", fontWeight: "800", color: "var(--text)", margin: "0 0 2px", letterSpacing: "-0.3px" }}>{value}</p>
                   <p style={{ fontSize: "10px", color: "var(--dim)", margin: 0 }}>{label}</p>

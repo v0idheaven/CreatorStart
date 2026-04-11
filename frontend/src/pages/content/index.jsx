@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, createElement } from "react"
 import { Search, Youtube, Film, BarChart2, Instagram, Layers, RefreshCw } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import VideoDetailPanel from "./VideoDetailPanel"
@@ -188,10 +188,10 @@ export default function Content() {
 
           {/* Platform tabs */}
           <div style={{ display: "flex", gap: "4px", marginBottom: "20px", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "4px", width: "fit-content" }}>
-            {PLATFORM_TABS.map(({ id, label, icon: Icon, color }) => (
+            {PLATFORM_TABS.map(({ id, label, icon, color }) => (
               <button key={id} onClick={() => { setPlatformTab(id); setFilterType("All") }}
                 style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 16px", borderRadius: "7px", border: "none", cursor: "pointer", fontSize: "13px", fontWeight: platformTab === id ? "600" : "400", background: platformTab === id ? color + "18" : "transparent", color: platformTab === id ? color : "var(--muted)", transition: "all 0.15s" }}>
-                <Icon size={13} strokeWidth={platformTab === id ? 2.5 : 1.8} />
+                {createElement(icon, { size: 13, strokeWidth: platformTab === id ? 2.5 : 1.8 })}
                 {label}
               </button>
             ))}
