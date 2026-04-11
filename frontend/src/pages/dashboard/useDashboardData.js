@@ -6,16 +6,15 @@ import { getMergedYoutubeViews } from "../../utils/youtubeStats"
 // Fetches real YouTube data + computes streak from videos
 export default function useDashboardData() {
   const [storedUser] = useState(() => JSON.parse(localStorage.getItem("user") || "{}"))
-  const [ytVideos, setYtVideos] = useState([])
-  const [ytAnalytics, setYtAnalytics] = useState(null)
-  const [loading, setLoading] = useState(false)
-
   const ytStats = storedUser.youtubeStats || null
   const ytConnected = !!ytStats
 
+  const [ytVideos, setYtVideos] = useState([])
+  const [ytAnalytics, setYtAnalytics] = useState(null)
+  const [loading, setLoading] = useState(ytConnected)
+
   useEffect(() => {
     if (!ytConnected) return
-    setLoading(true)
     Promise.all([
       apiFetch(API_ENDPOINTS.youtubeVideos),
       apiFetch(`${API_ENDPOINTS.youtubeAnalytics}?days=28`),
