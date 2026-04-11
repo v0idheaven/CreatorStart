@@ -29,6 +29,7 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
     const dayKey = toISTDayKey(v.publishedAt)
     return dayKey && dayKey >= recentCutoffKey
   })
+  const analyticsViews = Number(ov.views || 0)
   const displayViews = getMergedYoutubeViews({ ytStats, ytAnalytics, ytVideos })
 
   const W = 800, H = 140, PADX = 40, PADY = 16
