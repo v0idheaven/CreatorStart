@@ -3,6 +3,7 @@ import { User } from "../models/user.model.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import ApiError from "../utils/ApiError.js"
+import crypto from "crypto"
 
 const BACKEND_URL = process.env.BACKEND_URL || "https://creator-start-backend.onrender.com"
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://creator-start.vercel.app"
@@ -57,7 +58,7 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
             fullName: name,
             email,
             username,
-            password: Math.random().toString(36).slice(-12) + "Aa1!",
+            password: crypto.randomBytes(32).toString("hex"),
             avatar: picture,
             googleId,
             googleAccessToken: tokens.access_token,
@@ -109,7 +110,7 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
     res
         .cookie("accessToken", accessToken, cookieOptions)
         .cookie("refreshToken", refreshToken, cookieOptions)
-        .redirect(`${FRONTEND_URL}/auth/callback?token=${accessToken}&user=${encodeURIComponent(JSON.stringify(safeUser))}`)
+        .redirect(`${FRONTEND_URL}/auth/callback?token=${accessToken}`)
 })
 
 const refreshYoutubeStats = asyncHandler(async (req, res) => {
@@ -198,17 +199,17 @@ const getYoutubeVideos = asyncHandler(async (req, res) => {
     const videoIds = allVideoIds
     if (!videoIds?.length) return res.status(200).json(new ApiResponse(200, [], "No videos found"))
 
-    // YouTube videos.list accepts max 50 IDs — batch if needed
+    // YouTube videos.list accepts max 50 IDs — batch in parallel
     let allVideoItems = []
     try {
+        const batches = []
         for (let i = 0; i < videoIds.length; i += 50) {
-            const batch = videoIds.slice(i, i + 50)
-            const batchRes = await youtube.videos.list({
-                part: ["snippet", "statistics", "contentDetails"],
-                id: batch.join(",")
-            })
-            allVideoItems = [...allVideoItems, ...(batchRes.data.items || [])]
+            batches.push(videoIds.slice(i, i + 50))
         }
+        const batchResults = await Promise.all(batches.map(batch =>
+            youtube.videos.list({ part: ["snippet", "statistics", "contentDetails"], id: batch.join(",") })
+        ))
+        batchResults.forEach(r => { allVideoItems = [...allVideoItems, ...(r.data.items || [])] })
         statsRes = { data: { items: allVideoItems } }
     } catch (e) {
         const msg = String(e?.message || "").replace(/<[^>]*>/g, "").trim()
@@ -256,8 +257,13 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
 
     const youtubeAnalytics = google.youtubeAnalytics({ version: "v2", auth: oauth2Client })
     const days = parseInt(req.query.days) || 28
-    const endDate = new Date().toISOString().split("T")[0]
-    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+
+    // YouTube Analytics API uses UTC dates — keep everything in UTC
+    const now = new Date()
+    const endDate = now.toISOString().slice(0, 10)
+    const startDateObj = new Date(now)
+    startDateObj.setUTCDate(startDateObj.getUTCDate() - days)
+    const startDate = startDateObj.toISOString().slice(0, 10)
 
     try {
         const [overviewRes, dailyRes] = await Promise.all([
@@ -283,11 +289,67 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
         headers.forEach((h, i) => { overview[h] = row[i] || 0 })
 
         const dailyHeaders = dailyRes.data.columnHeaders?.map(h => h.name) || []
-        const daily = (dailyRes.data.rows || []).map(r => {
+        const dailyRaw = (dailyRes.data.rows || []).map(r => {
             const obj = {}
             dailyHeaders.forEach((h, i) => { obj[h] = r[i] })
             return obj
         })
+
+        // Fill all days from startDate to today with 0 for days YT API hasn't reported yet (2-3 day lag)
+        const dailyMap = {}
+        dailyRaw.forEach(d => { dailyMap[d.day] = d })
+
+        const daily = []
+        const cursor = new Date(startDate + "T00:00:00Z")
+        const end = new Date(endDate + "T00:00:00Z")
+        while (cursor <= end) {
+            const key = cursor.toISOString().split("T")[0]
+            daily.push(dailyMap[key] || { day: key, views: 0, estimatedMinutesWatched: 0 })
+            cursor.setUTCDate(cursor.getUTCDate() + 1)
+        }
+
+        // Merge near-real-time views (last 2 days) from API to better match Studio numbers.
+        try {
+            const rtStart = new Date(`${endDate}T00:00:00Z`)
+            rtStart.setUTCDate(rtStart.getUTCDate() - 2)
+            const rtStartDate = rtStart.toISOString().slice(0, 10)
+
+            const rtRes = await youtubeAnalytics.reports.query({
+                ids: "channel==MINE",
+                startDate: rtStartDate,
+                endDate,
+                metrics: "views",
+                dimensions: "day",
+                sort: "day",
+            })
+
+            const rtHeaders = rtRes.data.columnHeaders?.map(h => h.name) || []
+            const rtRows = (rtRes.data.rows || []).map(r => {
+                const obj = {}
+                rtHeaders.forEach((h, i) => { obj[h] = r[i] })
+                return obj
+            })
+            const rtByDay = {}
+            rtRows.forEach(r => {
+                if (r?.day) rtByDay[r.day] = Number(r.views || 0)
+            })
+
+            let addedViews = 0
+            const mergedDaily = daily.map(d => {
+                const baseViews = Number(d.views || 0)
+                const rtViews = Number(rtByDay[d.day] || 0)
+                const mergedViews = Math.max(baseViews, rtViews)
+                addedViews += Math.max(0, mergedViews - baseViews)
+                return { ...d, views: mergedViews }
+            })
+
+            daily.length = 0
+            daily.push(...mergedDaily)
+            overview.viewsAdjusted = Number(overview.views || 0) + addedViews
+        } catch (_rtErr) {
+            // If near-real-time report is unavailable, keep base analytics response.
+            overview.viewsAdjusted = Number(overview.views || 0)
+        }
 
         return res.status(200).json(new ApiResponse(200, { overview, daily }, "Analytics fetched"))
     } catch (e) {
