@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Youtube, RefreshCw } from "lucide-react"
+import { getMergedYoutubeViews } from "../../../utils/youtubeStats"
 
 export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshingYT, ytError, onRefresh, days, onChangeDays, fmt }) {
   const [ytTab, setYtTab] = useState("overview")
@@ -8,11 +9,8 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   const daily = ytAnalytics?.daily || []
   const ov = ytAnalytics?.overview || {}
 
-  // Views: use analytics period total (most accurate for selected period)
-  // Fallback to channel lifetime views only if analytics has no data at all
   const analyticsViews = Number(ov.views || 0)
-  const channelViews = Number(ytStats?.views || 0)
-  const displayViews = analyticsViews > 0 ? analyticsViews : channelViews
+  const displayViews = getMergedYoutubeViews({ ytStats, ytAnalytics, ytVideos })
 
   const W = 800, H = 140, PADX = 40, PADY = 16
   const graphMetric = ytTab === "audience" ? "estimatedMinutesWatched" : "views"
@@ -36,13 +34,18 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
     : ""
   const yLabels = [maxV, Math.round(maxV * 0.5), 0]
 
+  const graphLabel = ytTab === "overview" ? "Views graph" : "Watch time graph"
+  const graphSubLabel = ytTab === "overview"
+    ? "Daily views from YouTube Analytics + recent video stats"
+    : "Estimated minutes watched from YouTube Analytics"
+
   const metricTiles = ytTab === "overview" ? [
     { label: "Views", value: fmt(displayViews) },
     { label: "Watch time (hrs)", value: fmt(Math.round((ov.estimatedMinutesWatched || 0) / 60)) },
     { label: "Subscribers", value: fmt(ytStats?.subscribers || 0) },
   ] : [
-    { label: "Unique viewers", value: fmt(displayViews) },
-    { label: "Subs gained", value: fmt(ov.subscribersGained || 0), color: "#4ade80" },
+    { label: "Current subscribers", value: fmt(ytStats?.subscribers || 0), color: "#4ade80" },
+    { label: "Net change", value: fmt((ov.subscribersGained || 0) - (ov.subscribersLost || 0)), color: "#60a5fa" },
     { label: "Subs lost", value: fmt(ov.subscribersLost || 0), color: "#f87171" },
   ]
 
@@ -62,6 +65,15 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
         </button>
       </div>
 
+      <div className="yt-stats-heading">
+        <h2 className="yt-stats-title">
+          {analyticsViews > 0
+            ? `Your channel got ${fmt(displayViews)} views in the last ${days} days`
+            : `Your channel has ${fmt(displayViews)} total views`
+          }
+        </h2>
+      </div>
+
       {ytError && (
         <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "12px 16px", borderRadius: "10px", background: "#f8717115", border: "1px solid #f8717130", marginBottom: "16px" }}>
           <p style={{ fontSize: "13px", color: "#f87171", margin: 0, lineHeight: "1.5" }}>{ytError}</p>
@@ -74,10 +86,10 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
             <button key={t} onClick={() => setYtTab(t)} className={`yt-tab${ytTab === t ? " yt-tab--active" : ""}`}>{t}</button>
           ))}
           <div className="yt-tab-period">
-            {[7, 28, 90].map(d => (
+            {[7, 28, 90, 365].map(d => (
               <button key={d} onClick={() => onChangeDays(d)}
                 style={{ padding: "3px 10px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "11px", fontWeight: days === d ? "600" : "400", background: days === d ? "#ff444420" : "transparent", color: days === d ? "#ff4444" : "var(--dim)", transition: "all 0.15s" }}>
-                {d}d
+                {d === 365 ? "1y" : `${d}d`}
               </button>
             ))}
           </div>
@@ -93,12 +105,21 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
         </div>
 
         <div className="yt-graph-wrap">
+          <div className="yt-graph-caption">
+            <p className="yt-graph-caption-title">{graphLabel}</p>
+            <p className="yt-graph-caption-sub">{graphSubLabel}</p>
+          </div>
           {daily.length === 0 ? (
             <div className="yt-graph-empty">
               <p className="yt-graph-empty-text">No daily data for this period yet.</p>
             </div>
           ) : (
             <div className="yt-graph-inner">
+              {daily.filter(d => Number(d.views || 0) > 0).length === 0 && (
+                <div style={{ fontSize: "11px", color: "var(--dim)", padding: "8px 0", textAlign: "center" }}>
+                  Daily data lags 2-3 days (YouTube updates with a delay)
+                </div>
+              )}
               <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="yt-svg"
                 onMouseMove={e => {
                   const rect = e.currentTarget.getBoundingClientRect()
