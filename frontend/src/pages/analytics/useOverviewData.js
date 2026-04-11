@@ -9,7 +9,6 @@ export default function useOverviewData(platform, ytVideos, youtubeStats) {
 
     const plan = JSON.parse(localStorage.getItem(`planner_data_${platform}`) || "null")
     const streakArr = JSON.parse(localStorage.getItem(`streak_data_${platform}`) || "[]")
-    const contentArr = JSON.parse(localStorage.getItem(`content_data_${platform}`) || "[]")
     const entries = plan?.entries || []
     const active = entries.filter(e => e.active || e.content)
     const done = active.filter(e => e.isCompleted)
@@ -76,7 +75,7 @@ export default function useOverviewData(platform, ytVideos, youtubeStats) {
     return {
       active: active.length, done: done.length, rate, total: streakArr.length, missed,
       upcoming, weeks, consistency, monthlyActivity, todayPosted, useRealData,
-      contentTotal: contentArr.length, contentItems: contentArr,
+      contentTotal: 0, contentItems: [],
     }
   }, [platform, ytVideos, ytConnected])
 }

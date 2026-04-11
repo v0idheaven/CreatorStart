@@ -65,7 +65,7 @@ export default function DashboardYT() {
               <div className="chart-header">
                 <div>
                   <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", margin: "0 0 3px" }}>Upload activity</p>
-                  <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Views per upload day (last 7 days)</p>
+                  <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Videos uploaded per day (last 7 days)</p>
                 </div>
                 <span className="chart-badge" style={{ color: YT, borderColor: "#ff444430", background: YTbg }}>YouTube</span>
               </div>
