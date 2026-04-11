@@ -42,18 +42,7 @@ export default function Auth() {
         navigate("/select-platform")
       }
     } catch {
-      const stored = JSON.parse(localStorage.getItem("user") || "{}")
-      if (isLogin) {
-        if (!stored.email) { setError("No account found. Please sign up first."); setLoading(false); return }
-        if (stored.email !== form.email) { setError("Email not found."); setLoading(false); return }
-        if (stored.password && stored.password !== form.password) { setError("Incorrect password."); setLoading(false); return }
-        const plat = stored.platform || localStorage.getItem("platform")
-        if (plat) localStorage.setItem("platform", plat)
-        navigate(plat ? "/dashboard" : "/select-platform")
-      } else {
-        localStorage.setItem("user", JSON.stringify({ fullName: form.name, email: form.email, password: form.password, username: form.email.split("@")[0] }))
-        navigate("/select-platform")
-      }
+      setError("Network error. Please check your connection and try again.")
     } finally {
       setLoading(false)
     }
