@@ -8,22 +8,6 @@ function fmt(n) {
   return num.toLocaleString()
 }
 
-function MiniChart({ data, color }) {
-  if (!data?.length) return null
-  const W = 400, H = 60, PAD = 4
-  const max = Math.max(...data, 1)
-  const step = (W - PAD * 2) / (data.length - 1)
-  const coords = data.map((v, i) => ({ x: PAD + i * step, y: PAD + (1 - v / max) * (H - PAD * 2) }))
-  const line = coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x} ${c.y}`).join(" ")
-  const area = `${line} L ${coords[coords.length - 1].x} ${H} L ${PAD} ${H} Z`
-  return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block" }}>
-      <path d={area} fill={color} opacity="0.1" />
-      <path d={line} stroke={color} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
 function StatCard({ icon, label, value, color, sub }) {
   return (
     <div style={{ background: "var(--bg)", borderRadius: "10px", padding: "14px 16px", border: "1px solid var(--border)" }}>

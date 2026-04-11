@@ -116,7 +116,7 @@ export default function DashboardBoth() {
           <div className="dash-header-row">
             <div>
               <p className="page-kicker">Dashboard</p>
-              <h1 className="dash-greeting">{getGreeting()}, <span style={{ color: "#818cf8" }}>{firstName}</span> 👋</h1>
+              <h1 className="dash-greeting">{getGreeting()}, <span style={{ color: "#818cf8" }}>{firstName}</span></h1>
               <p className="dash-sub">Here's how your content is performing today.</p>
             </div>
             <div className="platform-switcher">
