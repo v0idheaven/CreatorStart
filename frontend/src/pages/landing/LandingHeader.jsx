@@ -5,8 +5,13 @@ export default function LandingHeader({ scrollTo }) {
   return (
     <header className="landing-header">
       <div className="landing-header-inner">
-        <div className="landing-logo">
-          <img src="/logo.svg" alt="CreatorStart" style={{ width: "180px", height: "36px", objectFit: "contain" }} />
+        <div className="landing-logo" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ width: "30px", height: "30px", background: "#818cf820", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <img src="/logo.svg" alt="CreatorStart" style={{ width: "20px", height: "20px", objectFit: "contain" }} />
+          </div>
+          <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: "16px", color: "#f0f0f2", letterSpacing: "-0.3px" }}>
+            Creator<span style={{ color: "#818cf8" }}>Start</span>
+          </span>
         </div>
         <nav className="landing-nav">
           {["features", "planner", "pricing", "about"].map(s => (
