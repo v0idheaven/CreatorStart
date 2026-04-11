@@ -7,13 +7,60 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
 
   const daily = ytAnalytics?.daily || []
   const ov = ytAnalytics?.overview || {}
+  const toISTDayKey = (dateInput) => {
+    const d = new Date(dateInput)
+    if (Number.isNaN(d.getTime())) return ""
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(d)
+  }
+
+  const addOneDayKey = (dayKey) => {
+    const d = new Date(`${dayKey}T00:00:00Z`)
+    if (Number.isNaN(d.getTime())) return ""
+    d.setUTCDate(d.getUTCDate() + 1)
+    return d.toISOString().slice(0, 10)
+  }
+
   const analyticsViews = Number(ov.views || 0)
-  const displayViews = Number(ov.viewsAdjusted || ov.views || 0)
+  const recentCutoff = new Date()
+  recentCutoff.setDate(recentCutoff.getDate() - 3)
+  const recentCutoffKey = toISTDayKey(recentCutoff)
+  const recentVideos = (ytVideos || []).filter(v => {
+    if (!v?.publishedAt) return false
+    const dayKey = toISTDayKey(v.publishedAt)
+    return dayKey && dayKey >= recentCutoffKey
+  })
+  const recentVideoViews = recentVideos.reduce((sum, v) => sum + Number(v.views || 0), 0)
+  const displayViews = analyticsViews + recentVideoViews
 
   const W = 800, H = 140, PADX = 40, PADY = 16
   const graphMetric = ytTab === "audience" ? "estimatedMinutesWatched" : "views"
   const maxV = Math.max(...daily.map(d => Number(d[graphMetric] || 0)), 1)
-  const graphDaily = daily
+  const graphDaily = daily.map(d => ({ ...d }))
+  if (ytTab === "overview" && recentVideos.length > 0) {
+    const byDay = new Map(graphDaily.map(d => [d.day, { ...d }]))
+    recentVideos.forEach(v => {
+      const publishedDay = toISTDayKey(v.publishedAt)
+      if (!publishedDay) return
+      const nextDay = addOneDayKey(publishedDay)
+      const views = Math.max(0, Number(v.views || 0))
+      if (!views) return
+
+      const dayOneViews = Math.min(1, views)
+      const dayTwoViews = Math.max(0, views - dayOneViews)
+
+      if (byDay.has(publishedDay)) {
+        const item = byDay.get(publishedDay)
+        item.views = Number(item.views || 0) + dayOneViews
+        byDay.set(publishedDay, item)
+      }
+      if (nextDay && dayTwoViews > 0 && byDay.has(nextDay)) {
+        const item = byDay.get(nextDay)
+        item.views = Number(item.views || 0) + dayTwoViews
+        byDay.set(nextDay, item)
+      }
+    })
+    graphDaily.splice(0, graphDaily.length, ...Array.from(byDay.values()))
+  }
 
   const coords = graphDaily.map((p, i) => {
     const v = Number(p[graphMetric] || 0)
