@@ -27,15 +27,22 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
 
   const W = 800, H = 140, PADX = 40, PADY = 16
   const graphMetric = ytTab === "audience" ? "estimatedMinutesWatched" : "views"
-  const maxV = Math.max(...daily.map(d => Number(d[graphMetric] || 0)), 1)
+  
+  // Add pending views to the last day for visualization
+  const displayDaily = daily.length > 0 && pendingViews > 0
+    ? [...daily.slice(0, -1), { ...daily[daily.length - 1], [graphMetric]: Number(daily[daily.length - 1][graphMetric] || 0) + pendingViews, isPending: true }]
+    : daily
+  
+  const maxV = Math.max(...displayDaily.map(d => Number(d[graphMetric] || 0)), 1)
 
-  const coords = daily.map((p, i) => {
+  const coords = displayDaily.map((p, i) => {
     const v = Number(p[graphMetric] || 0)
     return {
-      x: PADX + i * ((W - PADX * 2) / Math.max(daily.length - 1, 1)),
+      x: PADX + i * ((W - PADX * 2) / Math.max(displayDaily.length - 1, 1)),
       y: PADY + (1 - v / maxV) * (H - PADY * 2),
       v,
-      day: p.day
+      day: p.day,
+      isPending: p.isPending || false
     }
   })
 
@@ -103,27 +110,21 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
           ))}
         </div>
 
-        {pendingViews > 0 && (
-          <div style={{ padding: "8px 20px", fontSize: "12px", color: "#ff4444", borderTop: "1px solid var(--border)", marginTop: "12px" }}>
-            ⏳ +{fmt(pendingViews)} views pending (processing by YouTube)
-          </div>
-        )}
-
         <div className="yt-graph-wrap">
-          {daily.length === 0 ? (
+          {displayDaily.length === 0 ? (
             <div className="yt-graph-empty">
               <p className="yt-graph-empty-text">No daily data for this period yet.</p>
             </div>
           ) : (
             <div className="yt-graph-inner">
-              {daily.filter(d => d.views > 0).length === 0 && (
+              {displayDaily.filter(d => !d.isPending && d.views > 0).length === 0 && !pendingViews && (
                 <div style={{ fontSize: "11px", color: "var(--dim)", padding: "8px 0", textAlign: "center" }}>
                   📊 Daily data lags 2-3 days (YouTube updates with a delay)
                 </div>
               )}
               {pendingViews > 0 && (
-                <div style={{ fontSize: "11px", color: "#ff4444", padding: "8px 0", textAlign: "center", fontWeight: "500" }}>
-                  ⏳ {fmt(pendingViews)} views pending from recent days (YouTube still processing)
+                <div style={{ fontSize: "11px", color: "var(--dim)", padding: "8px 0", textAlign: "center" }}>
+                  💡 Last bar includes +{fmt(pendingViews)} pending views (lighter shade)
                 </div>
               )}
               <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="yt-svg"
@@ -144,16 +145,25 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
                     </g>
                   )
                 })}
-                <path d={areaPath} fill="#ff4444" opacity="0.06" />
+                <path d={areaPath} fill="#ff4444" opacity={pendingViews > 0 ? "0.03" : "0.06"} />
                 <path d={linePath} stroke="#ff4444" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                {pendingViews > 0 && coords.length > 0 && coords[coords.length - 1]?.isPending && (
+                  <g opacity="0.5">
+                    <path d={`M ${coords[coords.length - 2]?.x || PADX} ${coords[coords.length - 2]?.y || PADY} L ${coords[coords.length - 1].x} ${coords[coords.length - 1].y}`} stroke="#ff4444" strokeWidth="2" fill="none" strokeLinecap="round" strokeDasharray="5 5" />
+                    <circle cx={coords[coords.length - 1].x} cy={coords[coords.length - 1].y} r="3" fill="#ff4444" opacity="0.6" />
+                  </g>
+                )}
                 {hoveredIdx !== null && coords[hoveredIdx] && (
                   <g>
                     <line x1={coords[hoveredIdx].x} x2={coords[hoveredIdx].x} y1={PADY} y2={H} stroke="var(--muted)" strokeWidth="1" strokeDasharray="3 3" opacity="0.5" />
                     <circle cx={coords[hoveredIdx].x} cy={coords[hoveredIdx].y} r="5" fill="#ff4444" />
                     <circle cx={coords[hoveredIdx].x} cy={coords[hoveredIdx].y} r="3" fill="var(--card)" />
-                    <rect x={Math.min(coords[hoveredIdx].x + 8, W - 120)} y={Math.max(coords[hoveredIdx].y - 36, PADY)} width="112" height="32" rx="6" fill="var(--card)" stroke="var(--border)" strokeWidth="1" />
-                    <text x={Math.min(coords[hoveredIdx].x + 14, W - 114)} y={Math.max(coords[hoveredIdx].y - 18, PADY + 14)} fontSize="12" fontWeight="700" fill="var(--text)">{fmt(coords[hoveredIdx].v)}</text>
-                    <text x={Math.min(coords[hoveredIdx].x + 14, W - 114)} y={Math.max(coords[hoveredIdx].y - 6, PADY + 26)} fontSize="10" fill="var(--dim)">
+                    <rect x={Math.min(coords[hoveredIdx].x + 8, W - 120)} y={Math.max(coords[hoveredIdx].y - 48, PADY)} width="120" height="44" rx="6" fill="var(--card)" stroke="var(--border)" strokeWidth="1" />
+                    <text x={Math.min(coords[hoveredIdx].x + 14, W - 114)} y={Math.max(coords[hoveredIdx].y - 30, PADY + 10)} fontSize="12" fontWeight="700" fill="var(--text)">{fmt(coords[hoveredIdx].v)}</text>
+                    {coords[hoveredIdx].isPending && (
+                      <text x={Math.min(coords[hoveredIdx].x + 14, W - 114)} y={Math.max(coords[hoveredIdx].y - 18, PADY + 22)} fontSize="9" fill="#ff9999">(+pending)</text>
+                    )}
+                    <text x={Math.min(coords[hoveredIdx].x + 14, W - 114)} y={Math.max(coords[hoveredIdx].y - 6, PADY + 36)} fontSize="10" fill="var(--dim)">
                       {coords[hoveredIdx].day ? new Date(coords[hoveredIdx].day + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : ""}
                     </text>
                   </g>
