@@ -38,6 +38,7 @@ export default function useYouTubeData(youtubeStats) {
       if (aRes.ok && aData?.data) setYtAnalytics(aData.data)
       if (!vRes.ok) setYtError(cleanError(vData?.message))
       else if (!aRes.ok) setYtError(cleanError(aData?.message))
+      else if (aData?.data?.error) setYtError(`Analytics: ${aData.data.error}`)
     } catch (error) {
       clearTimeout(timeout)
       if (error.name === "AbortError") {
