@@ -51,11 +51,11 @@ export default function DashboardBoth() {
     const entries = plan?.entries || []
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(todayIST); d.setDate(todayIST.getDate() - (6 - i))
+      // Compare date strings directly (YYYY-MM-DD) to avoid timezone issues
+      const dStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`
       const posted = entries.filter(e => {
         if (!e.date || !e.isCompleted) return false
-        const ed = new Date(new Date(e.date).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
-        ed.setHours(0, 0, 0, 0)
-        return ed.getTime() === d.getTime()
+        return e.date.slice(0, 10) === dStr
       }).length
       return { day: DAYS[d.getDay() === 0 ? 6 : d.getDay() - 1], value: posted }
     })
