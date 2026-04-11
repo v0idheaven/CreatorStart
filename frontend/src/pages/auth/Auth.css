@@ -58,7 +58,7 @@
 }
 
 .auth-logo-accent {
-  color: #2d8fa3;
+  color: var(--brand-logo-color);
 }
 
 .auth-badge {

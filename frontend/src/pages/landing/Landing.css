@@ -56,7 +56,7 @@
 }
 
 .landing-logo-accent {
-  color: #2d8fa3;
+  color: var(--brand-logo-color);
 }
 
 .landing-nav {
