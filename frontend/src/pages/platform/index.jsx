@@ -24,9 +24,7 @@ export default function PlatformSelect() {
   return (
     <div className="platform-select-page">
       <div className="platform-select-logo" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-        <div style={{ width: "32px", height: "32px", background: "#818cf820", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <img src="/logo.svg" alt="CreatorStart" style={{ width: "22px", height: "22px", objectFit: "contain" }} />
-        </div>
+        <img src="/logo.svg" alt="CreatorStart" style={{ width: "30px", height: "30px", objectFit: "contain" }} />
         <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: "18px", color: "#f0f0f2", letterSpacing: "-0.3px" }}>
           Creator<span style={{ color: "#818cf8" }}>Start</span>
         </span>
