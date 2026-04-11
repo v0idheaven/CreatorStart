@@ -1,11 +1,21 @@
 import { createElement } from "react"
-import { X, ExternalLink, Eye, ThumbsUp, MessageCircle, Clock, Youtube } from "lucide-react"
+import { X, ExternalLink, Eye, ThumbsUp, MessageCircle, Clock, Youtube, Calendar, BarChart2, Percent } from "lucide-react"
 
 function fmt(n) {
   const num = Number(n || 0)
   if (num >= 1000000) return (num / 1000000).toFixed(1) + "M"
   if (num >= 1000) return (num / 1000).toFixed(1) + "K"
   return num.toLocaleString()
+}
+
+function fmtDuration(seconds) {
+  const s = Number(seconds || 0)
+  if (!s) return "—"
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
+  return `${m}:${String(sec).padStart(2, "0")}`
 }
 
 function StatCard({ icon, label, value, color, sub }) {
@@ -27,7 +37,22 @@ export default function VideoDetailPanel({ video, onClose }) {
   if (!video) return null
   const accent = "#ff4444"
   const date = new Date(video.publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
-  const likeRate = video.views ? ((video.likes / video.views) * 100).toFixed(1) : 0
+  const likeRate = Number(video.views) > 0 ? ((Number(video.likes) / Number(video.views)) * 100).toFixed(1) : "0"
+  const commentRate = Number(video.views) > 0 ? ((Number(video.comments) / Number(video.views)) * 100).toFixed(2) : "0"
+  const engagementRate = Number(video.views) > 0
+    ? (((Number(video.likes) + Number(video.comments)) / Number(video.views)) * 100).toFixed(1)
+    : "0"
+  const duration = fmtDuration(video.duration)
+
+  // Days since published
+  const daysSince = video.publishedAt
+    ? Math.floor((Date.now() - new Date(video.publishedAt).getTime()) / 86400000)
+    : null
+
+  // Views per day since publish
+  const viewsPerDay = daysSince > 0
+    ? (Number(video.views) / daysSince).toFixed(1)
+    : Number(video.views)
 
   return (
     <>
@@ -43,7 +68,10 @@ export default function VideoDetailPanel({ video, onClose }) {
                 <span style={{ fontSize: "11px", color: accent, fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>YouTube · {video.type}</span>
               </div>
               <h2 style={{ fontSize: "15px", fontWeight: "700", color: "var(--text)", margin: 0, lineHeight: "1.4" }}>{video.title}</h2>
-              <p style={{ fontSize: "12px", color: "var(--dim)", margin: "6px 0 0" }}>Published {date} · {video.duration}</p>
+              <p style={{ fontSize: "12px", color: "var(--dim)", margin: "6px 0 0" }}>
+                Published {date} · {duration}
+                {daysSince !== null && <span> · {daysSince} days ago</span>}
+              </p>
             </div>
             <button onClick={onClose} style={{ background: "var(--border)", border: "none", borderRadius: "8px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
               <X size={15} color="var(--muted)" />
@@ -51,19 +79,40 @@ export default function VideoDetailPanel({ video, onClose }) {
           </div>
         </div>
 
-        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
 
           {/* Thumbnail */}
           <div style={{ borderRadius: "10px", overflow: "hidden", aspectRatio: "16/9", background: "var(--border)" }}>
             {video.thumbnail && <img src={video.thumbnail} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
           </div>
 
-          {/* Main stats grid */}
+          {/* Main stats */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
             <StatCard icon={Eye} label="Views" value={fmt(video.views)} color="#818cf8" sub="total views" />
             <StatCard icon={ThumbsUp} label="Likes" value={fmt(video.likes)} color="#4ade80" sub={`${likeRate}% like rate`} />
-            <StatCard icon={MessageCircle} label="Comments" value={fmt(video.comments)} color="#f59e0b" sub="total comments" />
-            <StatCard icon={Clock} label="Duration" value={video.duration || "—"} color="#06b6d4" sub="video length" />
+            <StatCard icon={MessageCircle} label="Comments" value={fmt(video.comments)} color="#f59e0b" sub={`${commentRate}% comment rate`} />
+            <StatCard icon={Clock} label="Duration" value={duration} color="#06b6d4" sub="video length" />
+          </div>
+
+          {/* Performance metrics */}
+          <div style={{ background: "var(--bg)", borderRadius: "10px", border: "1px solid var(--border)", overflow: "hidden" }}>
+            <p style={{ fontSize: "11px", fontWeight: "600", color: "var(--dim)", textTransform: "uppercase", letterSpacing: "0.5px", padding: "12px 16px 8px", margin: 0 }}>Performance</p>
+            {[
+              { label: "Engagement rate", value: `${engagementRate}%`, sub: "likes + comments / views", icon: Percent, color: "#818cf8" },
+              { label: "Views per day", value: fmt(viewsPerDay), sub: `avg since publish`, icon: BarChart2, color: "#f59e0b" },
+              { label: "Published", value: date, sub: `${daysSince} days ago`, icon: Calendar, color: "#4ade80" },
+            ].map(({ label, value, sub, icon, color }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderTop: "1px solid var(--border)" }}>
+                <div style={{ width: "30px", height: "30px", borderRadius: "8px", background: color + "20", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {createElement(icon, { size: 13, color })}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: "12px", color: "var(--muted)", margin: "0 0 1px" }}>{label}</p>
+                  <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{sub}</p>
+                </div>
+                <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--text)" }}>{value}</span>
+              </div>
+            ))}
           </div>
 
           {/* View on YouTube */}
