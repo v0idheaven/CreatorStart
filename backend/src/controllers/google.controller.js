@@ -283,11 +283,27 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
         headers.forEach((h, i) => { overview[h] = row[i] || 0 })
 
         const dailyHeaders = dailyRes.data.columnHeaders?.map(h => h.name) || []
-        const daily = (dailyRes.data.rows || []).map(r => {
+        const dailyRaw = (dailyRes.data.rows || []).map(r => {
             const obj = {}
             dailyHeaders.forEach((h, i) => { obj[h] = r[i] })
             return obj
         })
+
+        // Fill all days from startDate to today (IST) with 0 if API didn't return data for that day
+        // This ensures graph always extends to today even though YT Analytics lags 2-3 days
+        const istNow = new Date(new Date().getTime() + 5.5 * 60 * 60 * 1000)
+        const todayIST = istNow.toISOString().split("T")[0]
+        const dailyMap = {}
+        dailyRaw.forEach(d => { dailyMap[d.day] = d })
+
+        const daily = []
+        const cursor = new Date(startDate + "T00:00:00Z")
+        const end = new Date(todayIST + "T00:00:00Z")
+        while (cursor <= end) {
+            const key = cursor.toISOString().split("T")[0]
+            daily.push(dailyMap[key] || { day: key, views: 0, estimatedMinutesWatched: 0 })
+            cursor.setUTCDate(cursor.getUTCDate() + 1)
+        }
 
         return res.status(200).json(new ApiResponse(200, { overview, daily }, "Analytics fetched"))
     } catch (e) {
