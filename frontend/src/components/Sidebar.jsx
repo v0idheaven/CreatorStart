@@ -76,7 +76,7 @@ export default function Sidebar() {
         <div className="sidebar-logo-icon" style={{ background: "transparent", border: "none", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <img src="/logo.svg" alt="CreatorStart" style={{ width: "28px", height: "28px", display: "block", objectFit: "contain" }} />
         </div>
-        <span className="sidebar-logo-text" style={{ opacity: isOpen ? 1 : 0, fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: "15px", letterSpacing: "-0.3px" }}>
+        <span className="sidebar-logo-text" style={{ opacity: isOpen ? 1 : 0, fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: "19px", letterSpacing: "-0.5px" }}>
           Creator<span style={{ color: "#818cf8" }}>Start</span>
         </span>
       </div>
