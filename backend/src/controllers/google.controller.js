@@ -257,13 +257,15 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
     const youtubeAnalytics = google.youtubeAnalytics({ version: "v2", auth: oauth2Client })
     const days = parseInt(req.query.days) || 28
     
-    // Use IST for date calculations to match server timezone
-    const istNow = new Date(new Date().getTime() + 5.5 * 60 * 60 * 1000)
-    const todayIST = istNow.toISOString().split("T")[0]
-    const startDateObj = new Date(istNow)
-    startDateObj.setDate(startDateObj.getDate() - days)
-    const startDate = startDateObj.toISOString().split("T")[0]
-    const endDate = todayIST
+    // Get today's date in IST (YYYY-MM-DD format)
+    const now = new Date()
+    const istDate = new Date(now.getTime() + 5.5 * 60 * 60 * 1000)
+    const endDate = istDate.toISOString().slice(0, 10)
+    
+    // Calculate start date by subtracting days from today (in IST)
+    const startDateObj = new Date(now.getTime() + 5.5 * 60 * 60 * 1000)
+    startDateObj.setUTCDate(startDateObj.getUTCDate() - days)
+    const startDate = startDateObj.toISOString().slice(0, 10)
 
     try {
         const [overviewRes, dailyRes] = await Promise.all([
@@ -309,7 +311,7 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
             cursor.setUTCDate(cursor.getUTCDate() + 1)
         }
 
-        console.log(`[YT Analytics] Period: ${startDate} to ${endDate}, Overview Views: ${overview.views}, Daily entries: ${daily.length}, Non-zero days: ${daily.filter(d => d.views > 0).length}`)
+        console.log(`[YT Analytics] Period: ${startDate} to ${endDate} (${days}d), Overview Views: ${overview.views}, API Daily entries: ${dailyRaw.length}, Filled Daily: ${daily.length}`)
 
         return res.status(200).json(new ApiResponse(200, { overview, daily }, "Analytics fetched"))
     } catch (e) {
