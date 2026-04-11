@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, createElement } from "react"
 import { Search, Youtube, Film, BarChart2, Instagram, Layers, RefreshCw } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import VideoDetailPanel from "./VideoDetailPanel"
 import { apiFetch } from "../../utils/api"
 import { API_ENDPOINTS } from "../../constants/api"
+import { getMergedYoutubeViews } from "../../utils/youtubeStats"
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://creator-start-backend.onrender.com"
 
@@ -95,6 +96,7 @@ export default function Content() {
   const [ytVideos, setYtVideos] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [ytAnalytics, setYtAnalytics] = useState(null)
   const [search, setSearch] = useState("")
   const [filterType, setFilterType] = useState("All")
   const [selectedVideo, setSelectedVideo] = useState(null)
@@ -108,14 +110,20 @@ export default function Content() {
     try {
       const controller = new AbortController()
       const timeout = setTimeout(() => controller.abort(), 20000)
-      const res = await apiFetch(API_ENDPOINTS.youtubeVideos, { signal: controller.signal })
+      const [videosRes, analyticsRes] = await Promise.all([
+        apiFetch(API_ENDPOINTS.youtubeVideos, { signal: controller.signal }),
+        apiFetch(`${API_ENDPOINTS.youtubeAnalytics}?days=28`, { signal: controller.signal }),
+      ])
       clearTimeout(timeout)
-      const data = await res.json()
-      if (res.ok && Array.isArray(data?.data)) {
-        setYtVideos(data.data.map(v => ({ ...v, platform: "youtube" })))
+      const [videosData, analyticsData] = await Promise.all([videosRes.json(), analyticsRes.json()])
+      if (videosRes.ok && Array.isArray(videosData?.data)) {
+        setYtVideos(videosData.data.map(v => ({ ...v, platform: "youtube" })))
       } else {
-        const msg = String(data?.message || "").replace(/<[^>]*>/g, "").trim()
+        const msg = String(videosData?.message || "").replace(/<[^>]*>/g, "").trim()
         setError(msg.toLowerCase().includes("quota") ? "YouTube API quota exceeded. Try again after midnight Pacific Time." : msg || "Failed to load videos")
+      }
+      if (analyticsRes.ok && analyticsData?.data) {
+        setYtAnalytics(analyticsData.data)
       }
     } catch (e) {
       setError(e.name === "AbortError" ? "Backend is waking up. Click Refresh in a moment." : "Could not load videos.")
@@ -141,7 +149,7 @@ export default function Content() {
   }), [allContent, filterType, search, platformTab])
 
   const tabContent = platformTab === "all" ? allContent : allContent.filter(c => c.platform === platformTab)
-  const totalViews = tabContent.reduce((s, c) => s + Number(c.views || 0), 0)
+  const totalViews = getMergedYoutubeViews({ ytStats: storedUser.youtubeStats, ytAnalytics, ytVideos }) || tabContent.reduce((s, c) => s + Number(c.views || 0), 0)
   const totalLikes = tabContent.reduce((s, c) => s + Number(c.likes || 0), 0)
   const totalCount = tabContent.length
 
@@ -180,17 +188,26 @@ export default function Content() {
 
           {/* Platform tabs */}
           <div style={{ display: "flex", gap: "4px", marginBottom: "20px", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "4px", width: "fit-content" }}>
-            {PLATFORM_TABS.map(({ id, label, icon: Icon, color }) => (
+            {PLATFORM_TABS.map(({ id, label, icon, color }) => (
               <button key={id} onClick={() => { setPlatformTab(id); setFilterType("All") }}
                 style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 16px", borderRadius: "7px", border: "none", cursor: "pointer", fontSize: "13px", fontWeight: platformTab === id ? "600" : "400", background: platformTab === id ? color + "18" : "transparent", color: platformTab === id ? color : "var(--muted)", transition: "all 0.15s" }}>
-                <Icon size={13} strokeWidth={platformTab === id ? 2.5 : 1.8} />
+                {createElement(icon, { size: 13, strokeWidth: platformTab === id ? 2.5 : 1.8 })}
                 {label}
               </button>
             ))}
           </div>
 
+          {/* Instagram Coming Soon */}
+          {platformTab === "instagram" && (
+            <div className="card empty-state">
+              <Instagram size={32} color="#c13584" style={{ marginBottom: "12px" }} />
+              <p className="empty-title">Coming Soon</p>
+              <p className="empty-sub">Instagram content library is on the way.</p>
+            </div>
+          )}
+
           {/* Not connected */}
-          {!ytConnected && (
+          {platformTab !== "instagram" && !ytConnected && (
             <div className="card empty-state">
               <Youtube size={32} color="#ff4444" style={{ marginBottom: "12px" }} />
               <p className="empty-title">Connect YouTube</p>
@@ -202,7 +219,7 @@ export default function Content() {
           )}
 
           {/* Loading */}
-          {ytConnected && loading && (
+          {platformTab !== "instagram" && ytConnected && loading && (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 0", gap: "12px" }}>
               <div className="spinner spinner-sm" style={{ borderTopColor: "#ff4444" }} />
               <span style={{ fontSize: "13px", color: "var(--dim)" }}>Loading your videos...</span>
@@ -210,7 +227,7 @@ export default function Content() {
           )}
 
           {/* Error */}
-          {ytConnected && !loading && error && (
+          {platformTab !== "instagram" && ytConnected && !loading && error && (
             <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "14px 16px", borderRadius: "10px", background: "#f8717115", border: "1px solid #f8717130", marginBottom: "16px" }}>
               <span style={{ fontSize: "16px" }}>⚠️</span>
               <div>
@@ -221,7 +238,7 @@ export default function Content() {
           )}
 
           {/* Filters + Grid */}
-          {ytConnected && !loading && !error && allContent.length > 0 && (
+          {platformTab !== "instagram" && ytConnected && !loading && !error && allContent.length > 0 && (
             <>
               <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
                 <div style={{ position: "relative", flex: 1, minWidth: "200px", maxWidth: "320px" }}>
@@ -254,7 +271,7 @@ export default function Content() {
           )}
 
           {/* No videos yet */}
-          {ytConnected && !loading && !error && allContent.length === 0 && (
+          {platformTab !== "instagram" && ytConnected && !loading && !error && allContent.length === 0 && (
             <div className="card empty-state">
               <Film size={32} color="var(--dim)" style={{ marginBottom: "12px" }} />
               <p className="empty-title">No videos found</p>

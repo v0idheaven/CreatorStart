@@ -3,7 +3,7 @@ import YTStudioView from "./YTStudioView"
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://creator-start-backend.onrender.com"
 
-export default function YouTubeTab({ ytStats, ytAnalytics, ytVideos, loadingVideos, refreshingYT, ytError, days, onChangeDays, onRefresh, fetchYTVideos, fmt }) {
+export default function YouTubeTab({ ytStats, ytAnalytics, ytVideos, refreshingYT, ytError, days, onChangeDays, onRefresh, fmt }) {
   if (!ytStats) {
     return (
       <div className="yt-connect-empty">

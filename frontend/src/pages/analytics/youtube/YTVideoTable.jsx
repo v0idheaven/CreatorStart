@@ -1,16 +1,7 @@
-import { useState, useEffect } from "react"
 import { Youtube, RefreshCw } from "lucide-react"
 
-// Recent YouTube videos table with error + slow-backend awareness
+// Recent YouTube videos table with loading and error states
 export default function YTVideoTable({ ytVideos, loadingVideos, ytError, onRefresh, fmt }) {
-  const [slowWarning, setSlowWarning] = useState(false)
-
-  // After 5s of loading, show a "this is taking a while" hint
-  useEffect(() => {
-    if (!loadingVideos) { setSlowWarning(false); return }
-    const t = setTimeout(() => setSlowWarning(true), 5000)
-    return () => clearTimeout(t)
-  }, [loadingVideos])
 
   return (
     <div className="chart-card yt-videos-card">
@@ -28,11 +19,6 @@ export default function YTVideoTable({ ytVideos, loadingVideos, ytError, onRefre
       {loadingVideos ? (
         <div className="yt-videos-loading" style={{ flexDirection: "column", gap: "8px" }}>
           <div className="spinner spinner-sm" style={{ borderTopColor: "#ff4444" }} />
-          {slowWarning && (
-            <p style={{ fontSize: "12px", color: "var(--dim)", margin: 0, textAlign: "center" }}>
-              Backend is waking up (free tier)...
-            </p>
-          )}
         </div>
       ) : ytError ? (
         <div className="yt-videos-loading" style={{ flexDirection: "column", gap: "10px" }}>

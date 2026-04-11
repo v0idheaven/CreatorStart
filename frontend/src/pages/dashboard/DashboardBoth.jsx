@@ -1,4 +1,5 @@
 import { createElement, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
 import { Zap, CalendarDays, FileText, AlignLeft, Clock, CheckCheck, Users, Eye, PlaySquare, Timer, Instagram, Youtube } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
@@ -20,8 +21,9 @@ const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 export default function DashboardBoth() {
   const [view, setView] = useState("overall")
-  const { ytVideos, ytStats, ytConnected, realStats, storedUser, streak } = useDashboardData()
+  const { ytVideos, ytConnected, realStats, storedUser, streak } = useDashboardData()
 
+  const navigate = useNavigate()
   const firstName = storedUser.fullName?.split(" ")[0] || "Creator"
   const platform = localStorage.getItem("platform") || "both"
   const accent = SWITCHER.find(s => s.id === view).color
@@ -43,36 +45,39 @@ export default function DashboardBoth() {
 
   // Overall chart: last 7 days posting activity from planner
   const overallChartData = (() => {
-    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const todayIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+    todayIST.setHours(0, 0, 0, 0)
     const plan = JSON.parse(localStorage.getItem(`planner_data_${platform}`) || "null")
     const entries = plan?.entries || []
     return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(today); d.setDate(today.getDate() - (6 - i))
+      const d = new Date(todayIST); d.setDate(todayIST.getDate() - (6 - i))
+      // Compare date strings directly (YYYY-MM-DD) to avoid timezone issues
+      const dStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`
       const posted = entries.filter(e => {
         if (!e.date || !e.isCompleted) return false
-        const ed = new Date(e.date); ed.setHours(0, 0, 0, 0)
-        return ed.getTime() === d.getTime()
+        return e.date.slice(0, 10) === dStr
       }).length
       return { day: DAYS[d.getDay() === 0 ? 6 : d.getDay() - 1], value: posted }
     })
   })()
 
-  // YouTube chart: last 7 days upload views
+  // YouTube chart: last 7 days — videos uploaded per day (IST)
   const ytChartData = (() => {
-    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const todayIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+    todayIST.setHours(0, 0, 0, 0)
     return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(today); d.setDate(today.getDate() - (6 - i))
-      const views = ytVideos.filter(v => {
+      const d = new Date(todayIST); d.setDate(todayIST.getDate() - (6 - i))
+      const count = ytVideos.filter(v => {
         if (!v.publishedAt) return false
-        const vd = new Date(v.publishedAt); vd.setHours(0, 0, 0, 0)
+        const vd = new Date(new Date(v.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+        vd.setHours(0, 0, 0, 0)
         return vd.getTime() === d.getTime()
-      }).reduce((s, v) => s + Number(v.views || 0), 0)
-      return { day: DAYS[d.getDay() === 0 ? 6 : d.getDay() - 1], value: views }
+      }).length
+      return { day: DAYS[d.getDay() === 0 ? 6 : d.getDay() - 1], value: count }
     })
   })()
 
-  // Overall stats — streak from YT videos, replace "Upcoming" with total views
-  const ytTotalViews = ytVideos.reduce((s, v) => s + Number(v.views || 0), 0)
+  // Overall stats — streak from YT videos, replace "Upcoming" with merged total views
   const ytThisMonth = ytVideos.filter(v => {
     if (!v.publishedAt) return false
     const d = new Date(v.publishedAt)
@@ -84,7 +89,7 @@ export default function DashboardBoth() {
     { label: "Completed", value: plannerData.done, icon: CheckCheck, color: "#4ade80" },
     { label: "Streak", value: streak > 0 ? `${streak}d` : "0d", icon: Clock, color: "#f59e0b" },
     ytConnected
-      ? { label: "Views", value: fmt(ytTotalViews), icon: Eye, color: "#60a5fa" }
+      ? { label: "Views", value: fmt(realStats?.views || 0), icon: Eye, color: "#60a5fa" }
       : { label: "This month", value: ytThisMonth, icon: FileText, color: "#60a5fa" },
   ]
 
@@ -114,7 +119,7 @@ export default function DashboardBoth() {
           <div className="dash-header-row">
             <div>
               <p className="page-kicker">Dashboard</p>
-              <h1 className="dash-greeting">{getGreeting()}, <span style={{ color: "#818cf8" }}>{firstName}</span> 👋</h1>
+              <h1 className="dash-greeting">{getGreeting()}, <span style={{ color: "#818cf8" }}>{firstName}</span></h1>
               <p className="dash-sub">Here's how your content is performing today.</p>
             </div>
             <div className="platform-switcher">
@@ -185,7 +190,7 @@ export default function DashboardBoth() {
                 <p className="dash-quick-label">Quick Actions</p>
                 <div className="quick-actions-grid">
                   {[{ icon: Zap, title: "Content Generator", desc: "Generate hooks, scripts & CTAs.", href: "/generator" }, { icon: CalendarDays, title: "30-Day Planner", desc: "Organize your content pipeline.", href: "/planner" }].map(({ icon, title, desc, href }) => (
-                    <div key={title} className="card dash-quick-card" onClick={() => window.location.href = href} style={{ cursor: "pointer" }}>
+                    <div key={title} className="card dash-quick-card" onClick={() => navigate(href)} style={{ cursor: "pointer" }}>
                       <div className="quick-action-icon" style={{ background: accent + "15" }}>
                         {createElement(icon, { size: 16, color: accent, strokeWidth: 2 })}
                       </div>

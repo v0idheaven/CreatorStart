@@ -67,17 +67,15 @@ function PrivateRoute({ children, sessionChecked, sessionValid }) {
 }
 
 export default function App() {
-  const [sessionChecked, setSessionChecked] = useState(false)
-  const [sessionValid, setSessionValid] = useState(false)
+  const hasLocalSession = !!(localStorage.getItem("accessToken") && localStorage.getItem("user"))
+  const [sessionChecked, setSessionChecked] = useState(hasLocalSession)
+  const [sessionValid, setSessionValid] = useState(hasLocalSession)
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken")
     const user = localStorage.getItem("user")
 
     if (token && user) {
-      // Both token and user exist — immediately valid, refresh silently in background
-      setSessionValid(true)
-      setSessionChecked(true)
       // Background refresh to keep token fresh (don't block UI)
       tryRestoreSession().catch(() => {})
     } else if (token && !user) {

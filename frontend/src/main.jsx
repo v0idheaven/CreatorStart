@@ -8,7 +8,7 @@ class ErrorBoundary extends Component {
   static getDerivedStateFromError(error) { return { error } }
   componentDidCatch(error, info) {
     // Log to an error reporting service in production if needed
-    if (process.env.NODE_ENV !== "production") {
+    if (import.meta.env.DEV) {
       console.error("ErrorBoundary caught:", error, info)
     }
   }
