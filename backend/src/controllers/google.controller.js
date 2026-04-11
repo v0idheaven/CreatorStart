@@ -271,7 +271,7 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
                 ids: "channel==MINE",
                 startDate,
                 endDate,
-                metrics: "views,estimatedMinutesWatched,averageViewDuration,subscribersGained,subscribersLost,likes,comments,shares,impressions,ctr",
+                metrics: "views,estimatedMinutesWatched,averageViewDuration,subscribersGained,subscribersLost,likes,comments,shares",
             }),
             youtubeAnalytics.reports.query({
                 ids: "channel==MINE",
