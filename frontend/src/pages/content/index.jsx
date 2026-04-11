@@ -39,22 +39,11 @@ function ContentCard({ item, accent, onClick }) {
     ? new Date(item.publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
     : "—"
 
-  // Format duration nicely
-  const durStr = (() => {
-    if (!item.duration) return null
-    const s = Number(item.duration)
-    if (!s) return null
-    const m = Math.floor(s / 60), sec = s % 60
-    return m > 0 ? `${m}:${String(sec).padStart(2, "0")}` : `0:${String(sec).padStart(2, "0")}`
-  })()
-
-  const likeRate = item.views > 0 ? ((Number(item.likes) / Number(item.views)) * 100).toFixed(1) : null
-
   return (
     <div onClick={onClick}
-      style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "14px", overflow: "hidden", transition: "all 0.18s", cursor: "pointer" }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = typeColor + "70"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${typeColor}15` }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none" }}>
+      style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "14px", overflow: "hidden", transition: "border-color 0.15s, transform 0.15s", cursor: "pointer" }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = accent + "60"; e.currentTarget.style.transform = "translateY(-2px)" }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.transform = "translateY(0)" }}>
 
       {/* Thumbnail */}
       <div style={{ position: "relative", aspectRatio: "16/9", background: "var(--border)", overflow: "hidden" }}>
@@ -64,43 +53,35 @@ function ContentCard({ item, accent, onClick }) {
               <Youtube size={28} color="var(--dim)" />
             </div>
         }
-        {/* Type badge */}
-        <span style={{ position: "absolute", top: "8px", left: "8px", padding: "3px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "700", background: typeColor + "ee", color: "#fff", backdropFilter: "blur(4px)" }}>
+        <span style={{ position: "absolute", top: "8px", left: "8px", padding: "3px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "700", background: typeColor + "dd", color: "#fff", backdropFilter: "blur(4px)" }}>
           {item.type}
         </span>
-        {/* Duration */}
-        {durStr && (
-          <span style={{ position: "absolute", bottom: "8px", right: "8px", padding: "2px 7px", borderRadius: "5px", fontSize: "11px", fontWeight: "600", background: "rgba(0,0,0,0.8)", color: "#fff" }}>
-            {durStr}
+        {item.duration && (
+          <span style={{ position: "absolute", bottom: "8px", right: "8px", padding: "2px 7px", borderRadius: "5px", fontSize: "11px", fontWeight: "600", background: "rgba(0,0,0,0.75)", color: "#fff" }}>
+            {item.duration}
           </span>
         )}
-        {/* Views overlay on hover */}
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%)", opacity: 0, transition: "opacity 0.18s" }}
-          onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-          onMouseLeave={e => e.currentTarget.style.opacity = "0"}>
-          <div style={{ position: "absolute", bottom: "10px", left: "12px", display: "flex", gap: "12px" }}>
-            <span style={{ fontSize: "12px", color: "#fff", fontWeight: "600" }}>{fmt(item.views)} views</span>
-            {likeRate && <span style={{ fontSize: "12px", color: "#4ade80", fontWeight: "600" }}>{likeRate}% likes</span>}
-          </div>
-        </div>
       </div>
 
       {/* Content */}
-      <div style={{ padding: "12px 14px" }}>
-        <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", margin: "0 0 6px", lineHeight: "1.4", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+      <div style={{ padding: "14px" }}>
+        <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", margin: "0 0 8px", lineHeight: "1.4", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
           {item.title}
         </p>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
             <Youtube size={11} color="#ff4444" />
             <span style={{ fontSize: "11px", color: "var(--dim)" }}>YouTube</span>
           </div>
           <span style={{ fontSize: "11px", color: "var(--dim)" }}>{date}</span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px", padding: "8px 0", borderTop: "1px solid var(--border)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", padding: "10px 0", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", marginBottom: "12px" }}>
           <StatPill label="Views" value={item.views} />
           <StatPill label="Likes" value={item.likes} />
           <StatPill label="Comments" value={item.comments} />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "7px", borderRadius: "8px", border: "1px solid var(--border)", color: "var(--dim)", fontSize: "12px", fontWeight: "500" }}>
+          <BarChart2 size={12} /> View analytics
         </div>
       </div>
     </div>
