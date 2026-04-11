@@ -3,7 +3,7 @@ import { Check, Pencil, X, Trash2, Sparkles, Plus, Copy } from "lucide-react"
 import { COLORS, PC, getContentType } from "../../constants/plannerConstants"
 import { STORAGE_KEYS } from "../../constants/storageKeys"
 
-function CopyBtn({ text, accent }) {
+function CopyBtn({ text }) {
   const [copied, setCopied] = useState(false)
   return (
     <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
@@ -13,7 +13,7 @@ function CopyBtn({ text, accent }) {
   )
 }
 
-export default function PlannerDetail({ activeEntry, entries, planInfo, aiDetail, aiLoading, aiError, activeExtraIdx, setActiveExtraIdx, onClose, onEdit, onToggleDone, onDelete, onAddDay, onGenerateBrief, onGenerateExtraBrief, onRemoveExtraPost }) {
+export default function PlannerDetail({ activeEntry, aiDetail, aiLoading, aiError, activeExtraIdx, setActiveExtraIdx, onClose, onEdit, onToggleDone, onDelete, onAddDay, onGenerateBrief, onGenerateExtraBrief, onRemoveExtraPost }) {
   const platform = localStorage.getItem(STORAGE_KEYS.PLATFORM) || "both"
   const accent = COLORS[platform] || COLORS.both
 
