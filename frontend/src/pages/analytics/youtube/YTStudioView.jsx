@@ -8,11 +8,9 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   const daily = ytAnalytics?.daily || []
   const ov = ytAnalytics?.overview || {}
 
-  // Views: use analytics period total (most accurate for selected period)
-  // Fallback to channel lifetime views only if analytics has no data at all
-  const analyticsViews = Number(ov.views || 0)
-  const channelViews = Number(ytStats?.views || 0)
-  const displayViews = analyticsViews > 0 ? analyticsViews : channelViews
+  // Views: Show channel lifetime total (matches YouTube Studio main number)
+  // The graph shows period breakdown with the API's daily data
+  const displayViews = Number(ytStats?.views || 0)
 
   const W = 800, H = 140, PADX = 40, PADY = 16
   const graphMetric = ytTab === "audience" ? "estimatedMinutesWatched" : "views"
