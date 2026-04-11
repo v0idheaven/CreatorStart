@@ -23,12 +23,11 @@ export default function PasswordForm({ accent, onLogout, onDelete }) {
       const res = await apiFetch(API_ENDPOINTS.updatePassword, { method: "PATCH", body: JSON.stringify({ currentPassword: pwCurrent, newPassword: pwNew }) })
       const data = await res.json()
       if (!res.ok) { setPwError(data.message || "Failed to update password"); return }
+      setPwSaved(true); setPwCurrent(""); setPwNew(""); setPwConfirm("")
+      setTimeout(() => { setPwSaved(false); setOpen(false) }, 2000)
     } catch {
-      const stored = JSON.parse(localStorage.getItem("user") || "{}")
-      if (stored.password && pwCurrent !== stored.password) { setPwError("Current password is incorrect."); return }
+      setPwError("Network error. Please check your connection.")
     }
-    setPwSaved(true); setPwCurrent(""); setPwNew(""); setPwConfirm("")
-    setTimeout(() => { setPwSaved(false); setOpen(false) }, 2000)
   }
 
   function cancel() { setOpen(false); setPwError(""); setPwCurrent(""); setPwNew(""); setPwConfirm("") }

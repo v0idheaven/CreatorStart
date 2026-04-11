@@ -27,7 +27,6 @@ export default function useSettingsData() {
     const totalPosted = ytConnected ? Number(user.youtubeStats?.videos || 0) : 0
     const subscribers = ytConnected ? Number(user.youtubeStats?.subscribers || 0) : 0
 
-    // Calculate streak from ytVideos in localStorage (set by dashboard/analytics fetch)
     let streak = 0
     try {
       const cachedVideos = JSON.parse(localStorage.getItem("yt_videos_cache") || "[]")
@@ -54,7 +53,8 @@ export default function useSettingsData() {
       { label: "Current streak", value: streak > 0 ? `${streak}d` : "0d", sub: streak > 0 ? "consecutive days posted" : "post today to start streak" },
       { label: "Audience", value: subscribers.toLocaleString(), sub: ytConnected ? "subscribers" : "connect YouTube to see" },
     ]
-  }, [platform])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [avatar]) // re-compute when user data changes (avatar update triggers re-render)
 
   function syncLocal(updates) {
     const current = JSON.parse(localStorage.getItem("user") || "{}")

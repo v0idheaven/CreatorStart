@@ -1,5 +1,7 @@
 import { useState, useRef } from "react"
 import { Camera, Eye, Pencil, Loader } from "lucide-react"
+import { apiFetch } from "../../utils/api"
+import { API_ENDPOINTS } from "../../constants/api"
 
 export default function AvatarCrop({ avatar, editingProfile, accent, initials, onAvatarChange }) {
   const [avatarUploading, setAvatarUploading] = useState(false)
@@ -40,8 +42,6 @@ export default function AvatarCrop({ avatar, editingProfile, accent, initials, o
     const dataUrl = canvas.toDataURL("image/jpeg", 0.92)
     canvas.toBlob(async (blob) => {
       try {
-        const { apiFetch } = await import("../../utils/api")
-        const { API_ENDPOINTS } = await import("../../constants/api")
         const form = new FormData()
         form.append("avatar", blob, "avatar.jpg")
         const res = await apiFetch(API_ENDPOINTS.updateAvatar, { method: "PATCH", body: form, headers: {} })
