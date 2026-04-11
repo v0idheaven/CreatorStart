@@ -8,24 +8,72 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   const daily = ytAnalytics?.daily || []
   const ov = ytAnalytics?.overview || {}
 
-  // Views sources:
-  // 1. analyticsViews = YouTube Analytics API (28-day window, lags 2-3 days) — most accurate for period
-  // 2. videoSumViews = sum of all video stats (lifetime total, always up to date)
-  // 3. channelViews = channel-level lifetime stat
-  // Use max so we always show the highest known value
+  const toISTDayKey = (dateInput) => {
+    const d = new Date(dateInput)
+    if (Number.isNaN(d.getTime())) return ""
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(d)
+  }
+
+  const addOneDayKey = (dayKey) => {
+    const d = new Date(`${dayKey}T00:00:00Z`)
+    if (Number.isNaN(d.getTime())) return ""
+    d.setUTCDate(d.getUTCDate() + 1)
+    return d.toISOString().slice(0, 10)
+  }
+
+  // Merge two API-derived signals:
+  // 1) Analytics overview/daily = period totals from YouTube Analytics API
+  // 2) Recent video stats = freshest per-video counts from YouTube Data API
+  // This keeps the UI API-driven while accounting for analytics lag.
   const analyticsViews = Number(ov.views || 0)
-  const videoSumViews = (ytVideos || []).reduce((s, v) => s + Number(v.views || 0), 0)
-  const channelViews = Number(ytStats?.views || 0)
-  const displayViews = Math.max(analyticsViews, videoSumViews, channelViews)
+  const recentCutoff = new Date()
+  recentCutoff.setDate(recentCutoff.getDate() - 3)
+  const recentCutoffKey = toISTDayKey(recentCutoff)
+
+  const recentVideos = (ytVideos || []).filter(v => {
+    if (!v?.publishedAt) return false
+    const dayKey = toISTDayKey(v.publishedAt)
+    return dayKey && dayKey >= recentCutoffKey
+  })
+
+  const recentVideoViews = recentVideos.reduce((sum, v) => sum + Number(v.views || 0), 0)
+  const displayViews = analyticsViews + recentVideoViews
 
   const W = 800, H = 140, PADX = 40, PADY = 16
   const graphMetric = ytTab === "audience" ? "estimatedMinutesWatched" : "views"
   const maxV = Math.max(...daily.map(d => Number(d[graphMetric] || 0)), 1)
 
-  const coords = daily.map((p, i) => {
+  const graphDaily = daily.map(d => ({ ...d }))
+  if (ytTab === "overview" && recentVideos.length > 0) {
+    const byDay = new Map(graphDaily.map(d => [d.day, { ...d }]))
+    recentVideos.forEach(v => {
+      const publishedDay = toISTDayKey(v.publishedAt)
+      if (!publishedDay) return
+      const nextDay = addOneDayKey(publishedDay)
+      const views = Math.max(0, Number(v.views || 0))
+      if (!views) return
+
+      const dayOneViews = Math.min(1, views)
+      const dayTwoViews = Math.max(0, views - dayOneViews)
+
+      if (byDay.has(publishedDay)) {
+        const item = byDay.get(publishedDay)
+        item.views = Number(item.views || 0) + dayOneViews
+        byDay.set(publishedDay, item)
+      }
+      if (nextDay && dayTwoViews > 0 && byDay.has(nextDay)) {
+        const item = byDay.get(nextDay)
+        item.views = Number(item.views || 0) + dayTwoViews
+        byDay.set(nextDay, item)
+      }
+    })
+    graphDaily.splice(0, graphDaily.length, ...Array.from(byDay.values()))
+  }
+
+  const coords = graphDaily.map((p, i) => {
     const v = Number(p[graphMetric] || 0)
     return {
-      x: PADX + i * ((W - PADX * 2) / Math.max(daily.length - 1, 1)),
+      x: PADX + i * ((W - PADX * 2) / Math.max(graphDaily.length - 1, 1)),
       y: PADY + (1 - v / maxV) * (H - PADY * 2),
       v,
       day: p.day
@@ -69,8 +117,8 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
       <div className="yt-stats-heading">
         <h2 className="yt-stats-title">
           {analyticsViews > 0
-            ? `Your channel got ${fmt(analyticsViews)} views in the last ${days} days`
-            : `Your channel has ${fmt(videoSumViews || channelViews)} total views`
+            ? `Your channel got ${fmt(displayViews)} views in the last ${days} days`
+            : `Your channel has ${fmt(displayViews)} total views`
           }
         </h2>
       </div>
@@ -106,13 +154,13 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
         </div>
 
         <div className="yt-graph-wrap">
-          {daily.length === 0 ? (
+          {graphDaily.length === 0 ? (
             <div className="yt-graph-empty">
               <p className="yt-graph-empty-text">No daily data for this period yet.</p>
             </div>
           ) : (
             <div className="yt-graph-inner">
-              {daily.filter(d => Number(d.views || 0) > 0).length === 0 && (
+              {graphDaily.filter(d => Number(d.views || 0) > 0).length === 0 && (
                 <div style={{ fontSize: "11px", color: "var(--dim)", padding: "8px 0", textAlign: "center" }}>
                   📊 Daily data lags 2-3 days (YouTube updates with a delay)
                 </div>
