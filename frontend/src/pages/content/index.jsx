@@ -197,8 +197,17 @@ export default function Content() {
             ))}
           </div>
 
+          {/* Instagram Coming Soon */}
+          {platformTab === "instagram" && (
+            <div className="card empty-state">
+              <Instagram size={32} color="#c13584" style={{ marginBottom: "12px" }} />
+              <p className="empty-title">Coming Soon</p>
+              <p className="empty-sub">Instagram content library is on the way.</p>
+            </div>
+          )}
+
           {/* Not connected */}
-          {!ytConnected && (
+          {platformTab !== "instagram" && !ytConnected && (
             <div className="card empty-state">
               <Youtube size={32} color="#ff4444" style={{ marginBottom: "12px" }} />
               <p className="empty-title">Connect YouTube</p>
@@ -210,7 +219,7 @@ export default function Content() {
           )}
 
           {/* Loading */}
-          {ytConnected && loading && (
+          {platformTab !== "instagram" && ytConnected && loading && (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 0", gap: "12px" }}>
               <div className="spinner spinner-sm" style={{ borderTopColor: "#ff4444" }} />
               <span style={{ fontSize: "13px", color: "var(--dim)" }}>Loading your videos...</span>
@@ -218,7 +227,7 @@ export default function Content() {
           )}
 
           {/* Error */}
-          {ytConnected && !loading && error && (
+          {platformTab !== "instagram" && ytConnected && !loading && error && (
             <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "14px 16px", borderRadius: "10px", background: "#f8717115", border: "1px solid #f8717130", marginBottom: "16px" }}>
               <span style={{ fontSize: "16px" }}>⚠️</span>
               <div>
@@ -229,7 +238,7 @@ export default function Content() {
           )}
 
           {/* Filters + Grid */}
-          {ytConnected && !loading && !error && allContent.length > 0 && (
+          {platformTab !== "instagram" && ytConnected && !loading && !error && allContent.length > 0 && (
             <>
               <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
                 <div style={{ position: "relative", flex: 1, minWidth: "200px", maxWidth: "320px" }}>
@@ -262,7 +271,7 @@ export default function Content() {
           )}
 
           {/* No videos yet */}
-          {ytConnected && !loading && !error && allContent.length === 0 && (
+          {platformTab !== "instagram" && ytConnected && !loading && !error && allContent.length === 0 && (
             <div className="card empty-state">
               <Film size={32} color="var(--dim)" style={{ marginBottom: "12px" }} />
               <p className="empty-title">No videos found</p>
