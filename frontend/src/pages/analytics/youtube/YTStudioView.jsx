@@ -8,8 +8,25 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
   const daily = ytAnalytics?.daily || []
   const ov = ytAnalytics?.overview || {}
 
-  // Views: prefer analytics total for selected period (7d/28d/90d/1y), fallback to channel views
-  const displayViews = Number(ov.views || 0) > 0 ? Number(ov.views || 0) : Number(ytStats?.views || 0)
+  // Views: include recent unprocessed video views so total matches Studio summary better.
+  const analyticsViews = Number(ov.views || 0)
+  const now = new Date()
+  const recentCutoff = new Date(now)
+  recentCutoff.setDate(recentCutoff.getDate() - 3)
+  const recentVideoViews = (ytVideos || []).reduce((sum, v) => {
+    if (!v?.publishedAt) return sum
+    const published = new Date(v.publishedAt)
+    if (Number.isNaN(published.getTime()) || published < recentCutoff) return sum
+    return sum + Number(v.views || 0)
+  }, 0)
+  const recentDailyViews = daily.reduce((sum, d) => {
+    if (!d?.day) return sum
+    const dayDate = new Date(`${d.day}T00:00:00`)
+    if (Number.isNaN(dayDate.getTime()) || dayDate < recentCutoff) return sum
+    return sum + Number(d.views || 0)
+  }, 0)
+  const pendingRecentViews = Math.max(0, recentVideoViews - recentDailyViews)
+  const displayViews = analyticsViews + pendingRecentViews
 
   const W = 800, H = 140, PADX = 40, PADY = 16
   const graphMetric = ytTab === "audience" ? "estimatedMinutesWatched" : "views"
