@@ -80,6 +80,10 @@ export default function YTStudioView({ ytStats, ytAnalytics, ytVideos, refreshin
         </button>
       </div>
 
+      <div className="yt-stats-heading">
+        <h2 className="yt-stats-title">Your channel got {fmt(displayViews)} views in the last {days} days</h2>
+      </div>
+
       {ytError && (
         <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "12px 16px", borderRadius: "10px", background: "#f8717115", border: "1px solid #f8717130", marginBottom: "16px" }}>
           <p style={{ fontSize: "13px", color: "#f87171", margin: 0, lineHeight: "1.5" }}>{ytError}</p>

@@ -9,7 +9,20 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 28px;
+}
+
+.yt-stats-heading {
+  margin-bottom: 24px;
+  padding: 8px 0;
+}
+
+.yt-stats-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: -0.5px;
 }
 
 .yt-channel-thumb {
@@ -66,15 +79,17 @@
 }
 
 .yt-analytics-card {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   padding: 0;
   overflow: hidden;
+  border-radius: 8px;
 }
 
 .yt-tab-row {
   display: flex;
   border-bottom: 1px solid var(--border);
   padding: 0 20px;
+  background: transparent;
 }
 
 .yt-tab {
@@ -112,10 +127,17 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   border-bottom: 1px solid var(--border);
+  gap: 0;
 }
 
 .yt-metric-cell {
-  padding: 16px 20px;
+  padding: 20px;
+  background: transparent;
+  transition: background 0.2s;
+}
+
+.yt-metric-cell:hover {
+  background: var(--card);
 }
 
 .yt-metric-cell--border {
@@ -123,13 +145,15 @@
 }
 
 .yt-metric-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--dim);
-  margin: 0 0 4px;
+  margin: 0 0 8px;
+  font-weight: 500;
+  text-transform: capitalize;
 }
 
 .yt-metric-value {
-  font-size: 24px;
+  font-size: 32px;
   font-weight: 800;
   color: var(--text);
   margin: 0;
@@ -137,19 +161,20 @@
 }
 
 .yt-graph-wrap {
-  padding: 20px;
+  padding: 24px;
   position: relative;
+  min-height: 200px;
 }
 
 .yt-graph-empty {
-  height: 140px;
+  height: 160px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .yt-graph-empty-text {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--dim);
   margin: 0;
 }
