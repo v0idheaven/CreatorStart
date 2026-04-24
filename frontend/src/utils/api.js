@@ -21,10 +21,23 @@ export async function apiFetch(url, options = {}) {
             const newToken = localStorage.getItem("accessToken")
             headers["Authorization"] = `Bearer ${newToken}`
             res = await fetch(url, { ...options, headers, credentials: "include" })
+        } else {
+            // Refresh also failed — session fully expired, force logout
+            forceLogout()
         }
     }
 
     return res
+}
+
+function forceLogout() {
+    localStorage.removeItem("accessToken")
+    localStorage.removeItem("user")
+    localStorage.removeItem("platform")
+    // Only redirect if not already on auth page
+    if (!window.location.pathname.startsWith("/auth")) {
+        window.location.href = "/auth"
+    }
 }
 
 async function tryRefresh() {
