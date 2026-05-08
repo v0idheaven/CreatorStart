@@ -205,9 +205,22 @@ export default function ContentGenerator() {
                     {quickIdeas.map((idea, i) => (
                       <div key={i}
                         onClick={() => {
-                          // Scroll to form and dispatch custom event to fill topic
+                          // Directly generate content from this idea
+                          const platform_ = localStorage.getItem("platform") || "both"
+                          const cfg_ = CONFIG[platform_] || CONFIG.both
+                          const format_ = cfg_.formats.includes(idea.format) ? idea.format : cfg_.formats[0]
+                          const niche_ = idea.niche || "Tech"
+                          const goal_ = cfg_.goals[0]
+                          const tone_ = "Casual"
+                          const fields = {
+                            format: format_, niche: niche_, goal: goal_, tone: tone_,
+                            topic: idea.topic, outputType: "full_script",
+                            rawFormat: format_, rawNiche: niche_, rawGoal: goal_, rawTone: tone_,
+                            customFormat: "", customNiche: "", customGoal: "", customTone: "",
+                          }
+                          handleGenerate(fields)
+                          // Also fill the form
                           window.dispatchEvent(new CustomEvent("fillGeneratorTopic", { detail: idea }))
-                          document.querySelector(".gen-form-panel")?.scrollIntoView({ behavior: "smooth" })
                         }}
                         style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "9px", border: "1px solid var(--border)", background: "var(--bg)", cursor: "pointer", transition: "border-color 0.15s" }}
                         onMouseEnter={e => e.currentTarget.style.borderColor = color + "60"}
@@ -217,7 +230,7 @@ export default function ContentGenerator() {
                           <p style={{ fontSize: "13px", color: "var(--text)", margin: "0 0 2px", fontWeight: "500" }}>{idea.topic}</p>
                           <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{idea.format} · {idea.niche}</p>
                         </div>
-                        <span style={{ fontSize: "10px", color, background: color + "15", padding: "2px 8px", borderRadius: "10px", fontWeight: "600", flexShrink: 0 }}>Use</span>
+                        <span style={{ fontSize: "10px", color, background: color + "15", padding: "2px 8px", borderRadius: "10px", fontWeight: "600", flexShrink: 0 }}>Generate</span>
                       </div>
                     ))}
                   </div>
@@ -294,7 +307,7 @@ export default function ContentGenerator() {
         .gen-btn-outline { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; }
         .gen-btn-fill { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 8px; border: none; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
         .gen-body { display: flex; gap: 24px; padding: 24px 40px 48px; align-items: flex-start; flex: 1; }
-        .gen-form-panel { width: 300px; flex-shrink: 0; position: sticky; top: 80px; max-height: calc(100vh - 100px); overflow-y: auto; overflow-x: visible; }
+        .gen-form-panel { width: 300px; flex-shrink: 0; position: sticky; top: 80px; align-self: flex-start; }
         .gen-results-panel { flex: 1; min-width: 0; }
         @media (max-width: 768px) {
           .gen-wrap { margin-left: 0; }
