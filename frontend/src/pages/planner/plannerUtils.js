@@ -1,13 +1,31 @@
 import { GOALS, TOPICS, FREQUENCIES, CONTENT_TYPES } from "../../constants/plannerConstants"
 
 export function buildFallbackContent(goalLabel, topicLabel, platformLabel, dayNum, seed) {
-  const angles = [
-    "quick tip", "common mistake", "step-by-step guide", "myth vs reality",
-    "behind-the-scenes", "beginner checklist", "pro strategy", "case study",
-    "trending topic", "audience Q&A", "personal story", "tool review",
+  const formats = [
+    `${topicLabel}: beginner's guide for ${platformLabel}`,
+    `Top mistakes to avoid in ${topicLabel}`,
+    `How to grow with ${topicLabel} content on ${platformLabel}`,
+    `${topicLabel} tips that actually work`,
+    `Behind the scenes: ${topicLabel} content creation`,
+    `${topicLabel} myth vs reality`,
+    `Step-by-step ${topicLabel} strategy for ${platformLabel}`,
+    `${topicLabel} Q&A — answering your questions`,
+    `My ${topicLabel} journey: what I learned`,
+    `Best tools for ${topicLabel} creators`,
+    `${topicLabel} trends you need to know`,
+    `How I use ${topicLabel} to ${goalLabel.toLowerCase()}`,
+    `${topicLabel} case study: what worked`,
+    `Quick ${topicLabel} tip for ${platformLabel}`,
+    `${topicLabel} for beginners vs advanced creators`,
+    `Why most ${topicLabel} content fails (and how to fix it)`,
+    `${topicLabel} content ideas for this week`,
+    `${topicLabel}: the honest truth`,
+    `How to stand out with ${topicLabel} on ${platformLabel}`,
+    `${topicLabel} challenge: 30 days results`,
   ]
-  const idx = (dayNum + seed) % angles.length
-  return `${goalLabel} for ${topicLabel} on ${platformLabel} - ${angles[idx]}.`
+  // Use a mix of dayNum and seed to ensure variety
+  const idx = (dayNum * 3 + seed * 7) % formats.length
+  return formats[idx]
 }
 
 function pickContentType(platform, dayNum, seed) {
