@@ -1,7 +1,7 @@
-import { createElement, useState } from "react"
+import { createElement, useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
-import { Zap, CalendarDays, FileText, AlignLeft, Clock, CheckCheck, Users, Eye, PlaySquare, Timer, Instagram, Youtube } from "lucide-react"
+import { Zap, CalendarDays, FileText, AlignLeft, Clock, CheckCheck, Users, Eye, PlaySquare, Timer, Youtube } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import StreakCard from "../../components/StreakCard"
 import StatGrid from "./StatGrid"
@@ -17,18 +17,77 @@ const SWITCHER = [
   { id: "instagram", label: "Instagram", color: "#c13584" },
 ]
 
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+// Format date to YYYY-MM-DD in IST
+function toISTDateStr(date) {
+  const ist = new Date(new Date(date).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+  return `${ist.getFullYear()}-${String(ist.getMonth()+1).padStart(2,"0")}-${String(ist.getDate()).padStart(2,"0")}`
+}
+
+// Build chart data between two IST dates from ytVideos
+function buildChartData(fromDate, toDate, ytVideos, ytConnected, platform) {
+  const from = new Date(fromDate + "T00:00:00")
+  const to = new Date(toDate + "T00:00:00")
+  const days = Math.round((to - from) / 86400000) + 1
+  const result = []
+  for (let i = 0; i < days; i++) {
+    const d = new Date(from); d.setDate(from.getDate() + i)
+    const dStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`
+    const label = d.toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+    let value = 0
+    if (ytConnected && ytVideos.length > 0) {
+      value = ytVideos.filter(v => {
+        if (!v.publishedAt) return false
+        return toISTDateStr(v.publishedAt) === dStr
+      }).length
+    } else {
+      try {
+        const plan = JSON.parse(localStorage.getItem(`planner_data_${platform}`) || "null")
+        const entries = plan?.entries || []
+        value = entries.filter(e => e.date && e.isCompleted && e.date.slice(0,10) === dStr).length
+      } catch { value = 0 }
+    }
+    result.push({ day: label, value })
+  }
+  return result
+}
 
 export default function DashboardBoth() {
   const [view, setView] = useState("overall")
-  const { ytVideos, ytConnected, realStats, storedUser, streak } = useDashboardData()
+  const [dateRange, setDateRange] = useState("7")   // "7" | "30" | "90" | "custom"
+  const [customFrom, setCustomFrom] = useState("")
+  const [customTo, setCustomTo] = useState("")
+  const [showCustom, setShowCustom] = useState(false)
 
+  const { ytVideos, ytConnected, realStats, storedUser, streak } = useDashboardData()
   const navigate = useNavigate()
   const firstName = storedUser.fullName?.split(" ")[0] || "Creator"
   const platform = localStorage.getItem("platform") || "both"
   const accent = SWITCHER.find(s => s.id === view).color
 
-  // Overall: real planner data
+  // Compute from/to dates
+  const { fromDate, toDate } = useMemo(() => {
+    const todayIST = toISTDateStr(new Date())
+    if (dateRange === "custom" && customFrom && customTo) {
+      return { fromDate: customFrom, toDate: customTo }
+    }
+    const days = Number(dateRange) || 7
+    const from = new Date()
+    from.setDate(from.getDate() - (days - 1))
+    return { fromDate: toISTDateStr(from), toDate: todayIST }
+  }, [dateRange, customFrom, customTo])
+
+  // Chart data
+  const overallChartData = useMemo(() =>
+    buildChartData(fromDate, toDate, ytVideos, ytConnected, platform),
+    [fromDate, toDate, ytVideos, ytConnected, platform]
+  )
+
+  const ytChartData = useMemo(() =>
+    buildChartData(fromDate, toDate, ytVideos, true, platform),
+    [fromDate, toDate, ytVideos, platform]
+  )
+
+  // Planner data
   const plannerData = (() => {
     const plan = JSON.parse(localStorage.getItem(`planner_data_${platform}`) || "null")
     const entries = plan?.entries || []
@@ -43,51 +102,6 @@ export default function DashboardBoth() {
     return { total: active.length, done: done.length, upcoming }
   })()
 
-  // Overall chart: last 7 days posting activity from planner
-  // Overall chart: last 7 days — YouTube videos uploaded per day (IST)
-  // If YT connected use real upload data, else fall back to planner completions
-  const overallChartData = (() => {
-    const todayIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
-    todayIST.setHours(0, 0, 0, 0)
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(todayIST); d.setDate(todayIST.getDate() - (6 - i))
-      let value = 0
-      if (ytConnected && ytVideos.length > 0) {
-        // Use real YouTube upload dates
-        value = ytVideos.filter(v => {
-          if (!v.publishedAt) return false
-          const vd = new Date(new Date(v.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
-          vd.setHours(0, 0, 0, 0)
-          return vd.getTime() === d.getTime()
-        }).length
-      } else {
-        // Fallback: planner completions
-        const plan = JSON.parse(localStorage.getItem(`planner_data_${platform}`) || "null")
-        const entries = plan?.entries || []
-        const dStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`
-        value = entries.filter(e => e.date && e.isCompleted && e.date.slice(0, 10) === dStr).length
-      }
-      return { day: DAYS[d.getDay() === 0 ? 6 : d.getDay() - 1], value }
-    })
-  })()
-
-  // YouTube chart: last 7 days — videos uploaded per day (IST)
-  const ytChartData = (() => {
-    const todayIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
-    todayIST.setHours(0, 0, 0, 0)
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(todayIST); d.setDate(todayIST.getDate() - (6 - i))
-      const count = ytVideos.filter(v => {
-        if (!v.publishedAt) return false
-        const vd = new Date(new Date(v.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
-        vd.setHours(0, 0, 0, 0)
-        return vd.getTime() === d.getTime()
-      }).length
-      return { day: DAYS[d.getDay() === 0 ? 6 : d.getDay() - 1], value: count }
-    })
-  })()
-
-  // Overall stats — streak from YT videos, replace "Upcoming" with merged total views
   const ytThisMonth = ytVideos.filter(v => {
     if (!v.publishedAt) return false
     const d = new Date(v.publishedAt)
@@ -117,8 +131,13 @@ export default function DashboardBoth() {
 
   const currentStats = view === "overall" ? overallStats : view === "youtube" ? ytStats_display : []
   const currentChartData = view === "youtube" ? ytChartData : overallChartData
-  const chartLabel = view === "youtube" ? "Upload views" : "Posts completed"
+  const chartLabel = view === "youtube" ? "Upload activity" : ytConnected ? "Videos uploaded" : "Posts completed"
   const chartType = view === "youtube" ? "bar" : "line"
+
+  // Date range label
+  const rangeLabel = dateRange === "custom" && customFrom && customTo
+    ? `${new Date(customFrom).toLocaleDateString("en-IN", { day: "numeric", month: "short" })} – ${new Date(customTo).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`
+    : `Last ${dateRange} days`
 
   return (
     <div className="dash-root">
@@ -142,7 +161,6 @@ export default function DashboardBoth() {
             </div>
           </div>
 
-          {/* Instagram connect prompt */}
           {view === "instagram" ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 0", gap: "10px", textAlign: "center" }}>
               <p style={{ fontSize: "18px", fontWeight: "700", color: "var(--text)", margin: 0 }}>Coming Soon</p>
@@ -157,23 +175,50 @@ export default function DashboardBoth() {
                   <div className="chart-header">
                     <div>
                       <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", margin: "0 0 3px" }}>{chartLabel}</p>
-                      <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Last 7 days</p>
+                      <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{rangeLabel}</p>
                     </div>
-                    <span className="chart-badge" style={{ color: accent, borderColor: accent + "30", background: accent + "10" }}>
-                      {SWITCHER.find(s => s.id === view).label}
-                    </span>
+                    {/* Date range selector */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      {["7", "30", "90"].map(d => (
+                        <button key={d} onClick={() => { setDateRange(d); setShowCustom(false) }}
+                          style={{ padding: "3px 9px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "11px", fontWeight: dateRange === d ? "600" : "400", background: dateRange === d ? accent + "20" : "transparent", color: dateRange === d ? accent : "var(--dim)", transition: "all 0.15s" }}>
+                          {d}d
+                        </button>
+                      ))}
+                      <button onClick={() => { setDateRange("custom"); setShowCustom(p => !p) }}
+                        style={{ padding: "3px 9px", borderRadius: "6px", border: `1px solid ${dateRange === "custom" ? accent : "var(--border)"}`, cursor: "pointer", fontSize: "11px", fontWeight: dateRange === "custom" ? "600" : "400", background: dateRange === "custom" ? accent + "20" : "transparent", color: dateRange === "custom" ? accent : "var(--dim)", transition: "all 0.15s" }}>
+                        Custom
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Custom date inputs */}
+                  {showCustom && (
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "12px", flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ fontSize: "11px", color: "var(--dim)" }}>From</span>
+                        <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
+                          style={{ padding: "5px 8px", borderRadius: "7px", border: "1px solid var(--border2)", background: "var(--bg)", color: "var(--text)", fontSize: "12px", outline: "none", colorScheme: "dark" }} />
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ fontSize: "11px", color: "var(--dim)" }}>To</span>
+                        <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
+                          style={{ padding: "5px 8px", borderRadius: "7px", border: "1px solid var(--border2)", background: "var(--bg)", color: "var(--text)", fontSize: "12px", outline: "none", colorScheme: "dark" }} />
+                      </div>
+                    </div>
+                  )}
+
                   <ResponsiveContainer width="100%" height={180}>
                     {chartType === "bar" ? (
                       <BarChart data={currentChartData}>
-                        <XAxis dataKey="day" tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <XAxis dataKey="day" tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
                         <YAxis tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} />
                         <Tooltip contentStyle={{ background: "var(--sb)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--text)", fontSize: "12px" }} />
                         <Bar dataKey="value" fill={accent} radius={[4, 4, 0, 0]} opacity={0.85} />
                       </BarChart>
                     ) : (
                       <LineChart data={currentChartData}>
-                        <XAxis dataKey="day" tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <XAxis dataKey="day" tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
                         <YAxis tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
                         <Tooltip contentStyle={{ background: "var(--sb)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--text)", fontSize: "12px" }} />
                         <Line type="monotone" dataKey="value" stroke={accent} strokeWidth={2} dot={{ fill: accent, strokeWidth: 0, r: 3 }} />
@@ -184,7 +229,6 @@ export default function DashboardBoth() {
                 <StreakCard accent={accent} platform="both" ytVideos={ytVideos} />
               </div>
 
-              {/* YouTube not connected prompt */}
               {view === "youtube" && !ytConnected && (
                 <div className="card" style={{ padding: "24px", textAlign: "center", marginBottom: "20px" }}>
                   <Youtube size={24} color="#ff4444" style={{ marginBottom: "8px" }} />
@@ -195,7 +239,6 @@ export default function DashboardBoth() {
                 </div>
               )}
 
-              {/* Quick actions */}
               <div style={{ marginBottom: "20px" }}>
                 <p className="dash-quick-label">Quick Actions</p>
                 <div className="quick-actions-grid">
@@ -211,12 +254,9 @@ export default function DashboardBoth() {
                 </div>
               </div>
 
-              {/* Recent content */}
               <div className="card" style={{ overflow: "hidden" }}>
                 <div className="dash-table-header">
-                  <span className="dash-table-title">
-                    {view === "youtube" ? "Recent Videos" : "Upcoming Posts"}
-                  </span>
+                  <span className="dash-table-title">{view === "youtube" ? "Recent Videos" : "Upcoming Posts"}</span>
                 </div>
                 {view === "youtube" ? (
                   ytVideos.length === 0 ? (
