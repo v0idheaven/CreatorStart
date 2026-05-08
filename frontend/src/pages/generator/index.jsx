@@ -289,7 +289,7 @@ export default function ContentGenerator() {
         @keyframes spin { to { transform: rotate(360deg) } }
         .gen-root { display: flex; background: var(--bg); min-height: 100vh; }
         .gen-wrap { margin-left: 72px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
-        .gen-header { padding: 20px 40px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+        .gen-header { padding: 20px 40px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; position: sticky; top: 0; background: var(--bg); z-index: 10; }
         .gen-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
         .gen-btn-outline { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; }
         .gen-btn-fill { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 8px; border: none; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
