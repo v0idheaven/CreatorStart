@@ -44,20 +44,30 @@ export default function DashboardBoth() {
   })()
 
   // Overall chart: last 7 days posting activity from planner
+  // Overall chart: last 7 days — YouTube videos uploaded per day (IST)
+  // If YT connected use real upload data, else fall back to planner completions
   const overallChartData = (() => {
     const todayIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
     todayIST.setHours(0, 0, 0, 0)
-    const plan = JSON.parse(localStorage.getItem(`planner_data_${platform}`) || "null")
-    const entries = plan?.entries || []
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(todayIST); d.setDate(todayIST.getDate() - (6 - i))
-      // Compare date strings directly (YYYY-MM-DD) to avoid timezone issues
-      const dStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`
-      const posted = entries.filter(e => {
-        if (!e.date || !e.isCompleted) return false
-        return e.date.slice(0, 10) === dStr
-      }).length
-      return { day: DAYS[d.getDay() === 0 ? 6 : d.getDay() - 1], value: posted }
+      let value = 0
+      if (ytConnected && ytVideos.length > 0) {
+        // Use real YouTube upload dates
+        value = ytVideos.filter(v => {
+          if (!v.publishedAt) return false
+          const vd = new Date(new Date(v.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+          vd.setHours(0, 0, 0, 0)
+          return vd.getTime() === d.getTime()
+        }).length
+      } else {
+        // Fallback: planner completions
+        const plan = JSON.parse(localStorage.getItem(`planner_data_${platform}`) || "null")
+        const entries = plan?.entries || []
+        const dStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`
+        value = entries.filter(e => e.date && e.isCompleted && e.date.slice(0, 10) === dStr).length
+      }
+      return { day: DAYS[d.getDay() === 0 ? 6 : d.getDay() - 1], value }
     })
   })()
 
