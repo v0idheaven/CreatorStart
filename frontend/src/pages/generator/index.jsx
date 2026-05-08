@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { Sparkles, CalendarDays, RotateCcw, Download, History, ChevronDown, ChevronUp, FileText, Zap, List, AlignLeft, Hash, RefreshCw } from "lucide-react"
+import { Sparkles, CalendarDays, RotateCcw, Download, History, ChevronDown, FileText, Zap, List, AlignLeft, Hash, RefreshCw } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { API_ENDPOINTS } from "../../constants/api"
 import { apiFetch } from "../../utils/api"
@@ -166,11 +166,34 @@ export default function ContentGenerator() {
           </div>
         </div>
 
-        {/* History panel — slides in below header */}
+        {/* History slide-in panel from right */}
         {showHistory && (
-          <div style={{ padding: "0 40px 16px", borderBottom: "1px solid var(--border)" }}>
-            <GenerationHistory accentColor={color} onLoad={item => { setResult(item.result); setLastFields(item.fields); setShowHistory(false) }} />
-          </div>
+          <>
+            <div onClick={() => setShowHistory(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 60 }} />
+            <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(420px, 90vw)", background: "var(--card)", borderLeft: "1px solid var(--border)", zIndex: 61, display: "flex", flexDirection: "column", overflowY: "auto" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 20px", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--card)", zIndex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <History size={15} color={color} />
+                  <span style={{ fontSize: "15px", fontWeight: "700", color: "var(--text)" }}>Generation History</span>
+                  <span style={{ fontSize: "11px", color: "var(--dim)", background: "var(--border)", padding: "1px 7px", borderRadius: "10px" }}>{history.length}</span>
+                </div>
+                <button onClick={() => setShowHistory(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--dim)", display: "flex", padding: "4px" }}>
+                  <ChevronDown size={18} style={{ transform: "rotate(-90deg)" }} />
+                </button>
+              </div>
+              <div style={{ padding: "16px", flex: 1 }}>
+                {history.length === 0 ? (
+                  <p style={{ fontSize: "13px", color: "var(--dim)", textAlign: "center", marginTop: "40px" }}>No history yet. Generate some content first.</p>
+                ) : (
+                  <GenerationHistory
+                    accentColor={color}
+                    onLoad={item => { setResult(item.result); setLastFields(item.fields); setShowHistory(false) }}
+                    forceOpen
+                  />
+                )}
+              </div>
+            </div>
+          </>
         )}
 
         {/* Body */}

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { History, ChevronDown, ChevronUp, Copy, Check, Trash2 } from "lucide-react"
 import { loadHistory, clearHistory, writeHistory } from "./historyStorage"
 
@@ -54,9 +54,12 @@ function HistoryItem({ item, accentColor, onLoad, onDelete }) {
   )
 }
 
-export default function GenerationHistory({ accentColor, onLoad }) {
-  const [open, setOpen] = useState(false)
+export default function GenerationHistory({ accentColor, onLoad, forceOpen }) {
+  const [open, setOpen] = useState(forceOpen || false)
   const [history, setHistory] = useState(() => loadHistory())
+
+  // Sync when forceOpen changes
+  useEffect(() => { if (forceOpen) setOpen(true) }, [forceOpen])
 
   function handleDelete(id) {
     const updated = history.filter(h => h.id !== id)
@@ -72,16 +75,18 @@ export default function GenerationHistory({ accentColor, onLoad }) {
   if (history.length === 0) return null
 
   return (
-    <div style={{ marginTop: "8px" }}>
+    <div style={{ marginTop: forceOpen ? "0" : "8px" }}>
+      {!forceOpen && (
       <button onClick={() => setOpen(p => !p)}
         style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 12px", borderRadius: "9px", border: "1px solid var(--border)", background: "var(--card)", color: "var(--muted)", fontSize: "12px", fontWeight: "500", cursor: "pointer", width: "100%" }}>
         <History size={13} color={accentColor} />
         <span style={{ flex: 1, textAlign: "left" }}>History ({history.length})</span>
         {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
       </button>
+      )}
 
       {open && (
-        <div style={{ marginTop: "8px" }}>
+        <div style={{ marginTop: forceOpen ? "0" : "8px" }}>
           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px" }}>
             <button onClick={clearAll} style={{ fontSize: "11px", color: "#f87171", background: "transparent", border: "none", cursor: "pointer" }}>Clear all</button>
           </div>
