@@ -32,7 +32,6 @@ const googleAuthRedirect = asyncHandler(async (_req, res) => {
             "email",
             "profile",
             "https://www.googleapis.com/auth/youtube.readonly",
-            "https://www.googleapis.com/auth/yt-analytics.readonly",
         ]
     })
     res.redirect(url)
@@ -359,12 +358,8 @@ const getYoutubeAnalytics = asyncHandler(async (req, res) => {
         if (msg.toLowerCase().includes("quota") || msg.toLowerCase().includes("exceeded")) {
             throw new ApiError(429, "YouTube API quota exceeded for today. Try again after midnight Pacific Time.")
         }
-        if (statusCode === 403 || msg.toLowerCase().includes("forbidden") || msg.toLowerCase().includes("access not configured") || msg.toLowerCase().includes("not been used")) {
-            throw new ApiError(403, `YouTube Analytics API not enabled or access denied: ${msg}`)
-        }
-        // For other errors (e.g. new channel with no data yet), return empty gracefully
-        console.warn("[YT Analytics] Returning empty daily data:", msg)
-        return res.status(200).json(new ApiResponse(200, { overview: {}, daily: [], error: msg }, "No analytics data yet"))
+        // Analytics scope not granted or not available — return empty gracefully
+        return res.status(200).json(new ApiResponse(200, { overview: {}, daily: [], error: msg }, "No analytics data"))
     }
 })
 
