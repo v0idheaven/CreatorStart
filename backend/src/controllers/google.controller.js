@@ -71,32 +71,36 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
         await user.save({ validateBeforeSave: false })
     }
 
-    try {
-        const youtube = google.youtube({ version: "v3", auth: oauth2Client })
-        const channelRes = await youtube.channels.list({
-            part: ["snippet", "statistics", "brandingSettings"],
-            mine: true
-        })
-        const channel = channelRes.data.items?.[0]
-        if (channel) {
-            user.youtubeChannelId = channel.id
-            user.youtubeStats = {
-                channelId: channel.id,
-                title: channel.snippet?.title,
-                description: channel.snippet?.description,
-                thumbnail: channel.snippet?.thumbnails?.high?.url || channel.snippet?.thumbnails?.default?.url,
-                subscribers: channel.statistics?.subscriberCount,
-                views: channel.statistics?.viewCount,
-                videos: channel.statistics?.videoCount,
-                country: channel.snippet?.country,
-                publishedAt: channel.snippet?.publishedAt,
+    // Only fetch YouTube stats for existing users who already had it connected
+    // New users should go through platform selection flow
+    const isNewUser = !user.youtubeStats
+    if (!isNewUser) {
+        try {
+            const youtube = google.youtube({ version: "v3", auth: oauth2Client })
+            const channelRes = await youtube.channels.list({
+                part: ["snippet", "statistics", "brandingSettings"],
+                mine: true
+            })
+            const channel = channelRes.data.items?.[0]
+            if (channel) {
+                user.youtubeChannelId = channel.id
+                user.youtubeStats = {
+                    channelId: channel.id,
+                    title: channel.snippet?.title,
+                    description: channel.snippet?.description,
+                    thumbnail: channel.snippet?.thumbnails?.high?.url || channel.snippet?.thumbnails?.default?.url,
+                    subscribers: channel.statistics?.subscriberCount,
+                    views: channel.statistics?.viewCount,
+                    videos: channel.statistics?.videoCount,
+                    country: channel.snippet?.country,
+                    publishedAt: channel.snippet?.publishedAt,
+                }
+                user.youtubeStatsUpdatedAt = new Date()
+                await user.save({ validateBeforeSave: false })
             }
-            user.youtubeStatsUpdatedAt = new Date()
-            await user.save({ validateBeforeSave: false })
+        } catch (e) {
+            void e
         }
-    } catch (e) {
-        // YouTube stats fetch failed silently — non-critical, user can still log in
-        void e
     }
 
     const accessToken = user.generateAccessToken()
