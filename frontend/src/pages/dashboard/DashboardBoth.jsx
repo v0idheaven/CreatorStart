@@ -58,7 +58,7 @@ export default function DashboardBoth() {
   const [customTo, setCustomTo] = useState("")
   const [showCustom, setShowCustom] = useState(false)
 
-  const { ytVideos, ytConnected, realStats, storedUser, streak } = useDashboardData()
+  const { ytVideos, ytConnected, realStats, storedUser, streak, loading } = useDashboardData()
   const navigate = useNavigate()
   const firstName = storedUser.fullName?.split(" ")[0] || "Creator"
   const platform = localStorage.getItem("platform") || "both"
@@ -76,16 +76,16 @@ export default function DashboardBoth() {
     return { fromDate: toISTDateStr(from), toDate: todayIST }
   }, [dateRange, customFrom, customTo])
 
-  // Chart data
-  const overallChartData = useMemo(() =>
-    buildChartData(fromDate, toDate, ytVideos, ytConnected, platform),
-    [fromDate, toDate, ytVideos, ytConnected, platform]
-  )
+  // Chart data — wait for videos to load before rendering
+  const overallChartData = useMemo(() => {
+    if (ytConnected && loading) return [] // wait for real data
+    return buildChartData(fromDate, toDate, ytVideos, ytConnected, platform)
+  }, [fromDate, toDate, ytVideos, ytConnected, platform, loading])
 
-  const ytChartData = useMemo(() =>
-    buildChartData(fromDate, toDate, ytVideos, true, platform),
-    [fromDate, toDate, ytVideos, platform]
-  )
+  const ytChartData = useMemo(() => {
+    if (ytConnected && loading) return [] // wait for real data
+    return buildChartData(fromDate, toDate, ytVideos, true, platform)
+  }, [fromDate, toDate, ytVideos, platform, loading])
 
   // Planner data
   const plannerData = (() => {
@@ -208,6 +208,11 @@ export default function DashboardBoth() {
                     </div>
                   )}
 
+                  {loading && ytConnected ? (
+                    <div style={{ height: "180px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div className="spinner spinner-md" />
+                    </div>
+                  ) : (
                   <ResponsiveContainer width="100%" height={180}>
                     {chartType === "bar" ? (
                       <BarChart data={currentChartData}>
@@ -225,6 +230,7 @@ export default function DashboardBoth() {
                       </LineChart>
                     )}
                   </ResponsiveContainer>
+                  )}
                 </div>
                 <StreakCard accent={accent} platform="both" ytVideos={ytVideos} />
               </div>
