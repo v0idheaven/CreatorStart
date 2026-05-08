@@ -108,12 +108,74 @@ export default function ContentGenerator() {
           {/* Results panel */}
           <div className="gen-results-panel">
             {!result && !loading && (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 0", gap: "12px", textAlign: "center" }}>
-                <div style={{ width: "60px", height: "60px", borderRadius: "18px", background: color + "12", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Sparkles size={26} color={color} />
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+
+                {/* Quick start prompts */}
+                <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px" }}>
+                  <p style={{ fontSize: "12px", fontWeight: "600", color: "var(--dim)", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 14px" }}>Quick Start Ideas</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {[
+                      { topic: "Morning routine for productivity", format: "Video", niche: "Lifestyle" },
+                      { topic: "5 AI tools every creator needs", format: "Short", niche: "Tech" },
+                      { topic: "How I grew to 1K subscribers", format: "Video", niche: "Education" },
+                      { topic: "Budget meal prep for the week", format: "Reel", niche: "Food" },
+                    ].map((idea, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "9px", border: "1px solid var(--border)", background: "var(--bg)", cursor: "pointer", transition: "border-color 0.15s" }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor = color + "60"}
+                        onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}>
+                        <Sparkles size={13} color={color} style={{ flexShrink: 0 }} />
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: "13px", color: "var(--text)", margin: "0 0 2px", fontWeight: "500" }}>{idea.topic}</p>
+                          <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{idea.format} · {idea.niche}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <p style={{ fontSize: "16px", fontWeight: "700", color: "var(--text)", margin: 0 }}>Ready to create</p>
-                <p style={{ fontSize: "13px", color: "var(--dim)", margin: 0, maxWidth: "260px", lineHeight: "1.6" }}>Fill the form and click Generate.</p>
+
+                {/* Output types */}
+                <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px" }}>
+                  <p style={{ fontSize: "12px", fontWeight: "600", color: "var(--dim)", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 14px" }}>What you can generate</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {[
+                      { label: "Full Script", desc: "Complete word-for-word script ready to record", icon: "📝" },
+                      { label: "Key Points", desc: "6-8 detailed talking points to speak from", icon: "•" },
+                      { label: "Hook + CTA", desc: "3 opening hooks and 3 call-to-actions", icon: "⚡" },
+                      { label: "Outline", desc: "Structured outline with sections and timing", icon: "📋" },
+                      { label: "Caption + Hashtags", desc: "Ready-to-post caption with 30 hashtags", icon: "#" },
+                    ].map(({ label, desc, icon }) => (
+                      <div key={label} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                        <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: color + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "13px", fontWeight: "700", color }}>
+                          {icon}
+                        </div>
+                        <div>
+                          <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", margin: "0 0 2px" }}>{label}</p>
+                          <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0, lineHeight: "1.4" }}>{desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tips */}
+                <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px" }}>
+                  <p style={{ fontSize: "12px", fontWeight: "600", color: "var(--dim)", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 14px" }}>Tips for better results</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {[
+                      "Add a specific topic for more targeted content",
+                      "Choose your actual audience in the form for personalized output",
+                      "Use 'Key Message' to make sure your main point comes through",
+                      "Try different tones — Casual vs Professional gives very different results",
+                      "Regenerate 2-3 times to get the best version",
+                    ].map((tip, i) => (
+                      <div key={i} style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                        <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: color, marginTop: "6px", flexShrink: 0 }} />
+                        <p style={{ fontSize: "12px", color: "var(--muted)", margin: 0, lineHeight: "1.5" }}>{tip}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
               </div>
             )}
             {loading && (

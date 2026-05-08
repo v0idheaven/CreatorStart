@@ -9,7 +9,13 @@ export default function useDashboardData() {
   const ytStats = storedUser.youtubeStats || null
   const ytConnected = !!ytStats
 
-  const [ytVideos, setYtVideos] = useState([])
+  const [ytVideos, setYtVideos] = useState(() => {
+    // Show cached data immediately while fresh data loads
+    try {
+      const cached = JSON.parse(localStorage.getItem("yt_videos_cache") || "[]")
+      return Array.isArray(cached) ? cached : []
+    } catch { return [] }
+  })
   const [ytAnalytics, setYtAnalytics] = useState(null)
   const [loading, setLoading] = useState(ytConnected)
 
