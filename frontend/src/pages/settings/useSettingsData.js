@@ -113,11 +113,15 @@ export default function useSettingsData() {
 
   async function deleteAccount() {
     try { await apiFetch(API_ENDPOINTS.deleteAccount, { method: "DELETE" }) } catch { /* silent */ }
-    // Clear everything from localStorage
+    // Clear absolutely everything
     localStorage.clear()
     sessionStorage.clear()
-    // Hard redirect to force fresh state
-    window.location.href = "/auth"
+    // Clear all cookies by setting them expired
+    document.cookie.split(";").forEach(c => {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
+    })
+    // Hard reload to completely fresh state
+    window.location.replace("/auth")
   }
 
   function updateAvatar(url) { setAvatar(url); syncLocal({ avatar: url }) }
