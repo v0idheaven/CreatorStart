@@ -9,15 +9,17 @@ export default function useDashboardData() {
   const ytStats = storedUser.youtubeStats || null
   const ytConnected = !!ytStats
 
-  const [ytVideos, setYtVideos] = useState(() => {
-    // Show cached data immediately while fresh data loads
+  const cachedVideos = (() => {
     try {
       const cached = JSON.parse(localStorage.getItem("yt_videos_cache") || "[]")
-      return Array.isArray(cached) ? cached : []
-    } catch { return [] }
-  })
+      return Array.isArray(cached) && cached.length > 0 ? cached : null
+    } catch { return null }
+  })()
+
+  const [ytVideos, setYtVideos] = useState(cachedVideos || [])
   const [ytAnalytics, setYtAnalytics] = useState(null)
-  const [loading, setLoading] = useState(ytConnected)
+  // If we have cached data, don't show spinner — load silently in background
+  const [loading, setLoading] = useState(ytConnected && !cachedVideos)
 
   useEffect(() => {
     if (!ytConnected) return
