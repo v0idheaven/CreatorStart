@@ -113,7 +113,11 @@ export default function useSettingsData() {
 
   async function deleteAccount() {
     try { await apiFetch(API_ENDPOINTS.deleteAccount, { method: "DELETE" }) } catch { /* silent */ }
-    localStorage.clear(); navigate("/auth")
+    // Clear everything from localStorage
+    localStorage.clear()
+    sessionStorage.clear()
+    // Hard redirect to force fresh state
+    window.location.href = "/auth"
   }
 
   function updateAvatar(url) { setAvatar(url); syncLocal({ avatar: url }) }

@@ -5,6 +5,15 @@ import { Planner } from "../models/planner.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
+import { google } from "googleapis"
+
+function getOAuthClient() {
+    return new google.auth.OAuth2(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET,
+        `${process.env.BACKEND_URL || "https://creator-start-backend.onrender.com"}/api/v1/auth/google/callback`
+    )
+}
 
 const generateTokens = async (userId) => {
     const user = await User.findById(userId)
@@ -178,7 +187,17 @@ const updateAvatar = asyncHandler(async (req, res) => {
 const deleteAccount = asyncHandler(async (req, res) => {
     const userId = req.user._id
 
-    // Delete all associated data
+    // Revoke Google OAuth access if connected
+    try {
+        const user = await User.findById(userId)
+        if (user?.googleAccessToken) {
+            const oauth2Client = getOAuthClient()
+            oauth2Client.setCredentials({ access_token: user.googleAccessToken })
+            await oauth2Client.revokeCredentials()
+        }
+    } catch { /* silent — revoke failure shouldn't block deletion */ }
+
+    // Delete all associated data from database
     await Promise.all([
         User.findByIdAndDelete(userId),
         Planner.deleteMany({ owner: userId }),
