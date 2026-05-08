@@ -99,7 +99,7 @@ export default function Sidebar() {
 
       <div className="sidebar-footer">
         <div className="sidebar-divider" />
-        <div className="sidebar-user">
+        <div className="sidebar-user" onClick={() => navigate("/settings")} title="Settings">
           {avatarUrl
             ? <img src={avatarUrl} alt="avatar" style={{ width: "28px", height: "28px", minWidth: "28px", borderRadius: "50%", objectFit: "cover" }} />
             : <div className="sidebar-avatar" style={{ background: color }}>{initials}</div>
@@ -107,6 +107,7 @@ export default function Sidebar() {
           {isOpen && (
             <div style={{ flex: 1, minWidth: 0 }}>
               <p className="sidebar-user-name">{displayName}</p>
+              <p style={{ fontSize: "10px", color: "var(--dim)", margin: 0 }}>Settings</p>
             </div>
           )}
         </div>
