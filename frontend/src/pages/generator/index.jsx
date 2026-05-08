@@ -294,7 +294,7 @@ export default function ContentGenerator() {
         .gen-btn-outline { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; }
         .gen-btn-fill { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 8px; border: none; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
         .gen-body { display: flex; gap: 24px; padding: 24px 40px 48px; align-items: flex-start; flex: 1; }
-        .gen-form-panel { width: 300px; flex-shrink: 0; position: sticky; top: 24px; max-height: calc(100vh - 80px); overflow-y: auto; }
+        .gen-form-panel { width: 300px; flex-shrink: 0; position: sticky; top: 80px; max-height: calc(100vh - 100px); overflow-y: auto; overflow-x: visible; }
         .gen-results-panel { flex: 1; min-width: 0; }
         @media (max-width: 768px) {
           .gen-wrap { margin-left: 0; }

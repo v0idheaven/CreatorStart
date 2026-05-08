@@ -4,7 +4,7 @@ import { NICHES, OUTPUT_TYPES } from "./generatorConfig"
 import { apiFetch } from "../../utils/api"
 import { API_ENDPOINTS } from "../../constants/api"
 
-function Dropdown({ label, options, value, onChange, color, placeholder, hint }) {
+function Dropdown({ label, options, value, onChange, color, placeholder, hint, dropUp }) {
   const [open, setOpen] = useState(false)
   return (
     <div style={{ position: "relative" }}>
@@ -18,7 +18,7 @@ function Dropdown({ label, options, value, onChange, color, placeholder, hint })
       {open && (
         <>
           <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 40 }} />
-          <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.3)", maxHeight: "200px", overflowY: "auto" }}>
+          <div style={{ position: "absolute", ...(dropUp ? { bottom: "calc(100% + 4px)" } : { top: "calc(100% + 4px)" }), left: 0, right: 0, background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.3)", maxHeight: "200px", overflowY: "auto" }}>
             {options.map(opt => (
               <div key={opt} onClick={() => { onChange(opt); setOpen(false) }}
                 style={{ padding: "9px 14px", fontSize: "13px", cursor: "pointer", color: value === opt ? color : "var(--text)", background: value === opt ? color + "12" : "transparent", fontWeight: value === opt ? "600" : "400" }}
@@ -137,7 +137,7 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
         <input className="input-sm" placeholder="e.g. Morning routine, AI tools..." value={topic} onChange={e => setTopic(e.target.value)} />
       </div>
 
-      <Dropdown label="What do you want?" options={OUTPUT_TYPES.map(o => o.label)} value={selectedOutput?.label} onChange={v => setOutputType(OUTPUT_TYPES.find(o => o.label === v)?.id || "full_script")} color={color} placeholder="Select output type" hint={selectedOutput?.desc} />
+      <Dropdown label="What do you want?" options={OUTPUT_TYPES.map(o => o.label)} value={selectedOutput?.label} onChange={v => setOutputType(OUTPUT_TYPES.find(o => o.label === v)?.id || "full_script")} color={color} placeholder="Select output type" hint={selectedOutput?.desc} dropUp />
 
       {error && <p className="error-box">{error}</p>}
 
