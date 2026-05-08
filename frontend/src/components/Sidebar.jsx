@@ -107,7 +107,6 @@ export default function Sidebar() {
           {isOpen && (
             <div style={{ flex: 1, minWidth: 0 }}>
               <p className="sidebar-user-name">{displayName}</p>
-              <p style={{ fontSize: "10px", color: "var(--dim)", margin: 0 }}>Settings</p>
             </div>
           )}
         </div>
