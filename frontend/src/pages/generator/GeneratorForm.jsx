@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Sparkles, ChevronDown, BookmarkCheck } from "lucide-react"
 import { NICHES, OUTPUT_TYPES } from "./generatorConfig"
 import { apiFetch } from "../../utils/api"
@@ -44,6 +44,18 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
   const [outputType, setOutputType] = useState("full_script")
   const [customValues, setCustomValues] = useState({})
   const [profileSaved, setProfileSaved] = useState(false)
+
+  // Listen for quick idea clicks from the right panel
+  useEffect(() => {
+    function handleFill(e) {
+      const { topic: t, format: f, niche: n } = e.detail || {}
+      if (t) setTopic(t)
+      if (f && formats.includes(f)) setFormat(f)
+      if (n && NICHES.includes(n)) setNiche(n)
+    }
+    window.addEventListener("fillGeneratorTopic", handleFill)
+    return () => window.removeEventListener("fillGeneratorTopic", handleFill)
+  }, [formats])
 
   const setCustom = (key, val) => setCustomValues(p => ({ ...p, [key]: val }))
   const resolve = (val, key) => val === "Other" ? (customValues[key] || "") : val

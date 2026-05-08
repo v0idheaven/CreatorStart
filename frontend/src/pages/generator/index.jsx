@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { Sparkles, CalendarDays, RotateCcw, Download } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { Sparkles, CalendarDays, RotateCcw, Download, History, ChevronDown, ChevronUp, FileText, Zap, List, AlignLeft, Hash, RefreshCw } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { API_ENDPOINTS } from "../../constants/api"
 import { apiFetch } from "../../utils/api"
@@ -8,13 +8,37 @@ import GeneratorForm from "./GeneratorForm"
 import ResultCard from "./ResultCard"
 import AddToPlannerModal from "./AddToPlannerModal"
 import GenerationHistory from "./GenerationHistory"
-import { saveToHistory } from "./historyStorage"
+import { saveToHistory, loadHistory, writeHistory, clearHistory } from "./historyStorage"
 
 const LABEL_MAP = {
   title: "Video Title", hook: "Hook", script: "Full Script", outline: "Outline",
   description: "Description", tags: "Tags", caption: "Caption", hashtags: "Hashtags",
   cta: "Call to Action", points: "Key Points", tip: "Pro Tip", angle: "Angle", reelIdea: "Reel Concept",
 }
+
+const OUTPUT_ICONS = {
+  "Full Script": FileText,
+  "Key Points": List,
+  "Hook + CTA": Zap,
+  "Outline": AlignLeft,
+  "Caption + Hashtags": Hash,
+}
+
+const OUTPUT_TYPES_INFO = [
+  { label: "Full Script", desc: "Complete word-for-word script ready to record" },
+  { label: "Key Points", desc: "6-8 detailed talking points to speak from" },
+  { label: "Hook + CTA", desc: "3 opening hooks and 3 call-to-actions" },
+  { label: "Outline", desc: "Structured outline with sections and timing" },
+  { label: "Caption + Hashtags", desc: "Ready-to-post caption with 30 hashtags" },
+]
+
+const TIPS = [
+  "Add a specific topic for more targeted content",
+  "Choose your actual audience for personalized output",
+  "Use 'Key Message' to make your main point clear",
+  "Try different tones — Casual vs Professional gives very different results",
+  "Regenerate 2-3 times to get the best version",
+]
 
 export default function ContentGenerator() {
   const platform = localStorage.getItem("platform") || "both"
@@ -27,6 +51,45 @@ export default function ContentGenerator() {
   const [showPlannerModal, setShowPlannerModal] = useState(false)
   const [lastPayload, setLastPayload] = useState(null)
   const [lastFields, setLastFields] = useState(null)
+  const [showHistory, setShowHistory] = useState(false)
+  const [history, setHistory] = useState(() => loadHistory())
+
+  // Quick ideas state
+  const [quickIdeas, setQuickIdeas] = useState([
+    { topic: "Morning routine for productivity", format: "Video", niche: "Lifestyle" },
+    { topic: "5 AI tools every creator needs", format: "Short", niche: "Tech" },
+    { topic: "How I grew to 1K subscribers", format: "Video", niche: "Education" },
+    { topic: "Budget meal prep for the week", format: "Reel", niche: "Food" },
+  ])
+  const [loadingIdeas, setLoadingIdeas] = useState(false)
+  const formRef = useRef(null)
+
+  async function fetchViralIdeas() {
+    setLoadingIdeas(true)
+    try {
+      const res = await apiFetch(API_ENDPOINTS.contentGenerator, {
+        method: "POST",
+        body: JSON.stringify({
+          platform, format: "Video", niche: "General", goal: "Grow Audience",
+          tone: "Casual", topic: "viral trending content ideas",
+          outputType: "hook_only",
+          refinement: `Give me 4 viral content topic ideas for ${platform} creators. Return ONLY a JSON array: [{"topic":"...","format":"Video/Short/Reel","niche":"Tech/Lifestyle/etc"},...]`
+        })
+      })
+      const data = await res.json()
+      // Try to parse ideas from response
+      const raw = data?.data?.hook || data?.data?.script || ""
+      const match = raw.match(/\[[\s\S]*\]/)
+      if (match) {
+        const parsed = JSON.parse(match[0])
+        if (Array.isArray(parsed) && parsed.length > 0) setQuickIdeas(parsed.slice(0, 4))
+      }
+    } catch { /* keep defaults */ }
+    setLoadingIdeas(false)
+  }
+
+  // Ref to trigger form fill from outside
+  const fillFormRef = useRef(null)
 
   async function callAPI(payload) {
     const res = await apiFetch(API_ENDPOINTS.contentGenerator, { method: "POST", body: JSON.stringify(payload) })
@@ -46,7 +109,7 @@ export default function ContentGenerator() {
     const payload = { platform, format: fields.format, niche: fields.niche, goal: fields.goal, tone: fields.tone, topic: fields.topic, outputType: fields.outputType || "full_script" }
     setLastPayload(payload); setLastFields(fields)
     setError(""); setLoading(true); setResult(null)
-    try { const r = await callAPI(payload); setResult(r); saveToHistory(fields, r) } catch (e) { setError(e.message) }
+    try { const r = await callAPI(payload); setResult(r); saveToHistory(fields, r); setHistory(loadHistory()) } catch (e) { setError(e.message) }
     setLoading(false)
   }
 
@@ -80,29 +143,47 @@ export default function ContentGenerator() {
             </div>
             <h1 style={{ fontSize: "22px", fontWeight: "700", color: "var(--text)", margin: 0, letterSpacing: "-0.5px" }}>Content Generator</h1>
           </div>
-          {result && (
-            <div className="gen-actions">
-              <button onClick={handleRegenerate} disabled={loading} className="gen-btn-outline" style={{ color, borderColor: color + "40" }}>
-                <RotateCcw size={12} /> Regenerate
+          <div className="gen-actions">
+            {/* History button in header */}
+            {history.length > 0 && (
+              <button onClick={() => setShowHistory(p => !p)} className="gen-btn-outline" style={{ color: showHistory ? color : "var(--muted)", borderColor: showHistory ? color + "40" : "var(--border)" }}>
+                <History size={12} /> History ({history.length})
               </button>
-              <button onClick={handleDownload} className="gen-btn-outline">
-                <Download size={12} /> Save
-              </button>
-              <button onClick={() => setShowPlannerModal(true)} className="gen-btn-fill" style={{ background: color }}>
-                <CalendarDays size={12} /> Add to Planner
-              </button>
-            </div>
-          )}
+            )}
+            {result && (
+              <>
+                <button onClick={handleRegenerate} disabled={loading} className="gen-btn-outline" style={{ color, borderColor: color + "40" }}>
+                  <RotateCcw size={12} /> Regenerate
+                </button>
+                <button onClick={handleDownload} className="gen-btn-outline">
+                  <Download size={12} /> Save
+                </button>
+                <button onClick={() => setShowPlannerModal(true)} className="gen-btn-fill" style={{ background: color }}>
+                  <CalendarDays size={12} /> Add to Planner
+                </button>
+              </>
+            )}
+          </div>
         </div>
+
+        {/* History panel — slides in below header */}
+        {showHistory && (
+          <div style={{ padding: "0 40px 16px", borderBottom: "1px solid var(--border)" }}>
+            <GenerationHistory accentColor={color} onLoad={item => { setResult(item.result); setLastFields(item.fields); setShowHistory(false) }} />
+          </div>
+        )}
 
         {/* Body */}
         <div className="gen-body">
           {/* Form panel */}
           <div className="gen-form-panel">
             <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "16px" }}>
-              <GeneratorForm formats={formats} goals={goals} tones={tones} color={color} onGenerate={handleGenerate} loading={loading} error={error} />
+              <GeneratorForm
+                ref={fillFormRef}
+                formats={formats} goals={goals} tones={tones} color={color}
+                onGenerate={handleGenerate} loading={loading} error={error}
+              />
             </div>
-            <GenerationHistory accentColor={color} onLoad={item => { setResult(item.result); setLastFields(item.fields) }} />
           </div>
 
           {/* Results panel */}
@@ -110,17 +191,25 @@ export default function ContentGenerator() {
             {!result && !loading && (
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
-                {/* Quick start prompts */}
+                {/* Quick start ideas */}
                 <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px" }}>
-                  <p style={{ fontSize: "12px", fontWeight: "600", color: "var(--dim)", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 14px" }}>Quick Start Ideas</p>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+                    <p style={{ fontSize: "12px", fontWeight: "600", color: "var(--dim)", textTransform: "uppercase", letterSpacing: "0.5px", margin: 0 }}>Quick Start Ideas</p>
+                    <button onClick={fetchViralIdeas} disabled={loadingIdeas}
+                      style={{ display: "flex", alignItems: "center", gap: "4px", padding: "4px 10px", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--dim)", fontSize: "11px", cursor: "pointer" }}>
+                      <RefreshCw size={10} className={loadingIdeas ? "spin" : ""} />
+                      {loadingIdeas ? "Loading..." : "Refresh"}
+                    </button>
+                  </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    {[
-                      { topic: "Morning routine for productivity", format: "Video", niche: "Lifestyle" },
-                      { topic: "5 AI tools every creator needs", format: "Short", niche: "Tech" },
-                      { topic: "How I grew to 1K subscribers", format: "Video", niche: "Education" },
-                      { topic: "Budget meal prep for the week", format: "Reel", niche: "Food" },
-                    ].map((idea, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "9px", border: "1px solid var(--border)", background: "var(--bg)", cursor: "pointer", transition: "border-color 0.15s" }}
+                    {quickIdeas.map((idea, i) => (
+                      <div key={i}
+                        onClick={() => {
+                          // Scroll to form and dispatch custom event to fill topic
+                          window.dispatchEvent(new CustomEvent("fillGeneratorTopic", { detail: idea }))
+                          document.querySelector(".gen-form-panel")?.scrollIntoView({ behavior: "smooth" })
+                        }}
+                        style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "9px", border: "1px solid var(--border)", background: "var(--bg)", cursor: "pointer", transition: "border-color 0.15s" }}
                         onMouseEnter={e => e.currentTarget.style.borderColor = color + "60"}
                         onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}>
                         <Sparkles size={13} color={color} style={{ flexShrink: 0 }} />
@@ -128,6 +217,7 @@ export default function ContentGenerator() {
                           <p style={{ fontSize: "13px", color: "var(--text)", margin: "0 0 2px", fontWeight: "500" }}>{idea.topic}</p>
                           <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{idea.format} · {idea.niche}</p>
                         </div>
+                        <span style={{ fontSize: "10px", color, background: color + "15", padding: "2px 8px", borderRadius: "10px", fontWeight: "600", flexShrink: 0 }}>Use</span>
                       </div>
                     ))}
                   </div>
@@ -137,23 +227,20 @@ export default function ContentGenerator() {
                 <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px" }}>
                   <p style={{ fontSize: "12px", fontWeight: "600", color: "var(--dim)", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 14px" }}>What you can generate</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    {[
-                      { label: "Full Script", desc: "Complete word-for-word script ready to record", icon: "📝" },
-                      { label: "Key Points", desc: "6-8 detailed talking points to speak from", icon: "•" },
-                      { label: "Hook + CTA", desc: "3 opening hooks and 3 call-to-actions", icon: "⚡" },
-                      { label: "Outline", desc: "Structured outline with sections and timing", icon: "📋" },
-                      { label: "Caption + Hashtags", desc: "Ready-to-post caption with 30 hashtags", icon: "#" },
-                    ].map(({ label, desc, icon }) => (
-                      <div key={label} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
-                        <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: color + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "13px", fontWeight: "700", color }}>
-                          {icon}
+                    {OUTPUT_TYPES_INFO.map(({ label: lbl, desc }) => {
+                      const Icon = OUTPUT_ICONS[lbl] || FileText
+                      return (
+                        <div key={lbl} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                          <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: color + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <Icon size={13} color={color} />
+                          </div>
+                          <div>
+                            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", margin: "0 0 2px" }}>{lbl}</p>
+                            <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0, lineHeight: "1.4" }}>{desc}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", margin: "0 0 2px" }}>{label}</p>
-                          <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0, lineHeight: "1.4" }}>{desc}</p>
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
 
@@ -161,13 +248,7 @@ export default function ContentGenerator() {
                 <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px" }}>
                   <p style={{ fontSize: "12px", fontWeight: "600", color: "var(--dim)", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 14px" }}>Tips for better results</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    {[
-                      "Add a specific topic for more targeted content",
-                      "Choose your actual audience in the form for personalized output",
-                      "Use 'Key Message' to make sure your main point comes through",
-                      "Try different tones — Casual vs Professional gives very different results",
-                      "Regenerate 2-3 times to get the best version",
-                    ].map((tip, i) => (
+                    {TIPS.map((tip, i) => (
                       <div key={i} style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
                         <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: color, marginTop: "6px", flexShrink: 0 }} />
                         <p style={{ fontSize: "12px", color: "var(--muted)", margin: 0, lineHeight: "1.5" }}>{tip}</p>
@@ -209,13 +290,12 @@ export default function ContentGenerator() {
         .gen-root { display: flex; background: var(--bg); min-height: 100vh; }
         .gen-wrap { margin-left: 72px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
         .gen-header { padding: 20px 40px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-        .gen-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .gen-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
         .gen-btn-outline { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; }
         .gen-btn-fill { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 8px; border: none; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
         .gen-body { display: flex; gap: 24px; padding: 24px 40px 48px; align-items: flex-start; flex: 1; }
         .gen-form-panel { width: 300px; flex-shrink: 0; position: sticky; top: 24px; max-height: calc(100vh - 80px); overflow-y: auto; }
         .gen-results-panel { flex: 1; min-width: 0; }
-
         @media (max-width: 768px) {
           .gen-wrap { margin-left: 0; }
           .gen-header { padding: 16px; }
