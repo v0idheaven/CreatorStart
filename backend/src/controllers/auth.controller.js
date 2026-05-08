@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js"
 import ApiError from "../utils/ApiError.js"
 import { User } from "../models/user.model.js"
+import { Planner } from "../models/planner.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
@@ -175,7 +176,14 @@ const updateAvatar = asyncHandler(async (req, res) => {
 })
 
 const deleteAccount = asyncHandler(async (req, res) => {
-    await User.findByIdAndDelete(req.user._id)
+    const userId = req.user._id
+
+    // Delete all associated data
+    await Promise.all([
+        User.findByIdAndDelete(userId),
+        Planner.deleteMany({ owner: userId }),
+    ])
+
     return res
         .status(200)
         .clearCookie("accessToken", cookieOptions)
