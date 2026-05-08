@@ -212,16 +212,16 @@ export default function DashboardBoth() {
                     {chartType === "bar" ? (
                       <BarChart data={currentChartData}>
                         <XAxis dataKey="day" tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                        <YAxis tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} domain={[0, 'auto']} />
                         <Tooltip contentStyle={{ background: "var(--sb)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--text)", fontSize: "12px" }} />
-                        <Bar dataKey="value" fill={accent} radius={[4, 4, 0, 0]} opacity={0.85} />
+                        <Bar dataKey="value" fill={accent} radius={[4, 4, 0, 0]} opacity={0.85} isAnimationActive={false} />
                       </BarChart>
                     ) : (
                       <LineChart data={currentChartData}>
                         <XAxis dataKey="day" tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                        <YAxis tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                        <YAxis tick={{ fill: "var(--dim)", fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} domain={[0, 'auto']} />
                         <Tooltip contentStyle={{ background: "var(--sb)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--text)", fontSize: "12px" }} />
-                        <Line type="monotone" dataKey="value" stroke={accent} strokeWidth={2} dot={{ fill: accent, strokeWidth: 0, r: 3 }} />
+                        <Line type="monotone" dataKey="value" stroke={accent} strokeWidth={2} dot={{ fill: accent, strokeWidth: 0, r: 3 }} isAnimationActive={false} />
                       </LineChart>
                     )}
                   </ResponsiveContainer>
