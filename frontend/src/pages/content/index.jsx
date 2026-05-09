@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, createElement } from "react"
-import { Search, Youtube, Film, BarChart2, Instagram, Layers, RefreshCw } from "lucide-react"
+import { Search, Youtube, Film, Instagram, Layers, RefreshCw } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import VideoDetailPanel from "./VideoDetailPanel"
 import { apiFetch } from "../../utils/api"

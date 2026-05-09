@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { Sparkles, CalendarDays, RotateCcw, Download, History, ChevronDown, FileText, Zap, List, AlignLeft, Hash, RefreshCw } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { API_ENDPOINTS } from "../../constants/api"
@@ -8,7 +8,7 @@ import GeneratorForm from "./GeneratorForm"
 import ResultCard from "./ResultCard"
 import AddToPlannerModal from "./AddToPlannerModal"
 import GenerationHistory from "./GenerationHistory"
-import { saveToHistory, loadHistory, writeHistory, clearHistory } from "./historyStorage"
+import { saveToHistory, loadHistory } from "./historyStorage"
 
 const LABEL_MAP = {
   title: "Video Title", hook: "Hook", script: "Full Script", outline: "Outline",
@@ -62,7 +62,6 @@ export default function ContentGenerator() {
     { topic: "Budget meal prep for the week", format: "Reel", niche: "Food" },
   ])
   const [loadingIdeas, setLoadingIdeas] = useState(false)
-  const formRef = useRef(null)
 
   async function fetchViralIdeas() {
     setLoadingIdeas(true)

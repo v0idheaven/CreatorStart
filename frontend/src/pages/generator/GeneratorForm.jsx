@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Sparkles, ChevronDown, BookmarkCheck } from "lucide-react"
+import { Sparkles, ChevronDown } from "lucide-react"
 import { NICHES, OUTPUT_TYPES } from "./generatorConfig"
 import { apiFetch } from "../../utils/api"
 import { API_ENDPOINTS } from "../../constants/api"
@@ -62,7 +62,7 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
   const selectedOutput = OUTPUT_TYPES.find(o => o.id === outputType)
 
   async function saveProfile() {
-    const profile = {
+    const profileData = {
       format: resolve(format, "format"),
       niche: resolve(niche, "niche"),
       goal: resolve(goal, "goal"),
@@ -72,20 +72,18 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
     try {
       const res = await apiFetch(API_ENDPOINTS.updateCreatorProfile, {
         method: "PATCH",
-        body: JSON.stringify(profile)
+        body: JSON.stringify(profileData)
       })
       const data = await res.json()
       const user = JSON.parse(localStorage.getItem("user") || "{}")
       if (res.ok && data?.data?.user?.creatorProfile) {
         localStorage.setItem("user", JSON.stringify({ ...user, creatorProfile: data.data.user.creatorProfile }))
       } else {
-        // Fallback: save locally even if backend fails
-        localStorage.setItem("user", JSON.stringify({ ...user, creatorProfile: profile }))
+        localStorage.setItem("user", JSON.stringify({ ...user, creatorProfile: profileData }))
       }
     } catch {
-      // Offline fallback
       const user = JSON.parse(localStorage.getItem("user") || "{}")
-      localStorage.setItem("user", JSON.stringify({ ...user, creatorProfile: profile }))
+      localStorage.setItem("user", JSON.stringify({ ...user, creatorProfile: profileData }))
     }
     setProfileSaved(true)
     setTimeout(() => setProfileSaved(false), 2000)
