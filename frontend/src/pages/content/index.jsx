@@ -165,25 +165,6 @@ export default function Content() {
               <p className="page-kicker">Library</p>
               <h1 className="page-title">Content</h1>
             </div>
-            {ytConnected && !loading && allContent.length > 0 && (
-              <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
-                <div style={{ textAlign: "right" }}>
-                  <p style={{ fontSize: "20px", fontWeight: "800", color: accent, margin: 0, letterSpacing: "-0.5px" }}>{fmt(totalViews)}</p>
-                  <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Total views</p>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <p style={{ fontSize: "20px", fontWeight: "800", color: "#4ade80", margin: 0, letterSpacing: "-0.5px" }}>{fmt(totalLikes)}</p>
-                  <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>Total likes</p>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <p style={{ fontSize: "20px", fontWeight: "800", color: "var(--text)", margin: 0, letterSpacing: "-0.5px" }}>{totalCount}</p>
-                  <p style={{ fontSize: "11px", color: "var(--dim)", margin: 0 }}>{platformTab === "instagram" ? "Posts" : "Videos"}</p>
-                </div>
-                <button onClick={fetchVideos} disabled={loading} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "7px 12px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--dim)", fontSize: "12px", cursor: "pointer" }}>
-                  <RefreshCw size={11} className={loading ? "spin" : ""} /> Refresh
-                </button>
-              </div>
-            )}
           </div>
 
           {/* Platform tabs */}
