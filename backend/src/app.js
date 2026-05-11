@@ -56,9 +56,10 @@ app.get('/api/v1/health', (_req, res) => {
     res.status(200).json({ ok: true })
 })
 
-app.use('/api/v1/auth', authLimiter, authRouter)
+// Apply strict login limiter BEFORE the general auth router
 app.use('/api/v1/auth/login', loginLimiter)
 app.use('/api/v1/auth/register', loginLimiter)
+app.use('/api/v1/auth', authLimiter, authRouter)
 app.use('/api/v1/planner', aiLimiter, plannerRouter)
 
 app.use((err, _req, res, _next) => {

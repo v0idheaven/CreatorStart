@@ -24,6 +24,8 @@ export async function apiFetch(url, options = {}) {
         } else {
             // Refresh also failed — session fully expired, force logout
             forceLogout()
+            // Return a fake 401 response so callers don't crash
+            return new Response(JSON.stringify({ success: false, message: "Session expired" }), { status: 401 })
         }
     }
 
