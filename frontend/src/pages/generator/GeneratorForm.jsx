@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react"
 import { Sparkles, ChevronDown } from "lucide-react"
 import { NICHES, OUTPUT_TYPES } from "./generatorConfig"
-import { apiFetch } from "../../utils/api"
-import { API_ENDPOINTS } from "../../constants/api"
 
 function Dropdown({ label, options, value, onChange, color, placeholder, hint, dropUp }) {
   const [open, setOpen] = useState(false)
@@ -41,11 +39,13 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
   const [goal, setGoal] = useState(() => (profile.goal && goals.includes(profile.goal) ? profile.goal : ""))
   const [tone, setTone] = useState(() => (profile.tone && tones.includes(profile.tone) ? profile.tone : ""))
   const [topic, setTopic] = useState(() => profile.topic || "")
+  const [audience, setAudience] = useState("")
+  const [length, setLength] = useState("")
   const [outputType, setOutputType] = useState("full_script")
   const [customValues, setCustomValues] = useState({})
-  const [profileSaved, setProfileSaved] = useState(false)
 
-  // Listen for quick idea clicks from the right panel
+  const LENGTHS = ["Short (under 60s)", "Medium (3-7 min)", "Long (10-15 min)", "Very long (20+ min)"]
+
   useEffect(() => {
     function handleFill(e) {
       const { topic: t, format: f, niche: n } = e.detail || {}
@@ -61,52 +61,11 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
   const resolve = (val, key) => val === "Other" ? (customValues[key] || "") : val
   const selectedOutput = OUTPUT_TYPES.find(o => o.id === outputType)
 
-  async function saveProfile() {
-    const profileData = {
-      format: resolve(format, "format"),
-      niche: resolve(niche, "niche"),
-      goal: resolve(goal, "goal"),
-      tone: resolve(tone, "tone"),
-      topic: topic.trim(),
-    }
-    try {
-      const res = await apiFetch(API_ENDPOINTS.updateCreatorProfile, {
-        method: "PATCH",
-        body: JSON.stringify(profileData)
-      })
-      const data = await res.json()
-      const user = JSON.parse(localStorage.getItem("user") || "{}")
-      if (res.ok && data?.data?.user?.creatorProfile) {
-        localStorage.setItem("user", JSON.stringify({ ...user, creatorProfile: data.data.user.creatorProfile }))
-      } else {
-        localStorage.setItem("user", JSON.stringify({ ...user, creatorProfile: profileData }))
-      }
-    } catch {
-      const user = JSON.parse(localStorage.getItem("user") || "{}")
-      localStorage.setItem("user", JSON.stringify({ ...user, creatorProfile: profileData }))
-    }
-    setProfileSaved(true)
-    setTimeout(() => setProfileSaved(false), 2000)
-  }
-
-  async function clearProfile() {
-    const user = JSON.parse(localStorage.getItem("user") || "{}")
-    delete user.creatorProfile
-    localStorage.setItem("user", JSON.stringify(user))
-    try {
-      await apiFetch(API_ENDPOINTS.updateCreatorProfile, {
-        method: "PATCH",
-        body: JSON.stringify({ format: "", niche: "", goal: "", tone: "", topic: "" })
-      })
-    } catch { /* silent */ }
-    setFormat(""); setNiche(""); setGoal(""); setTone(""); setTopic("")
-  }
-
   function handleSubmit() {
     onGenerate({
       format: resolve(format, "format"), niche: resolve(niche, "niche"),
       goal: resolve(goal, "goal"), tone: resolve(tone, "tone"),
-      topic: topic.trim(), outputType,
+      topic: topic.trim(), outputType, audience: audience.trim(), length,
       rawFormat: format, rawNiche: niche, rawGoal: goal, rawTone: tone,
       customFormat: customValues.format || "", customNiche: customValues.niche || "",
       customGoal: customValues.goal || "", customTone: customValues.tone || "",
@@ -134,6 +93,15 @@ export default function GeneratorForm({ formats, goals, tones, color, onGenerate
         </label>
         <input className="input-sm" placeholder="e.g. Morning routine, AI tools..." value={topic} onChange={e => setTopic(e.target.value)} />
       </div>
+
+      <div>
+        <label style={{ fontSize: "11px", fontWeight: "600", color: "var(--dim)", display: "block", marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+          Audience <span style={{ color: "var(--border2)", fontWeight: "400", textTransform: "none", letterSpacing: 0 }}>(optional)</span>
+        </label>
+        <input className="input-sm" placeholder="e.g. Beginners, 18-25 year olds..." value={audience} onChange={e => setAudience(e.target.value)} />
+      </div>
+
+      <Dropdown label="Length" options={LENGTHS} value={length} onChange={setLength} color={color} placeholder="Select content length (optional)" />
 
       <Dropdown label="What do you want?" options={OUTPUT_TYPES.map(o => o.label)} value={selectedOutput?.label} onChange={v => setOutputType(OUTPUT_TYPES.find(o => o.label === v)?.id || "full_script")} color={color} placeholder="Select output type" hint={selectedOutput?.desc} dropUp />
 
