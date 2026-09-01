@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Sparkles, CalendarDays, RotateCcw, Download, History, ChevronDown, FileText, Zap, List, AlignLeft, Hash, RefreshCw } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { API_ENDPOINTS } from "../../constants/api"
@@ -62,6 +62,7 @@ export default function ContentGenerator() {
     { topic: "Budget meal prep for the week", format: "Reel", niche: "Food" },
   ])
   const [loadingIdeas, setLoadingIdeas] = useState(false)
+  const fillFormRef = useRef(null)
 
   async function fetchViralIdeas() {
     setLoadingIdeas(true)
@@ -86,9 +87,6 @@ export default function ContentGenerator() {
     } catch { /* keep defaults */ }
     setLoadingIdeas(false)
   }
-
-  // Ref to trigger form fill from outside
-  const fillFormRef = useRef(null)
 
   async function callAPI(payload) {
     const res = await apiFetch(API_ENDPOINTS.contentGenerator, { method: "POST", body: JSON.stringify(payload) })
