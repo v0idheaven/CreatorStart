@@ -5,7 +5,7 @@ import { Planner } from "../models/planner.model.js"
 import fetch from "node-fetch"
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-const GROQ_MODEL = "llama-3.3-70b-versatile"
+const GROQ_MODEL = "llama3-70b-8192"
 
 const callGroq = async (prompt, temperature = 0.8) => {
     const apiKey = process.env.GROQ_API_KEY
