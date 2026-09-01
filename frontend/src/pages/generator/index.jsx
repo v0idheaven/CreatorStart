@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import { Sparkles, CalendarDays, RotateCcw, Download, History, ChevronDown, FileText, Zap, List, AlignLeft, Hash, RefreshCw } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { API_ENDPOINTS } from "../../constants/api"
@@ -62,7 +62,6 @@ export default function ContentGenerator() {
     { topic: "Budget meal prep for the week", format: "Reel", niche: "Food" },
   ])
   const [loadingIdeas, setLoadingIdeas] = useState(false)
-  const fillFormRef = useRef(null)
 
   async function fetchViralIdeas() {
     setLoadingIdeas(true)
@@ -199,7 +198,6 @@ export default function ContentGenerator() {
           <div className="gen-form-panel">
             <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "16px" }}>
               <GeneratorForm
-                ref={fillFormRef}
                 formats={formats} goals={goals} tones={tones} color={color}
                 onGenerate={handleGenerate} loading={loading} error={error}
               />
