@@ -7,10 +7,10 @@ import fetch from "node-fetch"
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 // Fallback chain — try each model until one works
 const GROQ_MODELS = [
-    "llama-3.1-8b-instant",
-    "llama3-8b-8192",
-    "gemma2-9b-it",
-    "gpt-oss-20b",
+    "qwen/qwen3.6-27b",
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b",
+    "qwen/qwen3.8-27b",
 ]
 
 const callGroq = async (prompt, temperature = 0.8) => {
