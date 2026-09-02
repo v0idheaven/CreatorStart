@@ -5,19 +5,43 @@ import { Planner } from "../models/planner.model.js"
 import fetch from "node-fetch"
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-const GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct" // Llama 4 Scout - latest available
+// Fallback chain — try each model until one works
+const GROQ_MODELS = [
+    "llama-3.1-8b-instant",
+    "llama3-8b-8192",
+    "gemma2-9b-it",
+    "gpt-oss-20b",
+]
 
 const callGroq = async (prompt, temperature = 0.8) => {
     const apiKey = process.env.GROQ_API_KEY
     if (!apiKey) throw new ApiError(500, "GROQ_API_KEY not configured")
-    const res = await fetch(GROQ_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: GROQ_MODEL, messages: [{ role: "user", content: prompt }], temperature })
-    })
-    const data = await res.json()
-    if (!res.ok) throw new ApiError(res.status, data?.error?.message || "Groq API error")
-    return data?.choices?.[0]?.message?.content || ""
+
+    let lastError = ""
+    for (const model of GROQ_MODELS) {
+        try {
+            const res = await fetch(GROQ_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+                body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], temperature })
+            })
+            const data = await res.json()
+            if (!res.ok) {
+                lastError = data?.error?.message || "Groq API error"
+                // If model decommissioned/not found, try next
+                if (lastError.toLowerCase().includes("decommission") || lastError.toLowerCase().includes("does not exist") || lastError.toLowerCase().includes("no longer")) {
+                    continue
+                }
+                throw new ApiError(res.status, lastError)
+            }
+            return data?.choices?.[0]?.message?.content || ""
+        } catch (e) {
+            if (e instanceof ApiError) throw e
+            lastError = e.message
+            continue
+        }
+    }
+    throw new ApiError(503, `All AI models unavailable. Last error: ${lastError}`)
 }
 
 const parseJson = (text) => {
