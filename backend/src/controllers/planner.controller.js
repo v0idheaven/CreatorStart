@@ -17,13 +17,16 @@ const callGroq = async (prompt, temperature = 0.8) => {
     const apiKey = process.env.GROQ_API_KEY
     if (!apiKey) throw new ApiError(500, "GROQ_API_KEY not configured")
 
+    // Add /nothink to disable Qwen's extended thinking mode which breaks JSON parsing
+    const cleanPrompt = `/nothink\n\n${prompt}`
+
     let lastError = ""
     for (const model of GROQ_MODELS) {
         try {
             const res = await fetch(GROQ_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-                body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], temperature })
+                body: JSON.stringify({ model, messages: [{ role: "user", content: cleanPrompt }], temperature })
             })
             const data = await res.json()
             if (!res.ok) {
@@ -45,12 +48,19 @@ const callGroq = async (prompt, temperature = 0.8) => {
 }
 
 const parseJson = (text) => {
-    const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
-    try { return JSON.parse(cleaned) } catch {
-        const match = cleaned.match(/\{[\s\S]*\}/)
-        if (match) { try { return JSON.parse(match[0]) } catch { return null } }
-        return null
-    }
+    // Strip thinking tags (Qwen/reasoning models)
+    let cleaned = text.replace(/<think>[\s\S]*?<\/think>/g, "").trim()
+    // Strip markdown code blocks
+    cleaned = cleaned.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
+    // Try direct parse
+    try { return JSON.parse(cleaned) } catch { /* continue */ }
+    // Try extracting JSON object
+    const objMatch = cleaned.match(/\{[\s\S]*\}/)
+    if (objMatch) { try { return JSON.parse(objMatch[0]) } catch { /* continue */ } }
+    // Try extracting JSON array
+    const arrMatch = cleaned.match(/\[[\s\S]*\]/)
+    if (arrMatch) { try { return JSON.parse(arrMatch[0]) } catch { /* continue */ } }
+    return null
 }
 
 const savePlanData = asyncHandler(async (req, res) => {
